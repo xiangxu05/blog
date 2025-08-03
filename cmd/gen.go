@@ -1,15 +1,28 @@
-package main
+package cmd
 
 import (
 	"blog/model_def"
 	"fmt"
 
 	"github.com/glebarez/sqlite"
+	"github.com/spf13/cobra"
 	"gorm.io/gen"
 	"gorm.io/gorm"
 )
 
-func main() {
+var genCmd = &cobra.Command{
+	Use:   "gen",
+	Short: "生成数据库迁移文件",
+	Run: func(cmd *cobra.Command, args []string) {
+		GenDataBase()
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(genCmd)
+}
+
+func GenDataBase() {
 	// 使用绝对路径连接 SQLite 数据库
 	dbPath := "D:\\projects\\personal_blog\\data\\blogData.db"
 	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
@@ -39,6 +52,7 @@ func main() {
 		&model_def.ArticleTag{},
 		&model_def.Comment{},
 		&model_def.Session{},
+		&model_def.File{},
 	)
 
 	fmt.Println("Starting code generation execution...")

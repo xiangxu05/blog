@@ -27,7 +27,7 @@ func newTag(db *gorm.DB, opts ...gen.DOOption) tag {
 
 	tableName := _tag.tagDo.TableName()
 	_tag.ALL = field.NewAsterisk(tableName)
-	_tag.ID = field.NewUint(tableName, "id")
+	_tag.ID = field.NewInt32(tableName, "id")
 	_tag.CreatedAt = field.NewTime(tableName, "created_at")
 	_tag.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_tag.DeletedAt = field.NewField(tableName, "deleted_at")
@@ -42,7 +42,7 @@ type tag struct {
 	tagDo tagDo
 
 	ALL       field.Asterisk
-	ID        field.Uint
+	ID        field.Int32
 	CreatedAt field.Time
 	UpdatedAt field.Time
 	DeletedAt field.Field
@@ -63,7 +63,7 @@ func (t tag) As(alias string) *tag {
 
 func (t *tag) updateTableName(table string) *tag {
 	t.ALL = field.NewAsterisk(table)
-	t.ID = field.NewUint(table, "id")
+	t.ID = field.NewInt32(table, "id")
 	t.CreatedAt = field.NewTime(table, "created_at")
 	t.UpdatedAt = field.NewTime(table, "updated_at")
 	t.DeletedAt = field.NewField(table, "deleted_at")

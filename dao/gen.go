@@ -22,6 +22,7 @@ var (
 	ArticleTag     *articleTag
 	Category       *category
 	Comment        *comment
+	File           *file
 	Session        *session
 	Tag            *tag
 	User           *user
@@ -34,6 +35,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	ArticleTag = &Q.ArticleTag
 	Category = &Q.Category
 	Comment = &Q.Comment
+	File = &Q.File
 	Session = &Q.Session
 	Tag = &Q.Tag
 	User = &Q.User
@@ -47,6 +49,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		ArticleTag:     newArticleTag(db, opts...),
 		Category:       newCategory(db, opts...),
 		Comment:        newComment(db, opts...),
+		File:           newFile(db, opts...),
 		Session:        newSession(db, opts...),
 		Tag:            newTag(db, opts...),
 		User:           newUser(db, opts...),
@@ -61,6 +64,7 @@ type Query struct {
 	ArticleTag     articleTag
 	Category       category
 	Comment        comment
+	File           file
 	Session        session
 	Tag            tag
 	User           user
@@ -76,6 +80,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		ArticleTag:     q.ArticleTag.clone(db),
 		Category:       q.Category.clone(db),
 		Comment:        q.Comment.clone(db),
+		File:           q.File.clone(db),
 		Session:        q.Session.clone(db),
 		Tag:            q.Tag.clone(db),
 		User:           q.User.clone(db),
@@ -98,6 +103,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		ArticleTag:     q.ArticleTag.replaceDB(db),
 		Category:       q.Category.replaceDB(db),
 		Comment:        q.Comment.replaceDB(db),
+		File:           q.File.replaceDB(db),
 		Session:        q.Session.replaceDB(db),
 		Tag:            q.Tag.replaceDB(db),
 		User:           q.User.replaceDB(db),
@@ -110,6 +116,7 @@ type queryCtx struct {
 	ArticleTag     IArticleTagDo
 	Category       ICategoryDo
 	Comment        ICommentDo
+	File           IFileDo
 	Session        ISessionDo
 	Tag            ITagDo
 	User           IUserDo
@@ -122,6 +129,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		ArticleTag:     q.ArticleTag.WithContext(ctx),
 		Category:       q.Category.WithContext(ctx),
 		Comment:        q.Comment.WithContext(ctx),
+		File:           q.File.WithContext(ctx),
 		Session:        q.Session.WithContext(ctx),
 		Tag:            q.Tag.WithContext(ctx),
 		User:           q.User.WithContext(ctx),

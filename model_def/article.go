@@ -10,7 +10,6 @@ type Article struct {
 	ID         int32          `gorm:"primaryKey;autoIncrement" json:"id"`
 	CreatedAt  time.Time      `json:"created_at"`
 	UpdatedAt  time.Time      `json:"updated_at"`
-	DeletedAt  gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
 	UserID     int32          `gorm:"not null;index" json:"user_id"` // 添加index加速按作者查询
 	User       User           `gorm:"foreignKey:UserID" json:"user,omitempty"`
 	Title      string         `gorm:"size:100;not null;index" json:"title"` // 添加index支持标题搜索
