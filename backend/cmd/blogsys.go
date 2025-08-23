@@ -20,7 +20,7 @@ var blogsysCmd = &cobra.Command{
 		dao.SetDefault(db)
 
 		r := router.InitRouter()
-		r.Run(":80")
+		r.Run(":8080")
 	},
 }
 

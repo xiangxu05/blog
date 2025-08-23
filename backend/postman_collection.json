@@ -180,7 +180,7 @@
               ]
             },
             "url": {
-              "raw": "{{baseUrl}}/api/files/upload/",
+              "raw": "{{baseUrl}}/api/files/upload",
               "host": ["{{baseUrl}}"],
               "path": ["api", "files", "upload", ""]
             }

@@ -3,9 +3,27 @@ package router
 import (
 	"blog/internal/endpoint"
 	"blog/internal/middleware"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
+
+// corsMiddleware CORS中间件
+func corsMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", "*")
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+		c.Header("Access-Control-Allow-Credentials", "true")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(http.StatusNoContent)
+			return
+		}
+
+		c.Next()
+	}
+}
 
 func InitRouter() *gin.Engine {
 	r := gin.Default()
@@ -13,8 +31,11 @@ func InitRouter() *gin.Engine {
 	// 设置Web路由和静态文件服务
 	endpoint.SetupWebRoutes(r)
 
+	// 为API路由组添加CORS中间件
 	api := r.Group("/api")
+	api.Use(corsMiddleware())
 
+	api.GET("/health", endpoint.HealthHandler)
 	// 用户模块
 	user := api.Group("/users")
 	user.POST("/register", endpoint.RegisterHandler)
@@ -58,6 +79,26 @@ func InitRouter() *gin.Engine {
 		articles.POST("", endpoint.CreateArticleHandler)       // 创建文章
 		articles.PUT("/:id", endpoint.UpdateArticleHandler)    // 更新文章
 		articles.DELETE("/:id", endpoint.DeleteArticleHandler) // 删除文章
+	}
+
+	// 管理员专用文章接口
+	admin := api.Group("/admin")
+	admin.Use(middleware.UserAuth(), middleware.RoleAuth())
+	{
+		adminArticles := admin.Group("/articles")
+		{
+			adminArticles.GET("", endpoint.GetArticleListHandler)              // 获取文章列表（管理员视图）
+			adminArticles.GET("/recent", endpoint.GetArticleListHandler)       // 获取最近文章
+			adminArticles.GET("/:id", endpoint.GetArticleHandler)              // 获取文章详情
+			adminArticles.POST("", endpoint.CreateArticleHandler)              // 创建文章
+			adminArticles.PUT("/:id", endpoint.UpdateArticleHandler)           // 更新文章
+			adminArticles.DELETE("/:id", endpoint.DeleteArticleHandler)        // 删除文章
+			adminArticles.PUT("/:id/publish", endpoint.UpdateArticleHandler)   // 发布文章
+			adminArticles.PUT("/:id/archive", endpoint.UpdateArticleHandler)   // 归档文章
+			adminArticles.PUT("/batch/publish", endpoint.UpdateArticleHandler) // 批量发布
+			adminArticles.PUT("/batch/archive", endpoint.UpdateArticleHandler) // 批量归档
+			adminArticles.DELETE("/batch", endpoint.DeleteArticleHandler)      // 批量删除
+		}
 	}
 
 	return r
