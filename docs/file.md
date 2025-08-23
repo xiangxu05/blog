@@ -1,6 +1,6 @@
 ### 2. 文件上传模块（Upload）
 
-- **POST /api/file/upload/** - 上传文件（需要认证）
+- **POST /api/files/upload/** - 上传文件（需要认证）
 
 ```json
 请求参数: (multipart/form-data),"key": "file", "value": file

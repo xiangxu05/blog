@@ -10,22 +10,13 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 const ArticleStorePath = "data/article/"
-const ImageStorePath = "data/image/"
-
-// type FileInfo struct {
-// 	FileID    int32 `json:"file_id"`    // 文件ID
-// 	Filename  string `json:"filename"`   // 文件名
-// 	Size      int64  `json:"size"`       // 文件大小
-// 	MimeType  string `json:"mime_type"`  // 文件类型
-// 	CreatedAt string `json:"created_at"` // 创建时间
-// }
+const FilesStorePath = "data/files/"
 
 func GetFileInfo(c *gin.Context, fileID string) (*message.FileInfo, error) {
 	fileIDInt, err := strconv.Atoi(fileID)
@@ -37,11 +28,10 @@ func GetFileInfo(c *gin.Context, fileID string) (*message.FileInfo, error) {
 		return nil, err
 	}
 	fileInfo := &message.FileInfo{
-		FileID:    file.ID,
-		Filename:  file.Filename,
-		Size:      file.Size,
-		MimeType:  file.MimeType,
-		CreatedAt: file.CreatedAt,
+		FileID:   file.ID,
+		Filename: file.Filename,
+		Size:     file.Size,
+		MimeType: file.MimeType,
 	}
 	return fileInfo, nil
 }
@@ -54,11 +44,10 @@ func GetFileList(c *gin.Context) ([]*message.FileInfo, error) {
 	fileInfos := make([]*message.FileInfo, 0, len(files))
 	for _, file := range files {
 		fileInfos = append(fileInfos, &message.FileInfo{
-			FileID:    file.ID,
-			Filename:  file.Filename,
-			Size:      file.Size,
-			MimeType:  file.MimeType,
-			CreatedAt: file.CreatedAt,
+			FileID:   file.ID,
+			Filename: file.Filename,
+			Size:     file.Size,
+			MimeType: file.MimeType,
 		})
 	}
 	return fileInfos, nil
@@ -88,7 +77,6 @@ func UploadFile(c *gin.Context, file *multipart.FileHeader) (*message.FileInfo, 
 		OwnerID:   userIdInt,
 		Size:      file.Size,
 		MimeType:  filepath.Ext(file.Filename),
-		CreatedAt: time.Now().Unix(),
 	}
 	err = dao.File.WithContext(c.Request.Context()).Create(fileInfo)
 	if err != nil {
@@ -96,11 +84,10 @@ func UploadFile(c *gin.Context, file *multipart.FileHeader) (*message.FileInfo, 
 	}
 
 	return &message.FileInfo{
-		FileID:    fileInfo.ID,
-		Filename:  fileInfo.Filename,
-		Size:      fileInfo.Size,
-		MimeType:  fileInfo.MimeType,
-		CreatedAt: fileInfo.CreatedAt,
+		FileID:   fileInfo.ID,
+		Filename: fileInfo.Filename,
+		Size:     fileInfo.Size,
+		MimeType: fileInfo.MimeType,
 	}, nil
 }
 
@@ -110,7 +97,7 @@ func SaveFileToLocal(c *gin.Context, file *multipart.FileHeader) (string, error)
 	if err != nil {
 		return "", err
 	}
-	err = os.MkdirAll(ImageStorePath, os.ModePerm)
+	err = os.MkdirAll(FilesStorePath, os.ModePerm)
 	if err != nil {
 		return "", err
 	}
@@ -125,7 +112,7 @@ func SaveFileToLocal(c *gin.Context, file *multipart.FileHeader) (string, error)
 		filePath = filepath.Join(ArticleStorePath, filename)
 	} else {
 		// 生成文件路径
-		filePath = filepath.Join(ImageStorePath, filename)
+		filePath = filepath.Join(FilesStorePath, filename)
 	}
 
 	// 保存文件

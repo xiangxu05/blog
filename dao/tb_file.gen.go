@@ -33,7 +33,7 @@ func newFile(db *gorm.DB, opts ...gen.DOOption) file {
 	_file.OwnerID = field.NewInt32(tableName, "owner_id")
 	_file.Size = field.NewInt64(tableName, "size")
 	_file.MimeType = field.NewString(tableName, "mime_type")
-	_file.CreatedAt = field.NewInt64(tableName, "created_at")
+	_file.CreatedAt = field.NewTime(tableName, "created_at")
 
 	_file.fillFieldMap()
 
@@ -50,7 +50,7 @@ type file struct {
 	OwnerID   field.Int32
 	Size      field.Int64
 	MimeType  field.String
-	CreatedAt field.Int64
+	CreatedAt field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -73,7 +73,7 @@ func (f *file) updateTableName(table string) *file {
 	f.OwnerID = field.NewInt32(table, "owner_id")
 	f.Size = field.NewInt64(table, "size")
 	f.MimeType = field.NewString(table, "mime_type")
-	f.CreatedAt = field.NewInt64(table, "created_at")
+	f.CreatedAt = field.NewTime(table, "created_at")
 
 	f.fillFieldMap()
 

@@ -42,7 +42,7 @@
             "email": "string",
             "avatar": "string",
             "role": "string",
-            "created_at": "number"
+            "created_at": "string"
         }
     }
 }

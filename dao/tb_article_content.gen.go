@@ -19,83 +19,80 @@ import (
 	"gorm.io/plugin/dbresolver"
 )
 
-func newArticleContent(db *gorm.DB, opts ...gen.DOOption) articleContent {
-	_articleContent := articleContent{}
+func newArticleVersion(db *gorm.DB, opts ...gen.DOOption) articleVersion {
+	_articleVersion := articleVersion{}
 
-	_articleContent.articleContentDo.UseDB(db, opts...)
-	_articleContent.articleContentDo.UseModel(&model_def.ArticleContent{})
+	_articleVersion.articleVersionDo.UseDB(db, opts...)
+	_articleVersion.articleVersionDo.UseModel(&model_def.ArticleVersion{})
 
-	tableName := _articleContent.articleContentDo.TableName()
-	_articleContent.ALL = field.NewAsterisk(tableName)
-	_articleContent.ID = field.NewUint(tableName, "id")
-	_articleContent.CreatedAt = field.NewTime(tableName, "created_at")
-	_articleContent.UpdatedAt = field.NewTime(tableName, "updated_at")
-	_articleContent.DeletedAt = field.NewField(tableName, "deleted_at")
-	_articleContent.ArticleID = field.NewInt32(tableName, "article_id")
-	_articleContent.Description = field.NewString(tableName, "description")
-	_articleContent.Version = field.NewInt(tableName, "version")
-	_articleContent.Content = field.NewString(tableName, "content")
+	tableName := _articleVersion.articleVersionDo.TableName()
+	_articleVersion.ALL = field.NewAsterisk(tableName)
+	_articleVersion.ID = field.NewUint(tableName, "id")
+	_articleVersion.CreatedAt = field.NewTime(tableName, "created_at")
+	_articleVersion.UpdatedAt = field.NewTime(tableName, "updated_at")
+	_articleVersion.ArticleID = field.NewInt32(tableName, "article_id")
+	_articleVersion.Description = field.NewString(tableName, "description")
+	_articleVersion.Version = field.NewInt(tableName, "version")
+	_articleVersion.StoreID = field.NewInt32(tableName, "store_id")
 
-	_articleContent.fillFieldMap()
+	_articleVersion.fillFieldMap()
 
-	return _articleContent
+	return _articleVersion
 }
 
-type articleContent struct {
-	articleContentDo articleContentDo
+type articleVersion struct {
+	articleVersionDo articleVersionDo
 
 	ALL         field.Asterisk
 	ID          field.Uint
 	CreatedAt   field.Time
 	UpdatedAt   field.Time
-	DeletedAt   field.Field
 	ArticleID   field.Int32
 	Description field.String
 	Version     field.Int
-	Content     field.String
+	StoreID     field.Int32
 
 	fieldMap map[string]field.Expr
 }
 
-func (a articleContent) Table(newTableName string) *articleContent {
-	a.articleContentDo.UseTable(newTableName)
+func (a articleVersion) Table(newTableName string) *articleVersion {
+	a.articleVersionDo.UseTable(newTableName)
 	return a.updateTableName(newTableName)
 }
 
-func (a articleContent) As(alias string) *articleContent {
-	a.articleContentDo.DO = *(a.articleContentDo.As(alias).(*gen.DO))
+func (a articleVersion) As(alias string) *articleVersion {
+	a.articleVersionDo.DO = *(a.articleVersionDo.As(alias).(*gen.DO))
 	return a.updateTableName(alias)
 }
 
-func (a *articleContent) updateTableName(table string) *articleContent {
+func (a *articleVersion) updateTableName(table string) *articleVersion {
 	a.ALL = field.NewAsterisk(table)
 	a.ID = field.NewUint(table, "id")
 	a.CreatedAt = field.NewTime(table, "created_at")
 	a.UpdatedAt = field.NewTime(table, "updated_at")
-	a.DeletedAt = field.NewField(table, "deleted_at")
 	a.ArticleID = field.NewInt32(table, "article_id")
 	a.Description = field.NewString(table, "description")
 	a.Version = field.NewInt(table, "version")
-	a.Content = field.NewString(table, "content")
+	a.StoreID = field.NewInt32(table, "store_id")
 
 	a.fillFieldMap()
 
 	return a
 }
 
-func (a *articleContent) WithContext(ctx context.Context) IArticleContentDo {
-	return a.articleContentDo.WithContext(ctx)
+func (a *articleVersion) WithContext(ctx context.Context) IArticleVersionDo {
+	return a.articleVersionDo.WithContext(ctx)
 }
 
-func (a articleContent) TableName() string { return a.articleContentDo.TableName() }
+func (a articleVersion) TableName() string { return a.articleVersionDo.TableName() }
 
-func (a articleContent) Alias() string { return a.articleContentDo.Alias() }
+func (a articleVersion) Alias() string { return a.articleVersionDo.Alias() }
 
-func (a articleContent) Columns(cols ...field.Expr) gen.Columns {
-	return a.articleContentDo.Columns(cols...)
+func (a articleVersion) Columns(cols ...field.Expr) gen.Columns {
+	return a.articleVersionDo.Columns(cols...)
 }
 
-func (a *articleContent) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
+func (a *articleVersion) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := a.fieldMap[fieldName]
 	if !ok || _f == nil {
 		return nil, false
@@ -104,70 +101,69 @@ func (a *articleContent) GetFieldByName(fieldName string) (field.OrderExpr, bool
 	return _oe, ok
 }
 
-func (a *articleContent) fillFieldMap() {
-	a.fieldMap = make(map[string]field.Expr, 8)
+func (a *articleVersion) fillFieldMap() {
+	a.fieldMap = make(map[string]field.Expr, 7)
 	a.fieldMap["id"] = a.ID
 	a.fieldMap["created_at"] = a.CreatedAt
 	a.fieldMap["updated_at"] = a.UpdatedAt
-	a.fieldMap["deleted_at"] = a.DeletedAt
 	a.fieldMap["article_id"] = a.ArticleID
 	a.fieldMap["description"] = a.Description
 	a.fieldMap["version"] = a.Version
-	a.fieldMap["content"] = a.Content
+	a.fieldMap["store_id"] = a.StoreID
 }
 
-func (a articleContent) clone(db *gorm.DB) articleContent {
-	a.articleContentDo.ReplaceConnPool(db.Statement.ConnPool)
+func (a articleVersion) clone(db *gorm.DB) articleVersion {
+	a.articleVersionDo.ReplaceConnPool(db.Statement.ConnPool)
 	return a
 }
 
-func (a articleContent) replaceDB(db *gorm.DB) articleContent {
-	a.articleContentDo.ReplaceDB(db)
+func (a articleVersion) replaceDB(db *gorm.DB) articleVersion {
+	a.articleVersionDo.ReplaceDB(db)
 	return a
 }
 
-type articleContentDo struct{ gen.DO }
+type articleVersionDo struct{ gen.DO }
 
-type IArticleContentDo interface {
+type IArticleVersionDo interface {
 	gen.SubQuery
-	Debug() IArticleContentDo
-	WithContext(ctx context.Context) IArticleContentDo
+	Debug() IArticleVersionDo
+	WithContext(ctx context.Context) IArticleVersionDo
 	WithResult(fc func(tx gen.Dao)) gen.ResultInfo
 	ReplaceDB(db *gorm.DB)
-	ReadDB() IArticleContentDo
-	WriteDB() IArticleContentDo
+	ReadDB() IArticleVersionDo
+	WriteDB() IArticleVersionDo
 	As(alias string) gen.Dao
-	Session(config *gorm.Session) IArticleContentDo
+	Session(config *gorm.Session) IArticleVersionDo
 	Columns(cols ...field.Expr) gen.Columns
-	Clauses(conds ...clause.Expression) IArticleContentDo
-	Not(conds ...gen.Condition) IArticleContentDo
-	Or(conds ...gen.Condition) IArticleContentDo
-	Select(conds ...field.Expr) IArticleContentDo
-	Where(conds ...gen.Condition) IArticleContentDo
-	Order(conds ...field.Expr) IArticleContentDo
-	Distinct(cols ...field.Expr) IArticleContentDo
-	Omit(cols ...field.Expr) IArticleContentDo
-	Join(table schema.Tabler, on ...field.Expr) IArticleContentDo
-	LeftJoin(table schema.Tabler, on ...field.Expr) IArticleContentDo
-	RightJoin(table schema.Tabler, on ...field.Expr) IArticleContentDo
-	Group(cols ...field.Expr) IArticleContentDo
-	Having(conds ...gen.Condition) IArticleContentDo
-	Limit(limit int) IArticleContentDo
-	Offset(offset int) IArticleContentDo
+	Clauses(conds ...clause.Expression) IArticleVersionDo
+	Not(conds ...gen.Condition) IArticleVersionDo
+	Or(conds ...gen.Condition) IArticleVersionDo
+	Select(conds ...field.Expr) IArticleVersionDo
+	Where(conds ...gen.Condition) IArticleVersionDo
+	Order(conds ...field.Expr) IArticleVersionDo
+	Distinct(cols ...field.Expr) IArticleVersionDo
+	Omit(cols ...field.Expr) IArticleVersionDo
+	Join(table schema.Tabler, on ...field.Expr) IArticleVersionDo
+	LeftJoin(table schema.Tabler, on ...field.Expr) IArticleVersionDo
+	RightJoin(table schema.Tabler, on ...field.Expr) IArticleVersionDo
+	Group(cols ...field.Expr) IArticleVersionDo
+	Having(conds ...gen.Condition) IArticleVersionDo
+	Limit(limit int) IArticleVersionDo
+	Offset(offset int) IArticleVersionDo
 	Count() (count int64, err error)
-	Scopes(funcs ...func(gen.Dao) gen.Dao) IArticleContentDo
-	Unscoped() IArticleContentDo
-	Create(values ...*model_def.ArticleContent) error
-	CreateInBatches(values []*model_def.ArticleContent, batchSize int) error
-	Save(values ...*model_def.ArticleContent) error
-	First() (*model_def.ArticleContent, error)
-	Take() (*model_def.ArticleContent, error)
-	Last() (*model_def.ArticleContent, error)
-	Find() ([]*model_def.ArticleContent, error)
-	FindInBatch(batchSize int, fc func(tx gen.Dao, batch int) error) (results []*model_def.ArticleContent, err error)
-	FindInBatches(result *[]*model_def.ArticleContent, batchSize int, fc func(tx gen.Dao, batch int) error) error
+	Scopes(funcs ...func(gen.Dao) gen.Dao) IArticleVersionDo
+	Unscoped() IArticleVersionDo
+	Create(values ...*model_def.ArticleVersion) error
+	CreateInBatches(values []*model_def.ArticleVersion, batchSize int) error
+	Save(values ...*model_def.ArticleVersion) error
+	First() (*model_def.ArticleVersion, error)
+	Take() (*model_def.ArticleVersion, error)
+	Last() (*model_def.ArticleVersion, error)
+	Find() ([]*model_def.ArticleVersion, error)
+	FindInBatch(batchSize int, fc func(tx gen.Dao, batch int) error) (results []*model_def.ArticleVersion, err error)
+	FindInBatches(result *[]*model_def.ArticleVersion, batchSize int, fc func(tx gen.Dao, batch int) error) error
 	Pluck(column field.Expr, dest interface{}) error
-	Delete(...*model_def.ArticleContent) (info gen.ResultInfo, err error)
+	Delete(...*model_def.ArticleVersion) (info gen.ResultInfo, err error)
 	Update(column field.Expr, value interface{}) (info gen.ResultInfo, err error)
 	UpdateSimple(columns ...field.AssignExpr) (info gen.ResultInfo, err error)
 	Updates(value interface{}) (info gen.ResultInfo, err error)
@@ -175,165 +171,165 @@ type IArticleContentDo interface {
 	UpdateColumnSimple(columns ...field.AssignExpr) (info gen.ResultInfo, err error)
 	UpdateColumns(value interface{}) (info gen.ResultInfo, err error)
 	UpdateFrom(q gen.SubQuery) gen.Dao
-	Attrs(attrs ...field.AssignExpr) IArticleContentDo
-	Assign(attrs ...field.AssignExpr) IArticleContentDo
-	Joins(fields ...field.RelationField) IArticleContentDo
-	Preload(fields ...field.RelationField) IArticleContentDo
-	FirstOrInit() (*model_def.ArticleContent, error)
-	FirstOrCreate() (*model_def.ArticleContent, error)
-	FindByPage(offset int, limit int) (result []*model_def.ArticleContent, count int64, err error)
+	Attrs(attrs ...field.AssignExpr) IArticleVersionDo
+	Assign(attrs ...field.AssignExpr) IArticleVersionDo
+	Joins(fields ...field.RelationField) IArticleVersionDo
+	Preload(fields ...field.RelationField) IArticleVersionDo
+	FirstOrInit() (*model_def.ArticleVersion, error)
+	FirstOrCreate() (*model_def.ArticleVersion, error)
+	FindByPage(offset int, limit int) (result []*model_def.ArticleVersion, count int64, err error)
 	ScanByPage(result interface{}, offset int, limit int) (count int64, err error)
 	Rows() (*sql.Rows, error)
 	Row() *sql.Row
 	Scan(result interface{}) (err error)
-	Returning(value interface{}, columns ...string) IArticleContentDo
+	Returning(value interface{}, columns ...string) IArticleVersionDo
 	UnderlyingDB() *gorm.DB
 	schema.Tabler
 }
 
-func (a articleContentDo) Debug() IArticleContentDo {
+func (a articleVersionDo) Debug() IArticleVersionDo {
 	return a.withDO(a.DO.Debug())
 }
 
-func (a articleContentDo) WithContext(ctx context.Context) IArticleContentDo {
+func (a articleVersionDo) WithContext(ctx context.Context) IArticleVersionDo {
 	return a.withDO(a.DO.WithContext(ctx))
 }
 
-func (a articleContentDo) ReadDB() IArticleContentDo {
+func (a articleVersionDo) ReadDB() IArticleVersionDo {
 	return a.Clauses(dbresolver.Read)
 }
 
-func (a articleContentDo) WriteDB() IArticleContentDo {
+func (a articleVersionDo) WriteDB() IArticleVersionDo {
 	return a.Clauses(dbresolver.Write)
 }
 
-func (a articleContentDo) Session(config *gorm.Session) IArticleContentDo {
+func (a articleVersionDo) Session(config *gorm.Session) IArticleVersionDo {
 	return a.withDO(a.DO.Session(config))
 }
 
-func (a articleContentDo) Clauses(conds ...clause.Expression) IArticleContentDo {
+func (a articleVersionDo) Clauses(conds ...clause.Expression) IArticleVersionDo {
 	return a.withDO(a.DO.Clauses(conds...))
 }
 
-func (a articleContentDo) Returning(value interface{}, columns ...string) IArticleContentDo {
+func (a articleVersionDo) Returning(value interface{}, columns ...string) IArticleVersionDo {
 	return a.withDO(a.DO.Returning(value, columns...))
 }
 
-func (a articleContentDo) Not(conds ...gen.Condition) IArticleContentDo {
+func (a articleVersionDo) Not(conds ...gen.Condition) IArticleVersionDo {
 	return a.withDO(a.DO.Not(conds...))
 }
 
-func (a articleContentDo) Or(conds ...gen.Condition) IArticleContentDo {
+func (a articleVersionDo) Or(conds ...gen.Condition) IArticleVersionDo {
 	return a.withDO(a.DO.Or(conds...))
 }
 
-func (a articleContentDo) Select(conds ...field.Expr) IArticleContentDo {
+func (a articleVersionDo) Select(conds ...field.Expr) IArticleVersionDo {
 	return a.withDO(a.DO.Select(conds...))
 }
 
-func (a articleContentDo) Where(conds ...gen.Condition) IArticleContentDo {
+func (a articleVersionDo) Where(conds ...gen.Condition) IArticleVersionDo {
 	return a.withDO(a.DO.Where(conds...))
 }
 
-func (a articleContentDo) Order(conds ...field.Expr) IArticleContentDo {
+func (a articleVersionDo) Order(conds ...field.Expr) IArticleVersionDo {
 	return a.withDO(a.DO.Order(conds...))
 }
 
-func (a articleContentDo) Distinct(cols ...field.Expr) IArticleContentDo {
+func (a articleVersionDo) Distinct(cols ...field.Expr) IArticleVersionDo {
 	return a.withDO(a.DO.Distinct(cols...))
 }
 
-func (a articleContentDo) Omit(cols ...field.Expr) IArticleContentDo {
+func (a articleVersionDo) Omit(cols ...field.Expr) IArticleVersionDo {
 	return a.withDO(a.DO.Omit(cols...))
 }
 
-func (a articleContentDo) Join(table schema.Tabler, on ...field.Expr) IArticleContentDo {
+func (a articleVersionDo) Join(table schema.Tabler, on ...field.Expr) IArticleVersionDo {
 	return a.withDO(a.DO.Join(table, on...))
 }
 
-func (a articleContentDo) LeftJoin(table schema.Tabler, on ...field.Expr) IArticleContentDo {
+func (a articleVersionDo) LeftJoin(table schema.Tabler, on ...field.Expr) IArticleVersionDo {
 	return a.withDO(a.DO.LeftJoin(table, on...))
 }
 
-func (a articleContentDo) RightJoin(table schema.Tabler, on ...field.Expr) IArticleContentDo {
+func (a articleVersionDo) RightJoin(table schema.Tabler, on ...field.Expr) IArticleVersionDo {
 	return a.withDO(a.DO.RightJoin(table, on...))
 }
 
-func (a articleContentDo) Group(cols ...field.Expr) IArticleContentDo {
+func (a articleVersionDo) Group(cols ...field.Expr) IArticleVersionDo {
 	return a.withDO(a.DO.Group(cols...))
 }
 
-func (a articleContentDo) Having(conds ...gen.Condition) IArticleContentDo {
+func (a articleVersionDo) Having(conds ...gen.Condition) IArticleVersionDo {
 	return a.withDO(a.DO.Having(conds...))
 }
 
-func (a articleContentDo) Limit(limit int) IArticleContentDo {
+func (a articleVersionDo) Limit(limit int) IArticleVersionDo {
 	return a.withDO(a.DO.Limit(limit))
 }
 
-func (a articleContentDo) Offset(offset int) IArticleContentDo {
+func (a articleVersionDo) Offset(offset int) IArticleVersionDo {
 	return a.withDO(a.DO.Offset(offset))
 }
 
-func (a articleContentDo) Scopes(funcs ...func(gen.Dao) gen.Dao) IArticleContentDo {
+func (a articleVersionDo) Scopes(funcs ...func(gen.Dao) gen.Dao) IArticleVersionDo {
 	return a.withDO(a.DO.Scopes(funcs...))
 }
 
-func (a articleContentDo) Unscoped() IArticleContentDo {
+func (a articleVersionDo) Unscoped() IArticleVersionDo {
 	return a.withDO(a.DO.Unscoped())
 }
 
-func (a articleContentDo) Create(values ...*model_def.ArticleContent) error {
+func (a articleVersionDo) Create(values ...*model_def.ArticleVersion) error {
 	if len(values) == 0 {
 		return nil
 	}
 	return a.DO.Create(values)
 }
 
-func (a articleContentDo) CreateInBatches(values []*model_def.ArticleContent, batchSize int) error {
+func (a articleVersionDo) CreateInBatches(values []*model_def.ArticleVersion, batchSize int) error {
 	return a.DO.CreateInBatches(values, batchSize)
 }
 
 // Save : !!! underlying implementation is different with GORM
 // The method is equivalent to executing the statement: db.Clauses(clause.OnConflict{UpdateAll: true}).Create(values)
-func (a articleContentDo) Save(values ...*model_def.ArticleContent) error {
+func (a articleVersionDo) Save(values ...*model_def.ArticleVersion) error {
 	if len(values) == 0 {
 		return nil
 	}
 	return a.DO.Save(values)
 }
 
-func (a articleContentDo) First() (*model_def.ArticleContent, error) {
+func (a articleVersionDo) First() (*model_def.ArticleVersion, error) {
 	if result, err := a.DO.First(); err != nil {
 		return nil, err
 	} else {
-		return result.(*model_def.ArticleContent), nil
+		return result.(*model_def.ArticleVersion), nil
 	}
 }
 
-func (a articleContentDo) Take() (*model_def.ArticleContent, error) {
+func (a articleVersionDo) Take() (*model_def.ArticleVersion, error) {
 	if result, err := a.DO.Take(); err != nil {
 		return nil, err
 	} else {
-		return result.(*model_def.ArticleContent), nil
+		return result.(*model_def.ArticleVersion), nil
 	}
 }
 
-func (a articleContentDo) Last() (*model_def.ArticleContent, error) {
+func (a articleVersionDo) Last() (*model_def.ArticleVersion, error) {
 	if result, err := a.DO.Last(); err != nil {
 		return nil, err
 	} else {
-		return result.(*model_def.ArticleContent), nil
+		return result.(*model_def.ArticleVersion), nil
 	}
 }
 
-func (a articleContentDo) Find() ([]*model_def.ArticleContent, error) {
+func (a articleVersionDo) Find() ([]*model_def.ArticleVersion, error) {
 	result, err := a.DO.Find()
-	return result.([]*model_def.ArticleContent), err
+	return result.([]*model_def.ArticleVersion), err
 }
 
-func (a articleContentDo) FindInBatch(batchSize int, fc func(tx gen.Dao, batch int) error) (results []*model_def.ArticleContent, err error) {
-	buf := make([]*model_def.ArticleContent, 0, batchSize)
+func (a articleVersionDo) FindInBatch(batchSize int, fc func(tx gen.Dao, batch int) error) (results []*model_def.ArticleVersion, err error) {
+	buf := make([]*model_def.ArticleVersion, 0, batchSize)
 	err = a.DO.FindInBatches(&buf, batchSize, func(tx gen.Dao, batch int) error {
 		defer func() { results = append(results, buf...) }()
 		return fc(tx, batch)
@@ -341,49 +337,49 @@ func (a articleContentDo) FindInBatch(batchSize int, fc func(tx gen.Dao, batch i
 	return results, err
 }
 
-func (a articleContentDo) FindInBatches(result *[]*model_def.ArticleContent, batchSize int, fc func(tx gen.Dao, batch int) error) error {
+func (a articleVersionDo) FindInBatches(result *[]*model_def.ArticleVersion, batchSize int, fc func(tx gen.Dao, batch int) error) error {
 	return a.DO.FindInBatches(result, batchSize, fc)
 }
 
-func (a articleContentDo) Attrs(attrs ...field.AssignExpr) IArticleContentDo {
+func (a articleVersionDo) Attrs(attrs ...field.AssignExpr) IArticleVersionDo {
 	return a.withDO(a.DO.Attrs(attrs...))
 }
 
-func (a articleContentDo) Assign(attrs ...field.AssignExpr) IArticleContentDo {
+func (a articleVersionDo) Assign(attrs ...field.AssignExpr) IArticleVersionDo {
 	return a.withDO(a.DO.Assign(attrs...))
 }
 
-func (a articleContentDo) Joins(fields ...field.RelationField) IArticleContentDo {
+func (a articleVersionDo) Joins(fields ...field.RelationField) IArticleVersionDo {
 	for _, _f := range fields {
 		a = *a.withDO(a.DO.Joins(_f))
 	}
 	return &a
 }
 
-func (a articleContentDo) Preload(fields ...field.RelationField) IArticleContentDo {
+func (a articleVersionDo) Preload(fields ...field.RelationField) IArticleVersionDo {
 	for _, _f := range fields {
 		a = *a.withDO(a.DO.Preload(_f))
 	}
 	return &a
 }
 
-func (a articleContentDo) FirstOrInit() (*model_def.ArticleContent, error) {
+func (a articleVersionDo) FirstOrInit() (*model_def.ArticleVersion, error) {
 	if result, err := a.DO.FirstOrInit(); err != nil {
 		return nil, err
 	} else {
-		return result.(*model_def.ArticleContent), nil
+		return result.(*model_def.ArticleVersion), nil
 	}
 }
 
-func (a articleContentDo) FirstOrCreate() (*model_def.ArticleContent, error) {
+func (a articleVersionDo) FirstOrCreate() (*model_def.ArticleVersion, error) {
 	if result, err := a.DO.FirstOrCreate(); err != nil {
 		return nil, err
 	} else {
-		return result.(*model_def.ArticleContent), nil
+		return result.(*model_def.ArticleVersion), nil
 	}
 }
 
-func (a articleContentDo) FindByPage(offset int, limit int) (result []*model_def.ArticleContent, count int64, err error) {
+func (a articleVersionDo) FindByPage(offset int, limit int) (result []*model_def.ArticleVersion, count int64, err error) {
 	result, err = a.Offset(offset).Limit(limit).Find()
 	if err != nil {
 		return
@@ -398,7 +394,7 @@ func (a articleContentDo) FindByPage(offset int, limit int) (result []*model_def
 	return
 }
 
-func (a articleContentDo) ScanByPage(result interface{}, offset int, limit int) (count int64, err error) {
+func (a articleVersionDo) ScanByPage(result interface{}, offset int, limit int) (count int64, err error) {
 	count, err = a.Count()
 	if err != nil {
 		return
@@ -408,15 +404,15 @@ func (a articleContentDo) ScanByPage(result interface{}, offset int, limit int) 
 	return
 }
 
-func (a articleContentDo) Scan(result interface{}) (err error) {
+func (a articleVersionDo) Scan(result interface{}) (err error) {
 	return a.DO.Scan(result)
 }
 
-func (a articleContentDo) Delete(models ...*model_def.ArticleContent) (result gen.ResultInfo, err error) {
+func (a articleVersionDo) Delete(models ...*model_def.ArticleVersion) (result gen.ResultInfo, err error) {
 	return a.DO.Delete(models)
 }
 
-func (a *articleContentDo) withDO(do gen.Dao) *articleContentDo {
+func (a *articleVersionDo) withDO(do gen.Dao) *articleVersionDo {
 	a.DO = *do.(*gen.DO)
 	return a
 }

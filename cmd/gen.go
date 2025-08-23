@@ -24,7 +24,7 @@ func init() {
 
 func GenDataBase() {
 	// 使用绝对路径连接 SQLite 数据库
-	dbPath := "D:\\projects\\personal_blog\\data\\blogData.db"
+	dbPath := "data/blogData.db"
 	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
 	if err != nil {
 		panic(err)
@@ -46,13 +46,11 @@ func GenDataBase() {
 	g.ApplyBasic(
 		&model_def.User{},
 		&model_def.Article{},
-		&model_def.ArticleContent{},
-		&model_def.Category{},
-		&model_def.Tag{},
-		&model_def.ArticleTag{},
+		&model_def.ArticleVersion{},
 		&model_def.Comment{},
 		&model_def.Session{},
 		&model_def.File{},
+		&model_def.Category{},
 	)
 
 	fmt.Println("Starting code generation execution...")

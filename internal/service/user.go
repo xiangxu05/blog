@@ -8,7 +8,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"regexp"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -41,12 +40,11 @@ func RegisterUser(c *gin.Context, req *message.RegisterRequest) error {
 
 	// 创建用户
 	newUser := &model_def.User{
-		Nickname:  req.Username,
-		Username:  req.Username,
-		Password:  hashedPassword,
-		Role:      "user",
-		Email:     req.Email,
-		CreatedAt: time.Now().Unix(),
+		Nickname: req.Username,
+		Username: req.Username,
+		Password: hashedPassword,
+		Role:     "user",
+		Email:    req.Email,
 	}
 
 	err = dao.User.WithContext(ctx).Create(newUser)

@@ -29,10 +29,8 @@ func newCategory(db *gorm.DB, opts ...gen.DOOption) category {
 	_category.ALL = field.NewAsterisk(tableName)
 	_category.ID = field.NewInt32(tableName, "id")
 	_category.CreatedAt = field.NewTime(tableName, "created_at")
-	_category.UpdatedAt = field.NewTime(tableName, "updated_at")
-	_category.DeletedAt = field.NewField(tableName, "deleted_at")
 	_category.Name = field.NewString(tableName, "name")
-	_category.Description = field.NewString(tableName, "description")
+	_category.Number = field.NewInt(tableName, "number")
 
 	_category.fillFieldMap()
 
@@ -42,13 +40,11 @@ func newCategory(db *gorm.DB, opts ...gen.DOOption) category {
 type category struct {
 	categoryDo categoryDo
 
-	ALL         field.Asterisk
-	ID          field.Int32
-	CreatedAt   field.Time
-	UpdatedAt   field.Time
-	DeletedAt   field.Field
-	Name        field.String
-	Description field.String
+	ALL       field.Asterisk
+	ID        field.Int32
+	CreatedAt field.Time
+	Name      field.String
+	Number    field.Int
 
 	fieldMap map[string]field.Expr
 }
@@ -67,10 +63,8 @@ func (c *category) updateTableName(table string) *category {
 	c.ALL = field.NewAsterisk(table)
 	c.ID = field.NewInt32(table, "id")
 	c.CreatedAt = field.NewTime(table, "created_at")
-	c.UpdatedAt = field.NewTime(table, "updated_at")
-	c.DeletedAt = field.NewField(table, "deleted_at")
 	c.Name = field.NewString(table, "name")
-	c.Description = field.NewString(table, "description")
+	c.Number = field.NewInt(table, "number")
 
 	c.fillFieldMap()
 
@@ -95,13 +89,11 @@ func (c *category) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (c *category) fillFieldMap() {
-	c.fieldMap = make(map[string]field.Expr, 6)
+	c.fieldMap = make(map[string]field.Expr, 4)
 	c.fieldMap["id"] = c.ID
 	c.fieldMap["created_at"] = c.CreatedAt
-	c.fieldMap["updated_at"] = c.UpdatedAt
-	c.fieldMap["deleted_at"] = c.DeletedAt
 	c.fieldMap["name"] = c.Name
-	c.fieldMap["description"] = c.Description
+	c.fieldMap["number"] = c.Number
 }
 
 func (c category) clone(db *gorm.DB) category {

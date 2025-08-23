@@ -36,45 +36,25 @@ func newComment(db *gorm.DB, opts ...gen.DOOption) comment {
 	_comment.User = field.NewInt32(tableName, "user")
 	_comment.Content = field.NewString(tableName, "content")
 	_comment.ParentID = field.NewInt32(tableName, "parent_id")
-	_comment.Article = commentHasOneArticle{
+	_comment.Article = commentBelongsToArticle{
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("Article", "model_def.Article"),
-		User: struct {
-			field.RelationField
-		}{
-			RelationField: field.NewRelation("Article.User", "model_def.User"),
-		},
-		Category: struct {
-			field.RelationField
-		}{
-			RelationField: field.NewRelation("Article.Category", "model_def.Category"),
-		},
-		Content: struct {
-			field.RelationField
-		}{
-			RelationField: field.NewRelation("Article.Content", "model_def.ArticleContent"),
-		},
-		Tags: struct {
-			field.RelationField
-		}{
-			RelationField: field.NewRelation("Article.Tags", "model_def.Tag"),
-		},
 	}
 
 	_comment.Parent = commentBelongsToParent{
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("Parent", "model_def.Comment"),
-		Parent: struct {
-			field.RelationField
-		}{
-			RelationField: field.NewRelation("Parent.Parent", "model_def.Comment"),
-		},
 		Article: struct {
 			field.RelationField
 		}{
 			RelationField: field.NewRelation("Parent.Article", "model_def.Article"),
+		},
+		Parent: struct {
+			field.RelationField
+		}{
+			RelationField: field.NewRelation("Parent.Parent", "model_def.Comment"),
 		},
 	}
 
@@ -96,7 +76,7 @@ type comment struct {
 	User      field.Int32
 	Content   field.String
 	ParentID  field.Int32
-	Article   commentHasOneArticle
+	Article   commentBelongsToArticle
 
 	Parent commentBelongsToParent
 
@@ -177,26 +157,13 @@ func (c comment) replaceDB(db *gorm.DB) comment {
 	return c
 }
 
-type commentHasOneArticle struct {
+type commentBelongsToArticle struct {
 	db *gorm.DB
 
 	field.RelationField
-
-	User struct {
-		field.RelationField
-	}
-	Category struct {
-		field.RelationField
-	}
-	Content struct {
-		field.RelationField
-	}
-	Tags struct {
-		field.RelationField
-	}
 }
 
-func (a commentHasOneArticle) Where(conds ...field.Expr) *commentHasOneArticle {
+func (a commentBelongsToArticle) Where(conds ...field.Expr) *commentBelongsToArticle {
 	if len(conds) == 0 {
 		return &a
 	}
@@ -209,32 +176,32 @@ func (a commentHasOneArticle) Where(conds ...field.Expr) *commentHasOneArticle {
 	return &a
 }
 
-func (a commentHasOneArticle) WithContext(ctx context.Context) *commentHasOneArticle {
+func (a commentBelongsToArticle) WithContext(ctx context.Context) *commentBelongsToArticle {
 	a.db = a.db.WithContext(ctx)
 	return &a
 }
 
-func (a commentHasOneArticle) Session(session *gorm.Session) *commentHasOneArticle {
+func (a commentBelongsToArticle) Session(session *gorm.Session) *commentBelongsToArticle {
 	a.db = a.db.Session(session)
 	return &a
 }
 
-func (a commentHasOneArticle) Model(m *model_def.Comment) *commentHasOneArticleTx {
-	return &commentHasOneArticleTx{a.db.Model(m).Association(a.Name())}
+func (a commentBelongsToArticle) Model(m *model_def.Comment) *commentBelongsToArticleTx {
+	return &commentBelongsToArticleTx{a.db.Model(m).Association(a.Name())}
 }
 
-func (a commentHasOneArticle) Unscoped() *commentHasOneArticle {
+func (a commentBelongsToArticle) Unscoped() *commentBelongsToArticle {
 	a.db = a.db.Unscoped()
 	return &a
 }
 
-type commentHasOneArticleTx struct{ tx *gorm.Association }
+type commentBelongsToArticleTx struct{ tx *gorm.Association }
 
-func (a commentHasOneArticleTx) Find() (result *model_def.Article, err error) {
+func (a commentBelongsToArticleTx) Find() (result *model_def.Article, err error) {
 	return result, a.tx.Find(&result)
 }
 
-func (a commentHasOneArticleTx) Append(values ...*model_def.Article) (err error) {
+func (a commentBelongsToArticleTx) Append(values ...*model_def.Article) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -242,7 +209,7 @@ func (a commentHasOneArticleTx) Append(values ...*model_def.Article) (err error)
 	return a.tx.Append(targetValues...)
 }
 
-func (a commentHasOneArticleTx) Replace(values ...*model_def.Article) (err error) {
+func (a commentBelongsToArticleTx) Replace(values ...*model_def.Article) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -250,7 +217,7 @@ func (a commentHasOneArticleTx) Replace(values ...*model_def.Article) (err error
 	return a.tx.Replace(targetValues...)
 }
 
-func (a commentHasOneArticleTx) Delete(values ...*model_def.Article) (err error) {
+func (a commentBelongsToArticleTx) Delete(values ...*model_def.Article) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -258,15 +225,15 @@ func (a commentHasOneArticleTx) Delete(values ...*model_def.Article) (err error)
 	return a.tx.Delete(targetValues...)
 }
 
-func (a commentHasOneArticleTx) Clear() error {
+func (a commentBelongsToArticleTx) Clear() error {
 	return a.tx.Clear()
 }
 
-func (a commentHasOneArticleTx) Count() int64 {
+func (a commentBelongsToArticleTx) Count() int64 {
 	return a.tx.Count()
 }
 
-func (a commentHasOneArticleTx) Unscoped() *commentHasOneArticleTx {
+func (a commentBelongsToArticleTx) Unscoped() *commentBelongsToArticleTx {
 	a.tx = a.tx.Unscoped()
 	return &a
 }
@@ -276,10 +243,10 @@ type commentBelongsToParent struct {
 
 	field.RelationField
 
-	Parent struct {
+	Article struct {
 		field.RelationField
 	}
-	Article struct {
+	Parent struct {
 		field.RelationField
 	}
 }

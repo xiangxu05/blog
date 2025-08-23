@@ -68,7 +68,6 @@ func LoginHandler(c *gin.Context) {
 			Email:    user.Email,
 			Avatar:   user.Avatar,
 			Role:     user.Role,
-			CreateAt: user.CreatedAt,
 		},
 	}
 	message.SendMsg(c, http.StatusOK, "登录成功", resp)
@@ -135,7 +134,6 @@ func GetUserHandler(c *gin.Context) {
 		Email:    user.Email,
 		Avatar:   user.Avatar,
 		Role:     user.Role,
-		CreateAt: user.CreatedAt,
 	}
 	message.SendMsg(c, http.StatusOK, "获取成功", resp)
 }
@@ -195,7 +193,6 @@ func GetOtherUserHandler(c *gin.Context) {
 		Nickname: user.Nickname,
 		Avatar:   user.Avatar,
 		Role:     user.Role,
-		CreateAt: user.CreatedAt,
 	}
 	message.SendMsg(c, http.StatusOK, "获取成功", resp)
 }

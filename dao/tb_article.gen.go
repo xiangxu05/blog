@@ -30,36 +30,12 @@ func newArticle(db *gorm.DB, opts ...gen.DOOption) article {
 	_article.ID = field.NewInt32(tableName, "id")
 	_article.CreatedAt = field.NewTime(tableName, "created_at")
 	_article.UpdatedAt = field.NewTime(tableName, "updated_at")
-	_article.DeletedAt = field.NewField(tableName, "deleted_at")
 	_article.UserID = field.NewInt32(tableName, "user_id")
 	_article.Title = field.NewString(tableName, "title")
-	_article.ArticleID = field.NewInt32(tableName, "article_id")
 	_article.Version = field.NewInt(tableName, "version")
-	_article.CategoryID = field.NewInt32(tableName, "category_id")
+	_article.Category = field.NewString(tableName, "category")
+	_article.Tags = field.NewString(tableName, "tags")
 	_article.Views = field.NewInt(tableName, "views")
-	_article.Content = articleHasOneContent{
-		db: db.Session(&gorm.Session{}),
-
-		RelationField: field.NewRelation("Content", "model_def.ArticleContent"),
-	}
-
-	_article.User = articleBelongsToUser{
-		db: db.Session(&gorm.Session{}),
-
-		RelationField: field.NewRelation("User", "model_def.User"),
-	}
-
-	_article.Category = articleBelongsToCategory{
-		db: db.Session(&gorm.Session{}),
-
-		RelationField: field.NewRelation("Category", "model_def.Category"),
-	}
-
-	_article.Tags = articleManyToManyTags{
-		db: db.Session(&gorm.Session{}),
-
-		RelationField: field.NewRelation("Tags", "model_def.Tag"),
-	}
 
 	_article.fillFieldMap()
 
@@ -69,24 +45,16 @@ func newArticle(db *gorm.DB, opts ...gen.DOOption) article {
 type article struct {
 	articleDo articleDo
 
-	ALL        field.Asterisk
-	ID         field.Int32
-	CreatedAt  field.Time
-	UpdatedAt  field.Time
-	DeletedAt  field.Field
-	UserID     field.Int32
-	Title      field.String
-	ArticleID  field.Int32
-	Version    field.Int
-	CategoryID field.Int32
-	Views      field.Int
-	Content    articleHasOneContent
-
-	User articleBelongsToUser
-
-	Category articleBelongsToCategory
-
-	Tags articleManyToManyTags
+	ALL       field.Asterisk
+	ID        field.Int32
+	CreatedAt field.Time
+	UpdatedAt field.Time
+	UserID    field.Int32
+	Title     field.String
+	Version   field.Int
+	Category  field.String
+	Tags      field.String
+	Views     field.Int
 
 	fieldMap map[string]field.Expr
 }
@@ -106,12 +74,11 @@ func (a *article) updateTableName(table string) *article {
 	a.ID = field.NewInt32(table, "id")
 	a.CreatedAt = field.NewTime(table, "created_at")
 	a.UpdatedAt = field.NewTime(table, "updated_at")
-	a.DeletedAt = field.NewField(table, "deleted_at")
 	a.UserID = field.NewInt32(table, "user_id")
 	a.Title = field.NewString(table, "title")
-	a.ArticleID = field.NewInt32(table, "article_id")
 	a.Version = field.NewInt(table, "version")
-	a.CategoryID = field.NewInt32(table, "category_id")
+	a.Category = field.NewString(table, "category")
+	a.Tags = field.NewString(table, "tags")
 	a.Views = field.NewInt(table, "views")
 
 	a.fillFieldMap()
@@ -137,364 +104,26 @@ func (a *article) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (a *article) fillFieldMap() {
-	a.fieldMap = make(map[string]field.Expr, 14)
+	a.fieldMap = make(map[string]field.Expr, 9)
 	a.fieldMap["id"] = a.ID
 	a.fieldMap["created_at"] = a.CreatedAt
 	a.fieldMap["updated_at"] = a.UpdatedAt
-	a.fieldMap["deleted_at"] = a.DeletedAt
 	a.fieldMap["user_id"] = a.UserID
 	a.fieldMap["title"] = a.Title
-	a.fieldMap["article_id"] = a.ArticleID
 	a.fieldMap["version"] = a.Version
-	a.fieldMap["category_id"] = a.CategoryID
+	a.fieldMap["category"] = a.Category
+	a.fieldMap["tags"] = a.Tags
 	a.fieldMap["views"] = a.Views
-
 }
 
 func (a article) clone(db *gorm.DB) article {
 	a.articleDo.ReplaceConnPool(db.Statement.ConnPool)
-	a.Content.db = db.Session(&gorm.Session{Initialized: true})
-	a.Content.db.Statement.ConnPool = db.Statement.ConnPool
-	a.User.db = db.Session(&gorm.Session{Initialized: true})
-	a.User.db.Statement.ConnPool = db.Statement.ConnPool
-	a.Category.db = db.Session(&gorm.Session{Initialized: true})
-	a.Category.db.Statement.ConnPool = db.Statement.ConnPool
-	a.Tags.db = db.Session(&gorm.Session{Initialized: true})
-	a.Tags.db.Statement.ConnPool = db.Statement.ConnPool
 	return a
 }
 
 func (a article) replaceDB(db *gorm.DB) article {
 	a.articleDo.ReplaceDB(db)
-	a.Content.db = db.Session(&gorm.Session{})
-	a.User.db = db.Session(&gorm.Session{})
-	a.Category.db = db.Session(&gorm.Session{})
-	a.Tags.db = db.Session(&gorm.Session{})
 	return a
-}
-
-type articleHasOneContent struct {
-	db *gorm.DB
-
-	field.RelationField
-}
-
-func (a articleHasOneContent) Where(conds ...field.Expr) *articleHasOneContent {
-	if len(conds) == 0 {
-		return &a
-	}
-
-	exprs := make([]clause.Expression, 0, len(conds))
-	for _, cond := range conds {
-		exprs = append(exprs, cond.BeCond().(clause.Expression))
-	}
-	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
-	return &a
-}
-
-func (a articleHasOneContent) WithContext(ctx context.Context) *articleHasOneContent {
-	a.db = a.db.WithContext(ctx)
-	return &a
-}
-
-func (a articleHasOneContent) Session(session *gorm.Session) *articleHasOneContent {
-	a.db = a.db.Session(session)
-	return &a
-}
-
-func (a articleHasOneContent) Model(m *model_def.Article) *articleHasOneContentTx {
-	return &articleHasOneContentTx{a.db.Model(m).Association(a.Name())}
-}
-
-func (a articleHasOneContent) Unscoped() *articleHasOneContent {
-	a.db = a.db.Unscoped()
-	return &a
-}
-
-type articleHasOneContentTx struct{ tx *gorm.Association }
-
-func (a articleHasOneContentTx) Find() (result *model_def.ArticleContent, err error) {
-	return result, a.tx.Find(&result)
-}
-
-func (a articleHasOneContentTx) Append(values ...*model_def.ArticleContent) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Append(targetValues...)
-}
-
-func (a articleHasOneContentTx) Replace(values ...*model_def.ArticleContent) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Replace(targetValues...)
-}
-
-func (a articleHasOneContentTx) Delete(values ...*model_def.ArticleContent) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Delete(targetValues...)
-}
-
-func (a articleHasOneContentTx) Clear() error {
-	return a.tx.Clear()
-}
-
-func (a articleHasOneContentTx) Count() int64 {
-	return a.tx.Count()
-}
-
-func (a articleHasOneContentTx) Unscoped() *articleHasOneContentTx {
-	a.tx = a.tx.Unscoped()
-	return &a
-}
-
-type articleBelongsToUser struct {
-	db *gorm.DB
-
-	field.RelationField
-}
-
-func (a articleBelongsToUser) Where(conds ...field.Expr) *articleBelongsToUser {
-	if len(conds) == 0 {
-		return &a
-	}
-
-	exprs := make([]clause.Expression, 0, len(conds))
-	for _, cond := range conds {
-		exprs = append(exprs, cond.BeCond().(clause.Expression))
-	}
-	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
-	return &a
-}
-
-func (a articleBelongsToUser) WithContext(ctx context.Context) *articleBelongsToUser {
-	a.db = a.db.WithContext(ctx)
-	return &a
-}
-
-func (a articleBelongsToUser) Session(session *gorm.Session) *articleBelongsToUser {
-	a.db = a.db.Session(session)
-	return &a
-}
-
-func (a articleBelongsToUser) Model(m *model_def.Article) *articleBelongsToUserTx {
-	return &articleBelongsToUserTx{a.db.Model(m).Association(a.Name())}
-}
-
-func (a articleBelongsToUser) Unscoped() *articleBelongsToUser {
-	a.db = a.db.Unscoped()
-	return &a
-}
-
-type articleBelongsToUserTx struct{ tx *gorm.Association }
-
-func (a articleBelongsToUserTx) Find() (result *model_def.User, err error) {
-	return result, a.tx.Find(&result)
-}
-
-func (a articleBelongsToUserTx) Append(values ...*model_def.User) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Append(targetValues...)
-}
-
-func (a articleBelongsToUserTx) Replace(values ...*model_def.User) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Replace(targetValues...)
-}
-
-func (a articleBelongsToUserTx) Delete(values ...*model_def.User) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Delete(targetValues...)
-}
-
-func (a articleBelongsToUserTx) Clear() error {
-	return a.tx.Clear()
-}
-
-func (a articleBelongsToUserTx) Count() int64 {
-	return a.tx.Count()
-}
-
-func (a articleBelongsToUserTx) Unscoped() *articleBelongsToUserTx {
-	a.tx = a.tx.Unscoped()
-	return &a
-}
-
-type articleBelongsToCategory struct {
-	db *gorm.DB
-
-	field.RelationField
-}
-
-func (a articleBelongsToCategory) Where(conds ...field.Expr) *articleBelongsToCategory {
-	if len(conds) == 0 {
-		return &a
-	}
-
-	exprs := make([]clause.Expression, 0, len(conds))
-	for _, cond := range conds {
-		exprs = append(exprs, cond.BeCond().(clause.Expression))
-	}
-	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
-	return &a
-}
-
-func (a articleBelongsToCategory) WithContext(ctx context.Context) *articleBelongsToCategory {
-	a.db = a.db.WithContext(ctx)
-	return &a
-}
-
-func (a articleBelongsToCategory) Session(session *gorm.Session) *articleBelongsToCategory {
-	a.db = a.db.Session(session)
-	return &a
-}
-
-func (a articleBelongsToCategory) Model(m *model_def.Article) *articleBelongsToCategoryTx {
-	return &articleBelongsToCategoryTx{a.db.Model(m).Association(a.Name())}
-}
-
-func (a articleBelongsToCategory) Unscoped() *articleBelongsToCategory {
-	a.db = a.db.Unscoped()
-	return &a
-}
-
-type articleBelongsToCategoryTx struct{ tx *gorm.Association }
-
-func (a articleBelongsToCategoryTx) Find() (result *model_def.Category, err error) {
-	return result, a.tx.Find(&result)
-}
-
-func (a articleBelongsToCategoryTx) Append(values ...*model_def.Category) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Append(targetValues...)
-}
-
-func (a articleBelongsToCategoryTx) Replace(values ...*model_def.Category) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Replace(targetValues...)
-}
-
-func (a articleBelongsToCategoryTx) Delete(values ...*model_def.Category) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Delete(targetValues...)
-}
-
-func (a articleBelongsToCategoryTx) Clear() error {
-	return a.tx.Clear()
-}
-
-func (a articleBelongsToCategoryTx) Count() int64 {
-	return a.tx.Count()
-}
-
-func (a articleBelongsToCategoryTx) Unscoped() *articleBelongsToCategoryTx {
-	a.tx = a.tx.Unscoped()
-	return &a
-}
-
-type articleManyToManyTags struct {
-	db *gorm.DB
-
-	field.RelationField
-}
-
-func (a articleManyToManyTags) Where(conds ...field.Expr) *articleManyToManyTags {
-	if len(conds) == 0 {
-		return &a
-	}
-
-	exprs := make([]clause.Expression, 0, len(conds))
-	for _, cond := range conds {
-		exprs = append(exprs, cond.BeCond().(clause.Expression))
-	}
-	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
-	return &a
-}
-
-func (a articleManyToManyTags) WithContext(ctx context.Context) *articleManyToManyTags {
-	a.db = a.db.WithContext(ctx)
-	return &a
-}
-
-func (a articleManyToManyTags) Session(session *gorm.Session) *articleManyToManyTags {
-	a.db = a.db.Session(session)
-	return &a
-}
-
-func (a articleManyToManyTags) Model(m *model_def.Article) *articleManyToManyTagsTx {
-	return &articleManyToManyTagsTx{a.db.Model(m).Association(a.Name())}
-}
-
-func (a articleManyToManyTags) Unscoped() *articleManyToManyTags {
-	a.db = a.db.Unscoped()
-	return &a
-}
-
-type articleManyToManyTagsTx struct{ tx *gorm.Association }
-
-func (a articleManyToManyTagsTx) Find() (result []*model_def.Tag, err error) {
-	return result, a.tx.Find(&result)
-}
-
-func (a articleManyToManyTagsTx) Append(values ...*model_def.Tag) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Append(targetValues...)
-}
-
-func (a articleManyToManyTagsTx) Replace(values ...*model_def.Tag) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Replace(targetValues...)
-}
-
-func (a articleManyToManyTagsTx) Delete(values ...*model_def.Tag) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Delete(targetValues...)
-}
-
-func (a articleManyToManyTagsTx) Clear() error {
-	return a.tx.Clear()
-}
-
-func (a articleManyToManyTagsTx) Count() int64 {
-	return a.tx.Count()
-}
-
-func (a articleManyToManyTagsTx) Unscoped() *articleManyToManyTagsTx {
-	a.tx = a.tx.Unscoped()
-	return &a
 }
 
 type articleDo struct{ gen.DO }

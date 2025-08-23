@@ -33,20 +33,11 @@ func clearAllData(db *gorm.DB) error {
 	if err := db.Unscoped().Where("1 = 1").Delete(&model_def.Article{}).Error; err != nil {
 		return fmt.Errorf("清空 articles 表失败: %v", err)
 	}
-	if err := db.Unscoped().Where("1 = 1").Delete(&model_def.ArticleTag{}).Error; err != nil {
-		return fmt.Errorf("清空 article_tags 表失败: %v", err)
-	}
-	if err := db.Unscoped().Where("1 = 1").Delete(&model_def.ArticleContent{}).Error; err != nil {
+	if err := db.Unscoped().Where("1 = 1").Delete(&model_def.ArticleVersion{}).Error; err != nil {
 		return fmt.Errorf("清空 article_contents 表失败: %v", err)
 	}
 	if err := db.Unscoped().Where("1 = 1").Delete(&model_def.Comment{}).Error; err != nil {
 		return fmt.Errorf("清空 comments 表失败: %v", err)
-	}
-	if err := db.Unscoped().Where("1 = 1").Delete(&model_def.Category{}).Error; err != nil {
-		return fmt.Errorf("清空 categories 表失败: %v", err)
-	}
-	if err := db.Unscoped().Where("1 = 1").Delete(&model_def.Tag{}).Error; err != nil {
-		return fmt.Errorf("清空 tags 表失败: %v", err)
 	}
 	if err := db.Unscoped().Where("1 = 1").Delete(&model_def.User{}).Error; err != nil {
 		return fmt.Errorf("清空 users 表失败: %v", err)
@@ -55,6 +46,9 @@ func clearAllData(db *gorm.DB) error {
 		return fmt.Errorf("清空 sessions 表失败: %v", err)
 	}
 	if err := db.Unscoped().Where("1 = 1").Delete(&model_def.File{}).Error; err != nil {
+		return fmt.Errorf("清空 file 表失败: %v", err)
+	}
+	if err := db.Unscoped().Where("1 = 1").Delete(&model_def.Category{}).Error; err != nil {
 		return fmt.Errorf("清空 file 表失败: %v", err)
 	}
 	return nil
@@ -84,22 +78,9 @@ func InitDataBase() {
 		log.Fatal("Failed to create table:", err)
 	}
 
-	if err := db.AutoMigrate(&model_def.ArticleContent{}); err != nil {
+	if err := db.AutoMigrate(&model_def.ArticleVersion{}); err != nil {
 		log.Fatal("Failed to create table:", err)
 	}
-
-	if err := db.AutoMigrate(&model_def.Category{}); err != nil {
-		log.Fatal("Failed to create table:", err)
-	}
-
-	if err := db.AutoMigrate(&model_def.ArticleTag{}); err != nil {
-		log.Fatal("Failed to create table:", err)
-	}
-
-	if err := db.AutoMigrate(&model_def.Tag{}); err != nil {
-		log.Fatal("Failed to create table:", err)
-	}
-
 	if err := db.AutoMigrate(&model_def.Comment{}); err != nil {
 		log.Fatal("Failed to create table:", err)
 	}
@@ -109,6 +90,9 @@ func InitDataBase() {
 	}
 
 	if err := db.AutoMigrate(&model_def.File{}); err != nil {
+		log.Fatal("Failed to create table:", err)
+	}
+	if err := db.AutoMigrate(&model_def.Category{}); err != nil {
 		log.Fatal("Failed to create table:", err)
 	}
 

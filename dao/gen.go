@@ -18,26 +18,22 @@ import (
 var (
 	Q              = new(Query)
 	Article        *article
-	ArticleContent *articleContent
-	ArticleTag     *articleTag
+	ArticleVersion *articleVersion
 	Category       *category
 	Comment        *comment
 	File           *file
 	Session        *session
-	Tag            *tag
 	User           *user
 )
 
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	*Q = *Use(db, opts...)
 	Article = &Q.Article
-	ArticleContent = &Q.ArticleContent
-	ArticleTag = &Q.ArticleTag
+	ArticleVersion = &Q.ArticleVersion
 	Category = &Q.Category
 	Comment = &Q.Comment
 	File = &Q.File
 	Session = &Q.Session
-	Tag = &Q.Tag
 	User = &Q.User
 }
 
@@ -45,13 +41,11 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
 		db:             db,
 		Article:        newArticle(db, opts...),
-		ArticleContent: newArticleContent(db, opts...),
-		ArticleTag:     newArticleTag(db, opts...),
+		ArticleVersion: newArticleVersion(db, opts...),
 		Category:       newCategory(db, opts...),
 		Comment:        newComment(db, opts...),
 		File:           newFile(db, opts...),
 		Session:        newSession(db, opts...),
-		Tag:            newTag(db, opts...),
 		User:           newUser(db, opts...),
 	}
 }
@@ -60,13 +54,11 @@ type Query struct {
 	db *gorm.DB
 
 	Article        article
-	ArticleContent articleContent
-	ArticleTag     articleTag
+	ArticleVersion articleVersion
 	Category       category
 	Comment        comment
 	File           file
 	Session        session
-	Tag            tag
 	User           user
 }
 
@@ -76,13 +68,11 @@ func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
 		db:             db,
 		Article:        q.Article.clone(db),
-		ArticleContent: q.ArticleContent.clone(db),
-		ArticleTag:     q.ArticleTag.clone(db),
+		ArticleVersion: q.ArticleVersion.clone(db),
 		Category:       q.Category.clone(db),
 		Comment:        q.Comment.clone(db),
 		File:           q.File.clone(db),
 		Session:        q.Session.clone(db),
-		Tag:            q.Tag.clone(db),
 		User:           q.User.clone(db),
 	}
 }
@@ -99,39 +89,33 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
 		db:             db,
 		Article:        q.Article.replaceDB(db),
-		ArticleContent: q.ArticleContent.replaceDB(db),
-		ArticleTag:     q.ArticleTag.replaceDB(db),
+		ArticleVersion: q.ArticleVersion.replaceDB(db),
 		Category:       q.Category.replaceDB(db),
 		Comment:        q.Comment.replaceDB(db),
 		File:           q.File.replaceDB(db),
 		Session:        q.Session.replaceDB(db),
-		Tag:            q.Tag.replaceDB(db),
 		User:           q.User.replaceDB(db),
 	}
 }
 
 type queryCtx struct {
 	Article        IArticleDo
-	ArticleContent IArticleContentDo
-	ArticleTag     IArticleTagDo
+	ArticleVersion IArticleVersionDo
 	Category       ICategoryDo
 	Comment        ICommentDo
 	File           IFileDo
 	Session        ISessionDo
-	Tag            ITagDo
 	User           IUserDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
 		Article:        q.Article.WithContext(ctx),
-		ArticleContent: q.ArticleContent.WithContext(ctx),
-		ArticleTag:     q.ArticleTag.WithContext(ctx),
+		ArticleVersion: q.ArticleVersion.WithContext(ctx),
 		Category:       q.Category.WithContext(ctx),
 		Comment:        q.Comment.WithContext(ctx),
 		File:           q.File.WithContext(ctx),
 		Session:        q.Session.WithContext(ctx),
-		Tag:            q.Tag.WithContext(ctx),
 		User:           q.User.WithContext(ctx),
 	}
 }
