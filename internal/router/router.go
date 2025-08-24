@@ -11,7 +11,8 @@ import (
 // corsMiddleware CORS中间件
 func corsMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "*")
+		// 允许前端域名访问，不能使用*当credentials为true时
+		c.Header("Access-Control-Allow-Origin", "http://localhost:8080")
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 		c.Header("Access-Control-Allow-Credentials", "true")
@@ -40,6 +41,8 @@ func InitRouter() *gin.Engine {
 	user := api.Group("/users")
 	user.POST("/register", endpoint.RegisterHandler)
 	user.POST("/login", endpoint.LoginHandler)
+	// 公开访问的用户信息接口
+	user.GET("/:user_id", endpoint.GetOtherUserHandler)
 	user.Use(middleware.UserAuth())
 	{
 		user.GET("/logout", endpoint.LogoutHandler)
@@ -48,7 +51,6 @@ func InitRouter() *gin.Engine {
 		user.GET("/profile", endpoint.GetUserHandler)
 		user.PUT("/profile", endpoint.UpdateUserHandler)
 		user.PUT("/password", endpoint.UpdatePasswordHandler)
-		user.GET("/:user_id", endpoint.GetOtherUserHandler)
 	}
 
 	// 文件模块

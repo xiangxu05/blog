@@ -18,13 +18,16 @@ type LoginResponse struct {
 	UserInfo  UserInfo `json:"user_info"`  // 用户信息
 }
 type UserInfo struct {
-	ID       int32  `json:"user_id"`
-	Username string `json:"username"`
-	Nickname string `json:"nickname"`
-	Email    string `json:"email"`
-	Avatar   string `json:"avatar"`
-	Role     string `json:"role"`
-	CreateAt int64  `json:"create_at"`
+	ID          int32  `json:"user_id"`
+	Username    string `json:"username"`
+	Nickname    string `json:"nickname"`
+	Email       string `json:"email"`
+	Avatar      string `json:"avatar"`
+	Role        string `json:"role"`
+	SelfIntro   string `json:"self_intro"`
+	PersonalWeb string `json:"personal_web"`
+	Location    string `json:"location"`
+	CreateAt    int64  `json:"create_at"`
 }
 
 // GET /api/users/refresh
@@ -34,9 +37,12 @@ type RefreshTokenResponse struct {
 
 // PUT /api/users/profile
 type UpdateProfileRequest struct {
-	Nickname string `json:"nickname"`
-	Email    string `json:"email"`
-	Avatar   string `json:"avatar"`
+	Nickname    string `json:"nickname"`
+	Email       string `json:"email"`
+	Avatar      string `json:"avatar"`
+	SelfIntro   string `json:"self_intro"`
+	PersonalWeb string `json:"personal_web"`
+	Location    string `json:"location"`
 }
 
 // PUT /api/users/password
@@ -48,10 +54,13 @@ type UpdatePasswordRequest struct {
 
 // GET /api/users/{user_id}
 type GetUserResponse struct {
-	ID       int32  `json:"user_id"`
-	Username string `json:"username"`
-	Nickname string `json:"nickname"`
-	Avatar   string `json:"avatar"`
-	Role     string `json:"role"`
-	CreateAt int64  `json:"create_at"`
+	ID          int32  `json:"user_id"`
+	Username    string `json:"username"`
+	Nickname    string `json:"nickname"`
+	Avatar      string `json:"avatar"`
+	Role        string `json:"role"`
+	SelfIntro   string `json:"self_intro"`
+	PersonalWeb string `json:"personal_web"`
+	Location    string `json:"location"`
+	CreateAt    int64  `json:"create_at"`
 }

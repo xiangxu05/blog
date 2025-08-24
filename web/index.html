@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人博客</title>
+    <meta name="description" content="个人博客 - 分享技术与生活">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="/assets/css/base.css" rel="stylesheet">
+    <link href="/assets/css/components.css" rel="stylesheet">
+    <link href="/assets/css/themes.css" rel="stylesheet">
+    <link href="/assets/css/utilities.css" rel="stylesheet">
+</head>
+<body data-theme="light">
+    <!-- 导航栏 -->
+    <nav id="navbar" class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="fas fa-feather-alt me-2"></i>
+                个人博客
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/articles">文章</a>
+                    </li>
+                    <!-- 未登录状态 -->
+                    <li class="nav-item d-none" id="nav-guest">
+                        <a class="nav-link" href="/login">登录</a>
+                    </li>
+                    <li class="nav-item d-none" id="nav-guest-register">
+                        <a class="nav-link" href="/register">注册</a>
+                    </li>
+                    <!-- 已登录状态 -->
+                    <li class="nav-item dropdown d-none" id="nav-user">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <img id="nav-avatar" src="" alt="头像" class="rounded-circle me-1" width="24" height="24">
+                            <span id="nav-username"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/profile">个人资料</a></li>
+                            <li class="d-none" id="nav-admin"><a class="dropdown-item" href="/admin">管理后台</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logout-btn">退出登录</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区域 -->
+    <main id="main-content" class="pt-5 mt-3">
+        <!-- 页面内容将通过JavaScript动态加载到这里 -->
+        <div id="page-content">
+            <!-- 加载指示器 -->
+            <div id="loading" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">加载中...</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-light py-4 mt-5">
+        <div class="container text-center">
+            <p class="mb-0 text-muted">
+                &copy; 2024 个人博客. All rights reserved.
+                <span class="mx-2">|</span>
+                <a href="#" class="text-decoration-none">关于我们</a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Toast 通知容器 -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="toast" class="toast" role="alert">
+            <div class="toast-header">
+                <i id="toast-icon" class="fas fa-info-circle me-2"></i>
+                <strong id="toast-title" class="me-auto">通知</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div id="toast-body" class="toast-body">
+                <!-- 消息内容 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Page.js 路由 -->
+    <script src="https://unpkg.com/page@1.11.6/page.js"></script>
+    <!-- Marked.js Markdown解析 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.2/marked.min.js"></script>
+    <!-- Highlight.js 代码高亮 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css" id="highlight-theme-light">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" id="highlight-theme-dark" disabled>
+    <!-- 数学公式支持 -->
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/contrib/auto-render.min.js"></script>
+    
+    <!-- 应用核心文件 -->
+    <script src="/assets/js/utils/markdown.js"></script>
+    <script src="/assets/js/utils/ux.js"></script>
+    <script src="/assets/js/core/state.js"></script>
+    <script src="/assets/js/core/api.js"></script>
+    <script src="/assets/js/core/router.js"></script>
+    <script src="/assets/js/core/app.js"></script>
+</body>
+</html>

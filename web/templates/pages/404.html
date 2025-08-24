@@ -1,0 +1,86 @@
+<div class="container py-5">
+  <div class="row">
+    <div class="col-12">
+      <div class="text-center py-5">
+        <!-- 404图标 -->
+        <div class="mb-4">
+          <i class="fas fa-exclamation-triangle fa-5x text-warning"></i>
+        </div>
+        
+        <!-- 错误信息 -->
+        <h1 class="display-1 fw-bold text-primary mb-3">404</h1>
+        <h2 class="h3 mb-3">页面不存在</h2>
+        <p class="text-muted mb-4 lead">
+          抱歉，您访问的页面不存在或已被移动。
+        </p>
+        
+        <!-- 操作按钮 -->
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+          <a href="/" class="btn btn-primary-custom btn-lg">
+            <i class="fas fa-home me-2"></i>
+            返回首页
+          </a>
+          <button class="btn btn-secondary-custom btn-lg" onclick="history.back()">
+            <i class="fas fa-arrow-left me-2"></i>
+            返回上页
+          </button>
+          <a href="/articles" class="btn btn-outline-custom btn-lg">
+            <i class="fas fa-book-open me-2"></i>
+            浏览文章
+          </a>
+        </div>
+        
+        <!-- 搜索建议 -->
+        <div class="mt-5">
+          <div class="card-custom d-inline-block">
+            <div class="card-body">
+              <h6 class="card-title">
+                <i class="fas fa-lightbulb me-2"></i>
+                建议操作
+              </h6>
+              <ul class="list-unstyled mb-0 text-start">
+                <li class="mb-1">
+                  <i class="fas fa-check text-success me-2"></i>
+                  检查网址是否输入正确
+                </li>
+                <li class="mb-1">
+                  <i class="fas fa-check text-success me-2"></i>
+                  尝试使用搜索功能
+                </li>
+                <li class="mb-1">
+                  <i class="fas fa-check text-success me-2"></i>
+                  访问网站主页重新导航
+                </li>
+                <li>
+                  <i class="fas fa-check text-success me-2"></i>
+                  联系网站管理员
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// 404页面初始化函数
+window.init404Page = function(routeData) {
+  console.log('初始化404页面');
+  
+  // 记录404错误（用于分析）
+  if (typeof gtag !== 'undefined') {
+    gtag('event', '404_error', {
+      'custom_parameter': window.location.pathname
+    });
+  }
+  
+  // 自动提示返回
+  setTimeout(() => {
+    if (confirm('页面不存在，是否返回首页？')) {
+      window.router.push('/');
+    }
+  }, 5000);
+};
+</script>

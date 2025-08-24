@@ -1,0 +1,397 @@
+<div class="container py-4">
+  <!-- 欢迎横幅 -->
+  <div class="row mb-5">
+    <div class="col-12">
+      <div class="card-custom bg-gradient p-4 p-md-5 text-center hero-banner">
+        <div class="row align-items-center">
+          <div class="col-md-8 mx-auto">
+            <h1 class="display-4 fw-bold text-white mb-3">
+              <i class="fas fa-feather-alt me-3"></i>
+              你好，我是项许
+            </h1>
+            <p class="lead text-white-50 mb-4">
+              分享技术见解，记录成长历程，与世界分享我的思考
+            </p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+              <a href="/articles" class="btn btn-light btn-lg">
+                <i class="fas fa-book-open me-2"></i>
+                浏览文章
+              </a>
+              <button class="btn btn-outline-light btn-lg" id="subscribe-btn">
+                <i class="fas fa-bell me-2"></i>
+                订阅更新
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- 主内容区域 -->
+    <div class="col-lg-8">
+      <!-- 最新文章标题 -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3 mb-0">
+          <i class="fas fa-newspaper me-2 text-primary"></i>
+          最新文章
+        </h2>
+        <a href="/articles" class="btn btn-outline-custom">
+          查看全部
+          <i class="fas fa-arrow-right ms-2"></i>
+        </a>
+      </div>
+
+      <!-- 文章列表 -->
+      <div id="articles-container">
+        <!-- 加载状态 -->
+        <div id="articles-loading" class="text-center py-5">
+          <div class="spinner-border text-primary mb-3" role="status">
+            <span class="visually-hidden">加载中...</span>
+          </div>
+          <p class="text-muted">正在加载文章...</p>
+        </div>
+
+        <!-- 文章列表将通过JavaScript动态填充 -->
+        <div id="articles-list" class="d-none">
+          <!-- 文章卡片模板将在这里渲染 -->
+        </div>
+
+        <!-- 空状态 -->
+        <div id="articles-empty" class="text-center py-5 d-none">
+          <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+          <h4 class="text-muted">暂无文章</h4>
+          <p class="text-muted">作者还没有发布任何文章</p>
+        </div>
+
+        <!-- 错误状态 -->
+        <div id="articles-error" class="alert alert-danger-custom d-none">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          <strong>加载失败</strong>
+          <p class="mb-2">无法加载文章列表，请稍后重试</p>
+          <button class="btn btn-outline-danger btn-sm" onclick="window.loadHomeArticles()">
+            <i class="fas fa-refresh me-2"></i>重新加载
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 侧边栏 -->
+    <div class="col-lg-4">
+      <!-- 关于博主 -->
+      <div class="card-custom mb-4">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="fas fa-user-circle me-2"></i>
+            关于博主
+          </h5>
+          <div class="text-center mb-3">
+            <img id="blogger-avatar" src="/assets/images/avatar-placeholder.png" alt="博主头像" class="avatar avatar-lg">
+          </div>
+          <p id="blogger-intro" class="text-muted small text-center">
+            热爱技术，喜欢分享。专注于前端开发、后端架构和技术教学。
+          </p>
+          <div class="d-flex justify-content-center gap-2">
+            <a id="blogger-github" href="#" class="btn btn-outline-custom btn-sm">
+              <i class="fab fa-github"></i>
+            </a>
+            <a id="blogger-twitter" href="#" class="btn btn-outline-custom btn-sm">
+              <i class="fab fa-twitter"></i>
+            </a>
+            <a id="blogger-email" href="#" class="btn btn-outline-custom btn-sm">
+              <i class="fas fa-envelope"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 热门标签 -->
+      <div class="card-custom mb-4">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="fas fa-tags me-2"></i>
+            热门标签
+          </h5>
+          <div id="popular-tags">
+            <!-- 标签将通过JavaScript动态加载 -->
+            <div class="d-flex flex-wrap gap-2">
+              <span class="article-tag">JavaScript</span>
+              <span class="article-tag">Vue.js</span>
+              <span class="article-tag">Node.js</span>
+              <span class="article-tag">Python</span>
+              <span class="article-tag">Go</span>
+              <span class="article-tag">数据库</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 统计信息 -->
+      <div class="card-custom mb-4">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="fas fa-chart-bar me-2"></i>
+            网站统计
+          </h5>
+          <div class="row text-center">
+            <div class="col-4">
+              <div class="border-end">
+                <h4 class="text-primary mb-0" id="total-articles">-</h4>
+                <small class="text-muted">文章</small>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="border-end">
+                <h4 class="text-success mb-0" id="total-views">-</h4>
+                <small class="text-muted">浏览</small>
+              </div>
+            </div>
+            <div class="col-4">
+              <h4 class="text-warning mb-0" id="total-tags">-</h4>
+              <small class="text-muted">标签</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 最近更新 -->
+      <div class="card-custom">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="fas fa-clock me-2"></i>
+            最近更新
+          </h5>
+          <div id="recent-updates">
+            <p class="text-muted small">正在加载...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 首页初始化函数
+  window.initHomePage = function (routeData) {
+    console.log('初始化首页');
+
+    // 加载首页数据
+    loadHomeData();
+
+    // 绑定事件
+    bindHomeEvents();
+  };
+
+  // 加载首页数据
+  async function loadHomeData() {
+    // 并行加载各种数据
+    await Promise.all([
+      loadHomeArticles(),
+      loadSiteStats(),
+      loadRecentUpdates(),
+      loadBloggerInfo()
+    ]);
+  }
+
+  // 加载博主信息
+  async function loadBloggerInfo() {
+    try {
+      // 获取管理员（1号ID）用户信息
+      const response = await window.apiClient.user.getUserInfo(1);
+
+      if (response) {
+        const user = response;
+
+        // 更新博主头像
+        const avatar = document.getElementById('blogger-avatar');
+        if (avatar && user.avatar) {
+          avatar.src = user.avatar;
+        }
+
+        // 更新博主介绍
+        const intro = document.getElementById('blogger-intro');
+        if (intro && user.self_intro) {
+          intro.textContent = user.self_intro;
+        }
+
+        // 更新个人网站链接（使用GitHub按钮）
+        const github = document.getElementById('blogger-github');
+        if (github && user.personal_web) {
+          github.href = user.personal_web;
+          github.style.display = 'inline-block';
+        } else if (github) {
+          github.style.display = 'none';
+        }
+
+        // 隐藏Twitter链接（暂时没有对应字段）
+        const twitter = document.getElementById('blogger-twitter');
+        if (twitter) {
+          twitter.style.display = 'none';
+        }
+
+        // 更新邮箱链接
+        const email = document.getElementById('blogger-email');
+        if (email && user.email) {
+          email.href = `mailto:${user.email}`;
+          email.style.display = 'inline-block';
+        } else if (email) {
+          email.style.display = 'none';
+        }
+      }
+    } catch (error) {
+      console.error('加载博主信息失败:', error);
+    }
+  }
+
+  // 加载首页文章列表
+  window.loadHomeArticles = async function () {
+    const articlesContainer = document.getElementById('articles-container');
+    const articlesLoading = document.getElementById('articles-loading');
+    const articlesList = document.getElementById('articles-list');
+    const articlesEmpty = document.getElementById('articles-empty');
+    const articlesError = document.getElementById('articles-error');
+
+    try {
+      // 显示加载状态
+      articlesLoading.classList.remove('d-none');
+      articlesList.classList.add('d-none');
+      articlesEmpty.classList.add('d-none');
+      articlesError.classList.add('d-none');
+
+      // 获取文章列表（首页只显示前6篇）
+      const response = await window.apiClient.articles.getList({
+        page: 1,
+        pageSize: 6
+      });
+
+      // 隐藏加载状态
+      articlesLoading.classList.add('d-none');
+
+      if (response.articles && response.articles.length > 0) {
+        // 渲染文章列表
+        renderArticlesList(response.articles);
+        articlesList.classList.remove('d-none');
+      } else {
+        // 显示空状态
+        articlesEmpty.classList.remove('d-none');
+      }
+
+    } catch (error) {
+      console.error('加载首页文章失败:', error);
+
+      // 显示错误状态
+      articlesLoading.classList.add('d-none');
+      articlesError.classList.remove('d-none');
+    }
+  };
+
+  // 渲染文章列表
+  function renderArticlesList(articles) {
+    const articlesList = document.getElementById('articles-list');
+    if (!articlesList) return;
+
+    const articlesHtml = articles.map(article => createArticleCard(article)).join('');
+    articlesList.innerHTML = articlesHtml;
+  }
+
+  // 创建文章卡片HTML
+  function createArticleCard(article) {
+    // 处理时间格式：如果是字符串则直接转换，如果是数字则乘以1000
+    const createdAt = typeof article.created_at === 'string' ? new Date(article.created_at) : new Date(article.created_at * 1000);
+    const publishDate = createdAt.toLocaleDateString('zh-CN');
+    const tags = article.tags ? article.tags.split(',').filter(tag => tag.trim()) : [];
+
+    return `
+    <div class="article-card mb-4">
+      <div class="card-body">
+        <h3 class="article-title">
+          <a href="/articles/${article.id}/${article.version}" class="text-decoration-none">
+            ${escapeHtml(article.title)}
+          </a>
+        </h3>
+        
+        <p class="article-description">
+          ${escapeHtml(article.description || '暂无描述')}
+        </p>
+        
+        ${tags.length > 0 ? `
+          <div class="article-tags">
+            ${tags.map(tag => `<span class="article-tag">${escapeHtml(tag.trim())}</span>`).join('')}
+          </div>
+        ` : ''}
+        
+        <div class="article-meta">
+          <span>
+            <i class="fas fa-calendar-alt me-1"></i>
+            ${publishDate}
+          </span>
+          <span>
+            <i class="fas fa-folder me-1"></i>
+            ${escapeHtml(article.category || '未分类')}
+          </span>
+        </div>
+      </div>
+    </div>
+  `;
+  }
+
+  // 加载网站统计信息
+  async function loadSiteStats() {
+    try {
+      // 这里可以调用统计API，暂时使用模拟数据
+      document.getElementById('total-articles').textContent = '12';
+      document.getElementById('total-views').textContent = '1.2k';
+      document.getElementById('total-tags').textContent = '8';
+    } catch (error) {
+      console.error('加载统计信息失败:', error);
+    }
+  }
+
+  // 加载最近更新
+  async function loadRecentUpdates() {
+    const recentUpdates = document.getElementById('recent-updates');
+    if (!recentUpdates) return;
+
+    try {
+      // 模拟最近更新信息
+      recentUpdates.innerHTML = `
+      <div class="small">
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">网站更新</span>
+          <span class="text-muted">2天前</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">新增文章</span>
+          <span class="text-muted">3天前</span>
+        </div>
+        <div class="d-flex justify-content-between">
+          <span class="text-muted">系统优化</span>
+          <span class="text-muted">1周前</span>
+        </div>
+      </div>
+    `;
+    } catch (error) {
+      console.error('加载最近更新失败:', error);
+      recentUpdates.innerHTML = '<p class="text-muted small">加载失败</p>';
+    }
+  }
+
+  // 绑定首页事件
+  function bindHomeEvents() {
+    // 订阅按钮
+    const subscribeBtn = document.getElementById('subscribe-btn');
+    if (subscribeBtn) {
+      subscribeBtn.addEventListener('click', function () {
+        window.blogApp.showNotification('订阅功能即将上线', 'info');
+      });
+    }
+  }
+
+  // HTML转义函数
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+</script>

@@ -18,20 +18,20 @@ type WebHandlerStruct struct {
 // NewWebHandler 创建新的Web处理器
 func NewWebHandler() *WebHandlerStruct {
 	return &WebHandlerStruct{
-		StaticRoot: "internal/endpoint/web",
+		StaticRoot: "web",
 	}
 }
 
 // RootHandler 根路径处理器
 func RootHandler(c *gin.Context) {
 	// 直接提供主页
-	c.File("internal/endpoint/web/index.html")
+	c.File("web/index.html")
 }
 
 // WebHandler 主要的Web处理器
 func WebHandler(c *gin.Context) {
 	// 提供主页HTML文件
-	c.File("internal/endpoint/web/index.html")
+	c.File("web/index.html")
 }
 
 // SetupWebRoutes 设置Web路由
@@ -50,12 +50,9 @@ func SetupWebRoutes(router *gin.Engine) {
 
 // setupStaticFiles 设置静态文件服务
 func (w *WebHandlerStruct) setupStaticFiles(router *gin.Engine) {
-	// 提供静态文件服务（CSS, JS, 图片等）
-	router.Static("/static", w.StaticRoot)
-	
-	// 直接提供CSS和JS文件
-	router.StaticFile("/style.css", filepath.Join(w.StaticRoot, "style.css"))
-	router.StaticFile("/app.js", filepath.Join(w.StaticRoot, "app.js"))
+	// 提供静态资源服务（CSS, JS, 图片等）
+	router.Static("/assets", filepath.Join(w.StaticRoot, "assets"))
+	router.Static("/templates", filepath.Join(w.StaticRoot, "templates"))
 	
 	// 提供favicon（如果存在）
 	if w.FileExists("favicon.ico") {
@@ -63,43 +60,52 @@ func (w *WebHandlerStruct) setupStaticFiles(router *gin.Engine) {
 	}
 }
 
-// setupPageRoutes 设置页面路由
+// setupPageRoutes 设置页面路由  
 func (w *WebHandlerStruct) setupPageRoutes(router *gin.Engine) {
 	// 主页路由
 	router.GET("/", RootHandler)
-	router.GET("/web", WebHandler)
 	
-	// 博客相关页面路由（SPA路由，都返回主页）
-	blogGroup := router.Group("/blog")
-	{
-		blogGroup.GET("/", WebHandler)
-		blogGroup.GET("/article/:id", WebHandler)
-		blogGroup.GET("/category/:id", WebHandler)
-		blogGroup.GET("/search", WebHandler)
-		blogGroup.GET("/popular", WebHandler)
-		blogGroup.GET("/my-articles", WebHandler)
+	// SPA前端路由（都返回index.html，由前端路由处理）
+	frontendRoutes := []string{
+		"/login",
+		"/register", 
+		"/profile",
+		"/articles",
+		"/articles/*path",
+		"/admin",
+		"/admin/*path",
 	}
 	
-	// 用户相关页面路由
-	userGroup := router.Group("/user")
-	{
-		userGroup.GET("/login", WebHandler)
-		userGroup.GET("/register", WebHandler)
-		userGroup.GET("/profile", WebHandler)
+	for _, route := range frontendRoutes {
+		router.GET(route, WebHandler)
 	}
 	
-	// 健康检查
-	router.GET("/health", w.HealthCheckHandler)
+	// 处理所有非API路由的回退（SPA路由回退机制）
+	router.NoRoute(func(c *gin.Context) {
+		// 如果是API请求，返回404
+		if len(c.Request.URL.Path) >= 4 && c.Request.URL.Path[:4] == "/api" {
+			c.JSON(http.StatusNotFound, gin.H{
+				"code": 404,
+				"msg":  "API接口不存在",
+				"data": nil,
+			})
+			return
+		}
+		
+		// 其他所有请求都返回index.html，交给前端路由处理
+		c.File("web/index.html")
+	})
 }
 
-// HealthCheckHandler 健康检查处理器
+// HealthCheckHandler Web健康检查处理器
 func (w *WebHandlerStruct) HealthCheckHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
-		"message": "服务正常运行",
+		"message": "Web服务正常运行",
 		"data": gin.H{
 			"status": "healthy",
-			"service": "personal_blog",
+			"service": "personal_blog_web",
+			"static_root": w.StaticRoot,
 		},
 	})
 }
@@ -133,8 +139,8 @@ func (w *WebHandlerStruct) SecurityHeadersMiddleware() gin.HandlerFunc {
 		// 防止点击劫持
 		c.Header("X-Frame-Options", "DENY")
 		
-		// 内容安全策略
-		c.Header("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data: https:;")
+		// 内容安全策略（放宽限制以支持CDN资源）
+		c.Header("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self';")
 		
 		c.Next()
 	}

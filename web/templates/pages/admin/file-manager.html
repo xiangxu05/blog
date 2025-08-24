@@ -1,0 +1,758 @@
+<div class="container-fluid py-4">
+  <!-- 页面头部 -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-1">
+        <i class="fas fa-folder-open me-2 text-primary"></i>
+        文件管理
+      </h1>
+      <p class="text-muted mb-0">管理上传的文件和图片</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary-custom" id="upload-files-btn">
+        <i class="fas fa-upload me-2"></i>
+        上传文件
+      </button>
+      <a href="/admin" class="btn btn-outline-custom">
+        <i class="fas fa-arrow-left me-2"></i>
+        返回仪表板
+      </a>
+    </div>
+  </div>
+
+  <!-- 文件上传区域 -->
+  <div class="card-custom mb-4" id="upload-area-card" style="display: none;">
+    <div class="card-body">
+      <div class="upload-zone" id="upload-zone">
+        <input type="file" id="file-input" multiple style="display: none;" accept="image/*,application/pdf,.doc,.docx,.txt,.md">
+        <div class="upload-placeholder text-center py-5">
+          <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+          <h5>拖拽文件到此处或点击上传</h5>
+          <p class="text-muted">支持图片、PDF、文档等格式，单个文件不超过10MB</p>
+          <button class="btn btn-outline-primary" id="select-files-btn">
+            选择文件
+          </button>
+        </div>
+      </div>
+      
+      <!-- 上传进度 -->
+      <div id="upload-progress-container" style="display: none;">
+        <div class="mt-4">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span>上传进度</span>
+            <button class="btn btn-outline-secondary btn-sm" id="cancel-upload-btn">取消上传</button>
+          </div>
+          <div class="progress mb-3">
+            <div class="progress-bar" id="overall-progress" style="width: 0%"></div>
+          </div>
+          <div id="file-upload-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文件筛选工具栏 -->
+  <div class="card-custom mb-4">
+    <div class="card-body py-3">
+      <div class="row g-3 align-items-center">
+        <div class="col-md-3">
+          <input type="text" class="form-control-custom" id="search-files" placeholder="搜索文件名...">
+        </div>
+        <div class="col-md-2">
+          <select class="form-select-custom" id="filter-type">
+            <option value="">所有类型</option>
+            <option value="image">图片</option>
+            <option value="document">文档</option>
+            <option value="other">其他</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select class="form-select-custom" id="sort-files">
+            <option value="created_desc">最新上传</option>
+            <option value="created_asc">最早上传</option>
+            <option value="name_asc">文件名A-Z</option>
+            <option value="size_desc">文件大小↓</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <div class="btn-group w-100">
+            <button class="btn btn-outline-custom active" id="view-grid" title="网格视图">
+              <i class="fas fa-th"></i>
+            </button>
+            <button class="btn btn-outline-custom" id="view-list" title="列表视图">
+              <i class="fas fa-list"></i>
+            </button>
+          </div>
+        </div>
+        <div class="col-md-3 text-end">
+          <span class="text-muted small" id="files-count">0 个文件</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文件列表 -->
+  <div class="card-custom">
+    <div class="card-body">
+      <!-- 加载状态 -->
+      <div id="files-loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">加载中...</span>
+        </div>
+        <p class="text-muted mt-2">正在加载文件...</p>
+      </div>
+
+      <!-- 文件网格视图 -->
+      <div id="files-grid" class="files-grid d-none">
+        <!-- 动态内容 -->
+      </div>
+
+      <!-- 文件列表视图 -->
+      <div id="files-list" class="d-none">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th width="50">预览</th>
+                <th>文件名</th>
+                <th width="100">类型</th>
+                <th width="100">大小</th>
+                <th width="150">上传时间</th>
+                <th width="120">操作</th>
+              </tr>
+            </thead>
+            <tbody id="files-table-body">
+              <!-- 动态内容 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 空状态 -->
+      <div id="files-empty" class="text-center py-5 d-none">
+        <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">暂无文件</h5>
+        <p class="text-muted">开始上传你的第一个文件吧！</p>
+        <button class="btn btn-primary-custom" onclick="showUploadArea()">
+          <i class="fas fa-upload me-2"></i>上传文件
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 文件预览模态框 -->
+<div class="modal fade" id="file-preview-modal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="preview-file-name">文件预览</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center" id="preview-content">
+        <!-- 预览内容 -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-custom" id="copy-url-btn">
+          <i class="fas fa-copy me-2"></i>复制链接
+        </button>
+        <button type="button" class="btn btn-primary-custom" id="download-file-btn">
+          <i class="fas fa-download me-2"></i>下载
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// 文件管理页面初始化
+window.initFileManagerPage = function(routeData) {
+  console.log('初始化文件管理页面');
+  
+  if (!window.appState.isAdmin()) {
+    window.router.push('/404');
+    return;
+  }
+  
+  initFileManager();
+};
+
+// 页面状态
+const fileManagerState = {
+  files: [],
+  filteredFiles: [],
+  viewMode: 'grid', // 'grid' 或 'list'
+  searchKeyword: '',
+  filterType: '',
+  sortBy: 'created_desc',
+  uploadQueue: []
+};
+
+// 初始化文件管理器
+function initFileManager() {
+  bindEvents();
+  loadFiles();
+}
+
+// 绑定事件
+function bindEvents() {
+  // 上传按钮
+  document.getElementById('upload-files-btn').addEventListener('click', showUploadArea);
+  document.getElementById('select-files-btn').addEventListener('click', () => {
+    document.getElementById('file-input').click();
+  });
+  
+  // 文件选择
+  document.getElementById('file-input').addEventListener('change', handleFileSelect);
+  
+  // 拖拽上传
+  const uploadZone = document.getElementById('upload-zone');
+  uploadZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    uploadZone.classList.add('dragover');
+  });
+  
+  uploadZone.addEventListener('dragleave', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+  });
+  
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    handleFileSelect({ target: { files: e.dataTransfer.files } });
+  });
+  
+  // 搜索和筛选
+  document.getElementById('search-files').addEventListener('input', handleSearch);
+  document.getElementById('filter-type').addEventListener('change', handleFilter);
+  document.getElementById('sort-files').addEventListener('change', handleSort);
+  
+  // 视图切换
+  document.getElementById('view-grid').addEventListener('click', () => switchView('grid'));
+  document.getElementById('view-list').addEventListener('click', () => switchView('list'));
+  
+  // 取消上传
+  document.getElementById('cancel-upload-btn').addEventListener('click', cancelUpload);
+}
+
+// 显示上传区域
+function showUploadArea() {
+  const uploadCard = document.getElementById('upload-area-card');
+  uploadCard.style.display = uploadCard.style.display === 'none' ? 'block' : 'none';
+}
+
+// 处理文件选择
+function handleFileSelect(e) {
+  const files = Array.from(e.target.files);
+  if (files.length > 0) {
+    startUpload(files);
+  }
+}
+
+// 开始上传
+async function startUpload(files) {
+  const progressContainer = document.getElementById('upload-progress-container');
+  const fileList = document.getElementById('file-upload-list');
+  const overallProgress = document.getElementById('overall-progress');
+  
+  progressContainer.style.display = 'block';
+  fileManagerState.uploadQueue = files;
+  
+  let completedCount = 0;
+  fileList.innerHTML = '';
+  
+  for (const file of files) {
+    const fileItem = createFileUploadItem(file);
+    fileList.appendChild(fileItem);
+    
+    try {
+      const result = await window.apiClient.files.upload(file);
+      updateFileUploadItem(fileItem, 'success', result);
+      completedCount++;
+    } catch (error) {
+      updateFileUploadItem(fileItem, 'error', error);
+      completedCount++;
+    }
+    
+    // 更新总进度
+    const progress = (completedCount / files.length) * 100;
+    overallProgress.style.width = `${progress}%`;
+  }
+  
+  // 上传完成
+  setTimeout(() => {
+    progressContainer.style.display = 'none';
+    loadFiles(); // 重新加载文件列表
+  }, 2000);
+}
+
+// 创建文件上传项
+function createFileUploadItem(file) {
+  const div = document.createElement('div');
+  div.className = 'upload-item d-flex align-items-center mb-2 p-2 border rounded';
+  div.innerHTML = `
+    <div class="me-3">
+      <i class="fas fa-file fa-2x text-muted"></i>
+    </div>
+    <div class="flex-grow-1">
+      <div class="fw-bold">${escapeHtml(file.name)}</div>
+      <div class="small text-muted">${formatFileSize(file.size)}</div>
+    </div>
+    <div class="upload-status">
+      <div class="spinner-border spinner-border-sm" role="status"></div>
+    </div>
+  `;
+  return div;
+}
+
+// 更新文件上传项状态
+function updateFileUploadItem(item, status, result) {
+  const statusEl = item.querySelector('.upload-status');
+  
+  if (status === 'success') {
+    statusEl.innerHTML = '<i class="fas fa-check-circle text-success"></i>';
+  } else {
+    statusEl.innerHTML = '<i class="fas fa-times-circle text-danger"></i>';
+  }
+}
+
+// 取消上传
+function cancelUpload() {
+  document.getElementById('upload-progress-container').style.display = 'none';
+  fileManagerState.uploadQueue = [];
+}
+
+// 加载文件列表
+async function loadFiles() {
+  const loading = document.getElementById('files-loading');
+  const grid = document.getElementById('files-grid');
+  const list = document.getElementById('files-list');
+  const empty = document.getElementById('files-empty');
+  
+  loading.classList.remove('d-none');
+  grid.classList.add('d-none');
+  list.classList.add('d-none');
+  empty.classList.add('d-none');
+  
+  try {
+    const response = await window.apiClient.files.getList();
+    fileManagerState.files = response || [];
+    
+    loading.classList.add('d-none');
+    
+    if (fileManagerState.files.length > 0) {
+      applyFilters();
+      renderFiles();
+    } else {
+      empty.classList.remove('d-none');
+    }
+    
+  } catch (error) {
+    console.error('加载文件失败:', error);
+    loading.classList.add('d-none');
+    
+    // 使用模拟数据
+    fileManagerState.files = generateMockFiles();
+    applyFilters();
+    renderFiles();
+  }
+}
+
+// 生成模拟文件数据
+function generateMockFiles() {
+  return [
+    {
+      id: 1,
+      name: 'avatar.jpg',
+      type: 'image/jpeg',
+      size: 245760,
+      created_at: Date.now() / 1000 - 86400
+    },
+    {
+      id: 2,
+      name: 'document.pdf',
+      type: 'application/pdf',
+      size: 1048576,
+      created_at: Date.now() / 1000 - 172800
+    },
+    {
+      id: 3,
+      name: 'notes.md',
+      type: 'text/markdown',
+      size: 2048,
+      created_at: Date.now() / 1000 - 259200
+    }
+  ];
+}
+
+// 应用筛选
+function applyFilters() {
+  let filtered = [...fileManagerState.files];
+  
+  // 搜索筛选
+  if (fileManagerState.searchKeyword) {
+    const keyword = fileManagerState.searchKeyword.toLowerCase();
+    filtered = filtered.filter(file => 
+      file.name.toLowerCase().includes(keyword)
+    );
+  }
+  
+  // 类型筛选
+  if (fileManagerState.filterType) {
+    filtered = filtered.filter(file => {
+      if (fileManagerState.filterType === 'image') {
+        return file.type.startsWith('image/');
+      } else if (fileManagerState.filterType === 'document') {
+        return file.type.includes('pdf') || file.type.includes('doc') || file.type.includes('text');
+      } else if (fileManagerState.filterType === 'other') {
+        return !file.type.startsWith('image/') && !file.type.includes('pdf') && !file.type.includes('doc') && !file.type.includes('text');
+      }
+      return true;
+    });
+  }
+  
+  // 排序
+  filtered.sort((a, b) => {
+    switch (fileManagerState.sortBy) {
+      case 'created_desc':
+        return b.created_at - a.created_at;
+      case 'created_asc':
+        return a.created_at - b.created_at;
+      case 'name_asc':
+        return a.name.localeCompare(b.name);
+      case 'size_desc':
+        return b.size - a.size;
+      default:
+        return 0;
+    }
+  });
+  
+  fileManagerState.filteredFiles = filtered;
+  document.getElementById('files-count').textContent = `${filtered.length} 个文件`;
+}
+
+// 渲染文件
+function renderFiles() {
+  if (fileManagerState.viewMode === 'grid') {
+    renderGridView();
+  } else {
+    renderListView();
+  }
+}
+
+// 渲染网格视图
+function renderGridView() {
+  const container = document.getElementById('files-grid');
+  container.classList.remove('d-none');
+  document.getElementById('files-list').classList.add('d-none');
+  
+  const html = fileManagerState.filteredFiles.map(file => {
+    const isImage = file.type.startsWith('image/');
+    const icon = getFileIcon(file.type);
+    
+    return `
+      <div class="file-card" onclick="previewFile(${file.id})">
+        <div class="file-preview">
+          ${isImage ? 
+            `<img src="/api/files/download/${file.id}" alt="${file.name}" loading="lazy">` :
+            `<i class="${icon} fa-3x text-muted"></i>`
+          }
+        </div>
+        <div class="file-info">
+          <div class="file-name" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</div>
+          <div class="file-meta text-muted small">
+            ${formatFileSize(file.size)} • ${formatDateTime(file.created_at)}
+          </div>
+        </div>
+        <div class="file-actions">
+          <button class="btn btn-outline-primary btn-sm" onclick="event.stopPropagation(); downloadFile(${file.id})" title="下载">
+            <i class="fas fa-download"></i>
+          </button>
+          <button class="btn btn-outline-danger btn-sm" onclick="event.stopPropagation(); deleteFile(${file.id})" title="删除">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  container.innerHTML = html;
+}
+
+// 渲染列表视图
+function renderListView() {
+  const container = document.getElementById('files-list');
+  const tbody = document.getElementById('files-table-body');
+  
+  container.classList.remove('d-none');
+  document.getElementById('files-grid').classList.add('d-none');
+  
+  const html = fileManagerState.filteredFiles.map(file => {
+    const isImage = file.type.startsWith('image/');
+    const icon = getFileIcon(file.type);
+    
+    return `
+      <tr onclick="previewFile(${file.id})" style="cursor: pointer;">
+        <td>
+          <div class="file-thumb">
+            ${isImage ? 
+              `<img src="/api/files/download/${file.id}" alt="${file.name}" class="rounded">` :
+              `<i class="${icon} fa-2x text-muted"></i>`
+            }
+          </div>
+        </td>
+        <td>
+          <div class="fw-bold">${escapeHtml(file.name)}</div>
+          <small class="text-muted">ID: ${file.id}</small>
+        </td>
+        <td><span class="badge badge-secondary-custom">${getFileTypeLabel(file.type)}</span></td>
+        <td>${formatFileSize(file.size)}</td>
+        <td><small>${formatDateTime(file.created_at)}</small></td>
+        <td>
+          <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-primary" onclick="event.stopPropagation(); downloadFile(${file.id})" title="下载">
+              <i class="fas fa-download"></i>
+            </button>
+            <button class="btn btn-outline-danger" onclick="event.stopPropagation(); deleteFile(${file.id})" title="删除">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+  
+  tbody.innerHTML = html;
+}
+
+// 事件处理函数
+function handleSearch(e) {
+  fileManagerState.searchKeyword = e.target.value.trim();
+  applyFilters();
+  renderFiles();
+}
+
+function handleFilter(e) {
+  fileManagerState.filterType = e.target.value;
+  applyFilters();
+  renderFiles();
+}
+
+function handleSort(e) {
+  fileManagerState.sortBy = e.target.value;
+  applyFilters();
+  renderFiles();
+}
+
+function switchView(mode) {
+  fileManagerState.viewMode = mode;
+  
+  // 更新按钮状态
+  document.getElementById('view-grid').classList.toggle('active', mode === 'grid');
+  document.getElementById('view-list').classList.toggle('active', mode === 'list');
+  
+  renderFiles();
+}
+
+// 文件操作
+function previewFile(fileId) {
+  const file = fileManagerState.files.find(f => f.id === fileId);
+  if (!file) return;
+  
+  const modal = new bootstrap.Modal(document.getElementById('file-preview-modal'));
+  const previewContent = document.getElementById('preview-content');
+  
+  document.getElementById('preview-file-name').textContent = file.name;
+  
+  if (file.type.startsWith('image/')) {
+    previewContent.innerHTML = `<img src="/api/files/download/${file.id}" class="img-fluid" alt="${file.name}">`;
+  } else {
+    previewContent.innerHTML = `
+      <div class="text-center py-5">
+        <i class="${getFileIcon(file.type)} fa-5x text-muted mb-3"></i>
+        <h5>${escapeHtml(file.name)}</h5>
+        <p class="text-muted">文件大小: ${formatFileSize(file.size)}</p>
+        <p class="text-muted">上传时间: ${formatDateTime(file.created_at)}</p>
+      </div>
+    `;
+  }
+  
+  // 设置操作按钮
+  document.getElementById('copy-url-btn').onclick = () => copyFileUrl(file.id);
+  document.getElementById('download-file-btn').onclick = () => downloadFile(file.id);
+  
+  modal.show();
+}
+
+function copyFileUrl(fileId) {
+  const url = `${window.location.origin}/api/files/download/${fileId}`;
+  navigator.clipboard.writeText(url).then(() => {
+    window.blogApp.showNotification('文件链接已复制到剪贴板', 'success');
+  });
+}
+
+function downloadFile(fileId) {
+  window.open(`/api/files/download/${fileId}`, '_blank');
+}
+
+async function deleteFile(fileId) {
+  if (!confirm('确定要删除这个文件吗？此操作不可恢复。')) {
+    return;
+  }
+  
+  try {
+    await window.apiClient.files.delete(fileId);
+    window.blogApp.showNotification('文件删除成功', 'success');
+    loadFiles();
+  } catch (error) {
+    console.error('删除文件失败:', error);
+    window.blogApp.showNotification('删除失败: ' + error.message, 'error');
+  }
+}
+
+// 工具函数
+function getFileIcon(type) {
+  if (type.startsWith('image/')) return 'fas fa-image';
+  if (type.includes('pdf')) return 'fas fa-file-pdf';
+  if (type.includes('doc')) return 'fas fa-file-word';
+  if (type.includes('text') || type.includes('markdown')) return 'fas fa-file-alt';
+  return 'fas fa-file';
+}
+
+function getFileTypeLabel(type) {
+  if (type.startsWith('image/')) return '图片';
+  if (type.includes('pdf')) return 'PDF';
+  if (type.includes('doc')) return '文档';
+  if (type.includes('text') || type.includes('markdown')) return '文本';
+  return '其他';
+}
+
+function formatFileSize(bytes) {
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  if (bytes === 0) return '0 B';
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+function formatDateTime(timestamp) {
+  const date = new Date(timestamp * 1000);
+  return date.toLocaleDateString('zh-CN') + ' ' + date.toLocaleTimeString('zh-CN', { 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+</script>
+
+<style>
+/* 文件管理样式 */
+.upload-zone {
+  border: 2px dashed var(--color-gray-4);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-fast) var(--ease-out);
+  cursor: pointer;
+}
+
+.upload-zone:hover,
+.upload-zone.dragover {
+  border-color: var(--color-primary);
+  background-color: var(--color-gray-6);
+}
+
+.files-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.file-card {
+  border: 1px solid var(--color-gray-5);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  background-color: var(--bg-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast) var(--ease-out);
+  position: relative;
+}
+
+.file-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.file-preview {
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--spacing-sm);
+  background-color: var(--color-gray-6);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.file-preview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+}
+
+.file-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: var(--spacing-xs);
+}
+
+.file-actions {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  opacity: 0;
+  transition: opacity var(--transition-fast) var(--ease-out);
+}
+
+.file-card:hover .file-actions {
+  opacity: 1;
+}
+
+.file-thumb {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-gray-6);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.file-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.upload-item {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--color-gray-5) !important;
+}
+
+@media (max-width: 768px) {
+  .files-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: var(--spacing-sm);
+  }
+  
+  .file-preview {
+    height: 80px;
+  }
+}
+</style>

@@ -1,0 +1,627 @@
+<div class="container-fluid py-4">
+  <!-- 管理后台头部 -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-1">
+        <i class="fas fa-tachometer-alt me-2 text-primary"></i>
+        管理后台
+      </h1>
+      <p class="text-muted mb-0">欢迎回来，管理员</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="/admin/articles/new" class="btn btn-primary-custom">
+        <i class="fas fa-plus me-2"></i>
+        写新文章
+      </a>
+      <a href="/" class="btn btn-outline-custom">
+        <i class="fas fa-home me-2"></i>
+        返回前台
+      </a>
+    </div>
+  </div>
+
+  <!-- 统计卡片 -->
+  <div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card-custom h-100">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col">
+              <div class="text-muted small fw-bold">文章总数</div>
+              <div class="h2 fw-bold" id="total-articles">-</div>
+              <div class="text-success small">
+                <i class="fas fa-arrow-up me-1"></i>
+                <span id="articles-growth">+0</span> 本月
+              </div>
+            </div>
+            <div class="col-auto">
+              <div class="bg-primary bg-opacity-10 p-3 rounded-circle">
+                <i class="fas fa-newspaper text-primary fa-2x"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card-custom h-100">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col">
+              <div class="text-muted small fw-bold">总浏览量</div>
+              <div class="h2 fw-bold" id="total-views">-</div>
+              <div class="text-success small">
+                <i class="fas fa-arrow-up me-1"></i>
+                <span id="views-growth">+0</span> 本月
+              </div>
+            </div>
+            <div class="col-auto">
+              <div class="bg-success bg-opacity-10 p-3 rounded-circle">
+                <i class="fas fa-eye text-success fa-2x"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card-custom h-100">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col">
+              <div class="text-muted small fw-bold">存储文件</div>
+              <div class="h2 fw-bold" id="total-files">-</div>
+              <div class="text-info small">
+                <i class="fas fa-hdd me-1"></i>
+                <span id="storage-used">0 MB</span> 已用
+              </div>
+            </div>
+            <div class="col-auto">
+              <div class="bg-info bg-opacity-10 p-3 rounded-circle">
+                <i class="fas fa-folder text-info fa-2x"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card-custom h-100">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col">
+              <div class="text-muted small fw-bold">注册用户</div>
+              <div class="h2 fw-bold" id="total-users">-</div>
+              <div class="text-warning small">
+                <i class="fas fa-user-plus me-1"></i>
+                <span id="users-growth">+0</span> 本月
+              </div>
+            </div>
+            <div class="col-auto">
+              <div class="bg-warning bg-opacity-10 p-3 rounded-circle">
+                <i class="fas fa-users text-warning fa-2x"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- 最近文章 -->
+    <div class="col-lg-8 mb-4">
+      <div class="card-custom">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="card-title mb-0">
+              <i class="fas fa-clock me-2"></i>
+              最近文章
+            </h5>
+            <a href="/admin/articles" class="btn btn-outline-custom btn-sm">
+              查看全部
+            </a>
+          </div>
+          
+          <div id="recent-articles">
+            <!-- 加载状态 -->
+            <div class="text-center py-4" id="recent-articles-loading">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">加载中...</span>
+              </div>
+            </div>
+            
+            <!-- 文章列表 -->
+            <div id="recent-articles-list" class="d-none">
+              <!-- 将通过JavaScript动态填充 -->
+            </div>
+            
+            <!-- 空状态 -->
+            <div id="recent-articles-empty" class="text-center py-4 d-none">
+              <i class="fas fa-file-alt fa-2x text-muted mb-2"></i>
+              <p class="text-muted">暂无文章</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 快捷操作 -->
+    <div class="col-lg-4 mb-4">
+      <div class="card-custom">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="fas fa-bolt me-2"></i>
+            快捷操作
+          </h5>
+          
+          <div class="d-grid gap-3">
+            <a href="/admin/articles/new" class="btn btn-primary-custom">
+              <i class="fas fa-pen me-2"></i>
+              写新文章
+            </a>
+            <a href="/admin/articles" class="btn btn-outline-custom">
+              <i class="fas fa-list me-2"></i>
+              管理文章
+            </a>
+            <a href="/admin/files" class="btn btn-outline-custom">
+              <i class="fas fa-folder-open me-2"></i>
+              文件管理
+            </a>
+            <button class="btn btn-outline-custom" id="clear-cache-btn">
+              <i class="fas fa-broom me-2"></i>
+              清理缓存
+            </button>
+            <button class="btn btn-outline-custom" id="backup-data-btn">
+              <i class="fas fa-download me-2"></i>
+              数据备份
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 系统状态 -->
+      <div class="card-custom mt-4">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="fas fa-server me-2"></i>
+            系统状态
+          </h5>
+          
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="small">服务器状态</span>
+              <span class="badge badge-success-custom">运行中</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="small">数据库</span>
+              <span class="badge badge-success-custom">正常</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="small">存储空间</span>
+              <span class="badge badge-warning-custom">75%</span>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <div class="small text-muted mb-1">内存使用率</div>
+            <div class="progress progress-custom">
+              <div class="progress-bar bg-info" style="width: 65%"></div>
+            </div>
+            <small class="text-muted">65% (2.1GB / 3.2GB)</small>
+          </div>
+          
+          <div class="small text-muted">
+            <div class="d-flex justify-content-between">
+              <span>上次备份:</span>
+              <span>2024-12-20</span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span>运行时间:</span>
+              <span id="uptime">15天 3小时</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 浏览量统计图表 -->
+  <div class="row">
+    <div class="col-lg-8 mb-4">
+      <div class="card-custom">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="card-title mb-0">
+              <i class="fas fa-chart-line me-2"></i>
+              访问统计
+            </h5>
+            <div class="btn-group btn-group-sm" role="group">
+              <input type="radio" class="btn-check" name="chart-period" id="chart-7d" value="7d" checked>
+              <label class="btn btn-outline-custom" for="chart-7d">7天</label>
+              
+              <input type="radio" class="btn-check" name="chart-period" id="chart-30d" value="30d">
+              <label class="btn btn-outline-custom" for="chart-30d">30天</label>
+              
+              <input type="radio" class="btn-check" name="chart-period" id="chart-90d" value="90d">
+              <label class="btn btn-outline-custom" for="chart-90d">90天</label>
+            </div>
+          </div>
+          
+          <div id="visitor-chart" style="height: 300px;">
+            <!-- 图表占位 -->
+            <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+              <div class="text-center">
+                <i class="fas fa-chart-line fa-3x mb-3"></i>
+                <p>图表功能即将上线</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 热门文章排行 -->
+    <div class="col-lg-4 mb-4">
+      <div class="card-custom">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="fas fa-fire me-2"></i>
+            热门文章
+          </h5>
+          
+          <div id="popular-articles">
+            <div class="text-center py-4">
+              <div class="spinner-border spinner-border-sm text-primary" role="status">
+                <span class="visually-hidden">加载中...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 最近活动 -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card-custom">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="fas fa-history me-2"></i>
+            最近活动
+          </h5>
+          
+          <div id="recent-activities">
+            <div class="text-center py-4">
+              <div class="spinner-border spinner-border-sm text-primary" role="status">
+                <span class="visually-hidden">加载中...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// 管理后台仪表板初始化函数
+window.initAdminDashboardPage = function(routeData) {
+  console.log('初始化管理后台仪表板');
+  
+  // 检查管理员权限
+  if (!window.appState.isAdmin()) {
+    window.router.push('/404');
+    return;
+  }
+  
+  // 加载仪表板数据
+  loadDashboardData();
+  
+  // 绑定事件
+  bindDashboardEvents();
+};
+
+// 加载仪表板数据
+async function loadDashboardData() {
+  // 并行加载各种数据
+  await Promise.all([
+    loadStatistics(),
+    loadRecentArticles(),
+    loadPopularArticles(),
+    loadRecentActivities()
+  ]);
+}
+
+// 加载统计数据
+async function loadStatistics() {
+  try {
+    // 模拟统计数据（实际应该从API获取）
+    const stats = {
+      totalArticles: 42,
+      articlesGrowth: 8,
+      totalViews: 15420,
+      viewsGrowth: 1250,
+      totalFiles: 128,
+      storageUsed: 256,
+      totalUsers: 1205,
+      usersGrowth: 32
+    };
+    
+    // 更新统计卡片
+    document.getElementById('total-articles').textContent = stats.totalArticles;
+    document.getElementById('articles-growth').textContent = `+${stats.articlesGrowth}`;
+    
+    document.getElementById('total-views').textContent = formatNumber(stats.totalViews);
+    document.getElementById('views-growth').textContent = `+${formatNumber(stats.viewsGrowth)}`;
+    
+    document.getElementById('total-files').textContent = stats.totalFiles;
+    document.getElementById('storage-used').textContent = `${stats.storageUsed} MB`;
+    
+    document.getElementById('total-users').textContent = formatNumber(stats.totalUsers);
+    document.getElementById('users-growth').textContent = `+${stats.usersGrowth}`;
+    
+  } catch (error) {
+    console.error('加载统计数据失败:', error);
+  }
+}
+
+// 加载最近文章
+async function loadRecentArticles() {
+  const recentArticlesLoading = document.getElementById('recent-articles-loading');
+  const recentArticlesList = document.getElementById('recent-articles-list');
+  const recentArticlesEmpty = document.getElementById('recent-articles-empty');
+  
+  try {
+    // 获取最近文章（使用管理员API）
+    const response = await window.apiClient.admin.getArticles({ page: 1, pageSize: 5 });
+    
+    recentArticlesLoading.classList.add('d-none');
+    
+    if (response.articles && response.articles.length > 0) {
+      renderRecentArticles(response.articles);
+      recentArticlesList.classList.remove('d-none');
+    } else {
+      recentArticlesEmpty.classList.remove('d-none');
+    }
+    
+  } catch (error) {
+    console.error('加载最近文章失败:', error);
+    recentArticlesLoading.classList.add('d-none');
+    
+    // 使用模拟数据
+    const mockArticles = [
+      {
+        id: 1,
+        title: 'Vue.js 3.0 深度解析',
+        created_at: Date.now() / 1000 - 3600,
+        status: 'published',
+        views: 1250
+      },
+      {
+        id: 2,
+        title: 'JavaScript 异步编程详解',
+        created_at: Date.now() / 1000 - 7200,
+        status: 'published',
+        views: 980
+      },
+      {
+        id: 3,
+        title: '前端性能优化实践',
+        created_at: Date.now() / 1000 - 10800,
+        status: 'draft',
+        views: 756
+      }
+    ];
+    
+    renderRecentArticles(mockArticles);
+    recentArticlesList.classList.remove('d-none');
+  }
+}
+
+// 渲染最近文章
+function renderRecentArticles(articles) {
+  const recentArticlesList = document.getElementById('recent-articles-list');
+  
+  const articlesHtml = articles.map(article => {
+    const timeAgo = getTimeAgo(article.created_at);
+    const statusBadge = getStatusBadge(article.status);
+    
+    return `
+      <div class="d-flex align-items-center justify-content-between p-3 border-bottom">
+        <div class="flex-grow-1">
+          <h6 class="mb-1">
+            <a href="/admin/articles/${article.id}/edit" class="text-decoration-none">
+              ${escapeHtml(article.title)}
+            </a>
+          </h6>
+          <div class="small text-muted">
+            <i class="fas fa-clock me-1"></i>
+            ${timeAgo}
+            <span class="mx-2">•</span>
+            <i class="fas fa-eye me-1"></i>
+            ${article.views || 0} 次浏览
+          </div>
+        </div>
+        <div class="ms-3">
+          ${statusBadge}
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  recentArticlesList.innerHTML = articlesHtml;
+}
+
+// 加载热门文章
+async function loadPopularArticles() {
+  const popularArticles = document.getElementById('popular-articles');
+  
+  try {
+    // 模拟热门文章数据
+    setTimeout(() => {
+      const mockPopular = [
+        { title: 'Vue.js 3.0 深度解析', views: 1250 },
+        { title: 'JavaScript 异步编程详解', views: 980 },
+        { title: '前端性能优化实践', views: 756 },
+        { title: 'CSS Grid 布局详解', views: 642 },
+        { title: 'Node.js 实战指南', views: 521 }
+      ];
+      
+      const popularHtml = mockPopular.map((article, index) => `
+        <div class="d-flex align-items-center mb-3">
+          <div class="badge badge-primary-custom me-3">${index + 1}</div>
+          <div class="flex-grow-1">
+            <h6 class="mb-1 small">${escapeHtml(article.title)}</h6>
+            <div class="small text-muted">
+              <i class="fas fa-eye me-1"></i>
+              ${formatNumber(article.views)} 次浏览
+            </div>
+          </div>
+        </div>
+      `).join('');
+      
+      popularArticles.innerHTML = popularHtml;
+    }, 1000);
+    
+  } catch (error) {
+    popularArticles.innerHTML = '<p class="text-muted small">加载失败</p>';
+  }
+}
+
+// 加载最近活动
+async function loadRecentActivities() {
+  const recentActivities = document.getElementById('recent-activities');
+  
+  try {
+    // 模拟活动数据
+    setTimeout(() => {
+      const activities = [
+        {
+          type: 'article',
+          action: '发布了新文章',
+          target: 'Vue.js 3.0 深度解析',
+          time: Date.now() / 1000 - 1800,
+          icon: 'fas fa-newspaper',
+          color: 'primary'
+        },
+        {
+          type: 'file',
+          action: '上传了文件',
+          target: 'vue-logo.png',
+          time: Date.now() / 1000 - 3600,
+          icon: 'fas fa-upload',
+          color: 'success'
+        },
+        {
+          type: 'article',
+          action: '更新了文章',
+          target: 'JavaScript 异步编程详解',
+          time: Date.now() / 1000 - 7200,
+          icon: 'fas fa-edit',
+          color: 'warning'
+        },
+        {
+          type: 'system',
+          action: '系统备份完成',
+          target: '数据库备份',
+          time: Date.now() / 1000 - 86400,
+          icon: 'fas fa-database',
+          color: 'info'
+        }
+      ];
+      
+      const activitiesHtml = activities.map(activity => `
+        <div class="d-flex align-items-center mb-3">
+          <div class="bg-${activity.color} bg-opacity-10 p-2 rounded-circle me-3">
+            <i class="${activity.icon} text-${activity.color}"></i>
+          </div>
+          <div class="flex-grow-1">
+            <div class="small mb-1">
+              ${activity.action} <strong>${escapeHtml(activity.target)}</strong>
+            </div>
+            <div class="small text-muted">
+              <i class="fas fa-clock me-1"></i>
+              ${getTimeAgo(activity.time)}
+            </div>
+          </div>
+        </div>
+      `).join('');
+      
+      recentActivities.innerHTML = activitiesHtml;
+    }, 1200);
+    
+  } catch (error) {
+    recentActivities.innerHTML = '<p class="text-muted small">加载活动记录失败</p>';
+  }
+}
+
+// 绑定事件
+function bindDashboardEvents() {
+  // 清理缓存按钮
+  document.getElementById('clear-cache-btn')?.addEventListener('click', function() {
+    if (confirm('确定要清理缓存吗？')) {
+      window.blogApp.showNotification('缓存清理完成', 'success');
+    }
+  });
+  
+  // 数据备份按钮
+  document.getElementById('backup-data-btn')?.addEventListener('click', function() {
+    window.blogApp.showNotification('数据备份功能即将上线', 'info');
+  });
+  
+  // 图表时间范围切换
+  document.querySelectorAll('input[name="chart-period"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      console.log('切换图表时间范围:', this.value);
+      // 这里可以重新加载图表数据
+    });
+  });
+}
+
+// 工具函数
+function formatNumber(num) {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1) + 'M';
+  } else if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'K';
+  }
+  return num.toString();
+}
+
+function getTimeAgo(timestamp) {
+  const now = Date.now() / 1000;
+  const diff = now - timestamp;
+  
+  if (diff < 60) {
+    return '刚刚';
+  } else if (diff < 3600) {
+    return `${Math.floor(diff / 60)} 分钟前`;
+  } else if (diff < 86400) {
+    return `${Math.floor(diff / 3600)} 小时前`;
+  } else {
+    return `${Math.floor(diff / 86400)} 天前`;
+  }
+}
+
+function getStatusBadge(status) {
+  const statusMap = {
+    'published': '<span class="badge badge-success-custom">已发布</span>',
+    'draft': '<span class="badge badge-secondary-custom">草稿</span>',
+    'private': '<span class="badge badge-warning-custom">私有</span>',
+    'archived': '<span class="badge badge-info-custom">归档</span>'
+  };
+  
+  return statusMap[status] || '<span class="badge badge-secondary-custom">未知</span>';
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+</script>

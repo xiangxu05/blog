@@ -48,7 +48,8 @@ func DownloadFileHandler(c *gin.Context) {
 		message.SendMsg(c, http.StatusInternalServerError, "文件下载失败", nil)
 		return
 	}
-	message.SendMsg(c, http.StatusOK, "文件下载成功", nil)
+	// 文件下载成功，不需要发送额外的JSON响应
+	// service.DownloadFile 已经通过 c.FileAttachment 发送了文件内容
 }
 
 func DeleteFileHandler(c *gin.Context) {

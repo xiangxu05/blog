@@ -32,6 +32,7 @@ func newArticle(db *gorm.DB, opts ...gen.DOOption) article {
 	_article.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_article.UserID = field.NewInt32(tableName, "user_id")
 	_article.Title = field.NewString(tableName, "title")
+	_article.Description = field.NewString(tableName, "description")
 	_article.Version = field.NewInt(tableName, "version")
 	_article.Category = field.NewString(tableName, "category")
 	_article.Tags = field.NewString(tableName, "tags")
@@ -45,16 +46,17 @@ func newArticle(db *gorm.DB, opts ...gen.DOOption) article {
 type article struct {
 	articleDo articleDo
 
-	ALL       field.Asterisk
-	ID        field.Int32
-	CreatedAt field.Time
-	UpdatedAt field.Time
-	UserID    field.Int32
-	Title     field.String
-	Version   field.Int
-	Category  field.String
-	Tags      field.String
-	Views     field.Int
+	ALL         field.Asterisk
+	ID          field.Int32
+	CreatedAt   field.Time
+	UpdatedAt   field.Time
+	UserID      field.Int32
+	Title       field.String
+	Description field.String
+	Version     field.Int
+	Category    field.String
+	Tags        field.String
+	Views       field.Int
 
 	fieldMap map[string]field.Expr
 }
@@ -76,6 +78,7 @@ func (a *article) updateTableName(table string) *article {
 	a.UpdatedAt = field.NewTime(table, "updated_at")
 	a.UserID = field.NewInt32(table, "user_id")
 	a.Title = field.NewString(table, "title")
+	a.Description = field.NewString(table, "description")
 	a.Version = field.NewInt(table, "version")
 	a.Category = field.NewString(table, "category")
 	a.Tags = field.NewString(table, "tags")
@@ -104,12 +107,13 @@ func (a *article) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (a *article) fillFieldMap() {
-	a.fieldMap = make(map[string]field.Expr, 9)
+	a.fieldMap = make(map[string]field.Expr, 10)
 	a.fieldMap["id"] = a.ID
 	a.fieldMap["created_at"] = a.CreatedAt
 	a.fieldMap["updated_at"] = a.UpdatedAt
 	a.fieldMap["user_id"] = a.UserID
 	a.fieldMap["title"] = a.Title
+	a.fieldMap["description"] = a.Description
 	a.fieldMap["version"] = a.Version
 	a.fieldMap["category"] = a.Category
 	a.fieldMap["tags"] = a.Tags

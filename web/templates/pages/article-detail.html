@@ -1,0 +1,732 @@
+<div class="container py-4">
+  <div class="row">
+    <!-- 主内容区域 -->
+    <div class="col-lg-8">
+      <!-- 文章加载状态 -->
+      <div id="article-loading" class="text-center py-5">
+        <div class="spinner-border text-primary mb-3" role="status">
+          <span class="visually-hidden">加载中...</span>
+        </div>
+        <p class="text-muted">正在加载文章...</p>
+      </div>
+
+      <!-- 文章内容容器 -->
+      <div id="article-container" class="d-none">
+        <!-- 文章头部 -->
+        <article class="card-custom mb-4">
+          <div class="card-body">
+            <!-- 文章标题 -->
+            <header class="mb-4">
+              <h1 id="article-title" class="display-5 fw-bold mb-3">文章标题</h1>
+
+              <!-- 文章元数据 -->
+              <div class="article-meta mb-3">
+                <div class="row align-items-center">
+                  <div class="col-md-8">
+                    <div class="d-flex flex-wrap align-items-center gap-3">
+                      <span class="text-muted">
+                        <i class="fas fa-calendar-alt me-1"></i>
+                        <span id="article-date">-</span>
+                      </span>
+                      <span class="text-muted">
+                        <i class="fas fa-folder me-1"></i>
+                        <span id="article-category">-</span>
+                      </span>
+                      <span class="text-muted">
+                        <i class="fas fa-eye me-1"></i>
+                        <span id="article-views">0</span> 次阅读
+                      </span>
+                      <span class="text-muted">
+                        <i class="fas fa-clock me-1"></i>
+                        <span id="reading-time">5</span> 分钟阅读
+                      </span>
+                    </div>
+                  </div>
+                  <div class="col-md-4 text-md-end">
+                    <!-- 文章操作按钮 -->
+                    <div class="btn-group" role="group">
+                      <button class="btn btn-outline-custom btn-sm" id="share-btn" title="分享文章">
+                        <i class="fas fa-share-alt"></i>
+                      </button>
+                      <button class="btn btn-outline-custom btn-sm" id="bookmark-btn" title="收藏文章">
+                        <i class="fas fa-bookmark"></i>
+                      </button>
+                      <button class="btn btn-outline-custom btn-sm" id="print-btn" title="打印文章">
+                        <i class="fas fa-print"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 文章标签 -->
+              <div id="article-tags" class="article-tags">
+                <!-- 标签将通过JavaScript动态添加 -->
+              </div>
+
+              <!-- 文章描述 -->
+              <div id="article-description" class="alert alert-info-custom">
+                <i class="fas fa-info-circle me-2"></i>
+                <span>文章描述</span>
+              </div>
+            </header>
+
+            <!-- 目录导航 -->
+            <div id="table-of-contents" class="card-custom mb-4 d-none">
+              <div class="card-body">
+                <h6 class="card-title">
+                  <i class="fas fa-list me-2"></i>
+                  文章目录
+                </h6>
+                <div id="toc-content">
+                  <!-- 目录内容将通过JavaScript生成 -->
+                </div>
+              </div>
+            </div>
+
+            <!-- 文章内容加载状态 -->
+            <div id="content-loading" class="text-center py-4">
+              <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">加载内容中...</span>
+              </div>
+              <p class="text-muted">正在加载文章内容...</p>
+            </div>
+
+            <!-- Markdown内容容器 -->
+            <div id="article-content" class="markdown-content d-none">
+              <!-- 文章内容将通过JavaScript渲染 -->
+            </div>
+
+            <!-- 内容加载错误 -->
+            <div id="content-error" class="alert alert-danger-custom d-none">
+              <i class="fas fa-exclamation-triangle me-2"></i>
+              <strong>内容加载失败</strong>
+              <p class="mb-2">无法加载文章内容，请稍后重试</p>
+              <button class="btn btn-outline-danger btn-sm" onclick="window.loadArticleContent()">
+                <i class="fas fa-refresh me-2"></i>重新加载
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <!-- 文章底部操作 -->
+        <div class="card-custom mb-4">
+          <div class="card-body">
+            <div class="row align-items-center">
+              <div class="col-md-6">
+                <h6 class="mb-2">觉得文章有用？</h6>
+                <div class="btn-group" role="group">
+                  <button class="btn btn-outline-success btn-sm" id="like-btn">
+                    <i class="fas fa-thumbs-up me-2"></i>
+                    <span id="like-count">0</span> 赞
+                  </button>
+                  <button class="btn btn-outline-custom btn-sm" id="comment-btn">
+                    <i class="fas fa-comment me-2"></i>
+                    评论
+                  </button>
+                </div>
+              </div>
+              <div class="col-md-6 text-md-end">
+                <h6 class="mb-2">分享给朋友</h6>
+                <div class="btn-group" role="group">
+                  <button class="btn btn-outline-custom btn-sm" onclick="shareToWeibo()">
+                    <i class="fab fa-weibo"></i>
+                  </button>
+                  <button class="btn btn-outline-custom btn-sm" onclick="shareToTwitter()">
+                    <i class="fab fa-twitter"></i>
+                  </button>
+                  <button class="btn btn-outline-custom btn-sm" onclick="copyLink()">
+                    <i class="fas fa-link"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 文章导航 -->
+        <div class="row mb-4">
+          <div class="col-md-6 mb-3 mb-md-0">
+            <div class="card-custom h-100" id="prev-article" style="display: none;">
+              <div class="card-body">
+                <small class="text-muted">上一篇</small>
+                <h6 class="card-title mb-0">
+                  <a href="#" class="text-decoration-none" id="prev-article-link">
+                    <i class="fas fa-chevron-left me-2"></i>
+                    <span id="prev-article-title">文章标题</span>
+                  </a>
+                </h6>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card-custom h-100" id="next-article" style="display: none;">
+              <div class="card-body text-end">
+                <small class="text-muted">下一篇</small>
+                <h6 class="card-title mb-0">
+                  <a href="#" class="text-decoration-none" id="next-article-link">
+                    <span id="next-article-title">文章标题</span>
+                    <i class="fas fa-chevron-right ms-2"></i>
+                  </a>
+                </h6>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 文章加载错误 -->
+      <div id="article-error" class="alert alert-danger-custom d-none">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>文章加载失败</strong>
+        <p class="mb-2">无法加载文章信息，请稍后重试</p>
+        <button class="btn btn-outline-danger btn-sm" onclick="window.loadArticleDetail()">
+          <i class="fas fa-refresh me-2"></i>重新加载
+        </button>
+      </div>
+    </div>
+
+    <!-- 侧边栏 -->
+    <div class="col-lg-4">
+      <!-- 阅读进度 -->
+      <div class="card-custom mb-4 sticky-top" style="top: 100px;">
+        <div class="card-body">
+          <h6 class="card-title">
+            <i class="fas fa-book-reader me-2"></i>
+            阅读进度
+          </h6>
+          <div class="progress progress-custom mb-2">
+            <div class="progress-bar" id="reading-progress" role="progressbar" style="width: 0%"></div>
+          </div>
+          <small class="text-muted">已阅读 <span id="progress-percent">0</span>%</small>
+        </div>
+      </div>
+
+      <!-- 快速导航 -->
+      <div class="card-custom mb-4" id="quick-nav" style="display: none;">
+        <div class="card-body">
+          <h6 class="card-title">
+            <i class="fas fa-list me-2"></i>
+            快速导航
+          </h6>
+          <div id="quick-nav-content">
+            <!-- 导航链接将通过JavaScript生成 -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 相关文章 -->
+      <div class="card-custom mb-4">
+        <div class="card-body">
+          <h6 class="card-title">
+            <i class="fas fa-newspaper me-2"></i>
+            相关文章
+          </h6>
+          <div id="related-articles">
+            <div class="text-center py-3">
+              <div class="spinner-border spinner-border-sm text-primary" role="status">
+                <span class="visually-hidden">加载中...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 文章信息卡片 -->
+      <div class="card-custom">
+        <div class="card-body">
+          <h6 class="card-title">
+            <i class="fas fa-info-circle me-2"></i>
+            文章信息
+          </h6>
+          <div class="small">
+            <div class="row mb-2">
+              <div class="col-6 text-muted">发布时间:</div>
+              <div class="col-6" id="info-publish-date">-</div>
+            </div>
+            <div class="row mb-2">
+              <div class="col-6 text-muted">最后更新:</div>
+              <div class="col-6" id="info-update-date">-</div>
+            </div>
+            <div class="row mb-2">
+              <div class="col-6 text-muted">文章版本:</div>
+              <div class="col-6" id="info-version">-</div>
+            </div>
+            <div class="row mb-2">
+              <div class="col-6 text-muted">字数统计:</div>
+              <div class="col-6" id="info-word-count">-</div>
+            </div>
+            <div class="row">
+              <div class="col-6 text-muted">阅读时长:</div>
+              <div class="col-6" id="info-read-time">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 分享模态框 -->
+<div class="modal fade" id="share-modal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content modal-content-custom">
+      <div class="modal-header modal-header-custom">
+        <h5 class="modal-title">
+          <i class="fas fa-share-alt me-2"></i>
+          分享文章
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body modal-body-custom">
+        <div class="mb-3">
+          <label class="form-label-custom">文章链接</label>
+          <div class="input-group">
+            <input type="text" class="form-control form-control-custom" id="share-url" readonly>
+            <button class="btn btn-outline-custom" onclick="copyShareUrl()">
+              <i class="fas fa-copy"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="d-grid gap-2">
+          <button class="btn btn-outline-custom" onclick="shareToWeibo()">
+            <i class="fab fa-weibo me-2"></i>分享到微博
+          </button>
+          <button class="btn btn-outline-custom" onclick="shareToTwitter()">
+            <i class="fab fa-twitter me-2"></i>分享到 Twitter
+          </button>
+          <button class="btn btn-outline-custom" onclick="shareToQQ()">
+            <i class="fab fa-qq me-2"></i>分享到 QQ
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 文章详情页面初始化函数
+  window.initArticleDetailPage = function (routeData) {
+    console.log('初始化文章详情页面', routeData);
+
+    // 获取文章ID和版本号
+    const articleId = routeData.params.id;
+    const version = routeData.params.version;
+
+    if (!articleId || !version) {
+      showArticleError('无效的文章链接');
+      return;
+    }
+
+    // 存储文章信息到全局
+    window.currentArticle = { id: articleId, version: version };
+
+    // 加载文章详情
+    loadArticleDetail();
+
+    // 绑定事件
+    bindArticleEvents();
+
+    // 初始化阅读进度追踪
+    initReadingProgress();
+  };
+
+  // 全局变量
+  let articleData = null;
+  let articleContent = null;
+
+  // 加载文章详情（两步加载机制）
+  window.loadArticleDetail = async function () {
+    const { id, version } = window.currentArticle;
+
+    try {
+      // 显示加载状态
+      showArticleLoading();
+
+      // 第一步：获取文章元数据
+      console.log('第一步：获取文章元数据');
+      articleData = await window.apiClient.articles.getDetail(id, version);
+
+      // 显示文章基本信息
+      displayArticleInfo(articleData);
+
+      // 第二步：根据store_id加载文章内容
+      if (articleData.store_id) {
+        await loadArticleContent();
+      } else {
+        showContentError('文章内容不存在');
+      }
+
+      // 加载相关数据
+      loadRelatedArticles();
+
+    } catch (error) {
+      console.error('加载文章详情失败:', error);
+      showArticleError(error.message || '文章加载失败');
+    }
+  };
+
+  // 加载文章内容
+  window.loadArticleContent = async function () {
+    if (!articleData || !articleData.store_id) {
+      showContentError('无法获取文章内容');
+      return;
+    }
+
+    try {
+      // 显示内容加载状态
+      showContentLoading();
+
+      console.log('第二步：根据store_id下载文章内容');
+      articleContent = await window.apiClient.files.download(articleData.store_id);
+
+      // 渲染Markdown内容
+      await renderMarkdownContent(articleContent);
+
+      // 生成目录
+      generateTableOfContents();
+
+      // 显示文章容器
+      hideContentLoading();
+
+    } catch (error) {
+      console.error('加载文章内容失败:', error);
+      showContentError(error.message || '文章内容加载失败');
+    }
+  };
+
+  // 显示文章基本信息
+  function displayArticleInfo(article) {
+
+    // 设置文章标题
+    document.getElementById('article-title').textContent = article.title;
+    document.title = `${article.title} - 个人博客`;
+
+    // 设置元数据
+    const publishDate = article.created_at ? new Date(article.created_at).toLocaleDateString('zh-CN') : '未知时间';
+    document.getElementById('article-date').textContent = publishDate;
+    document.getElementById('article-category').textContent = article.category || '未分类';
+    document.getElementById('article-views').textContent = article.views || 0;
+
+    // 设置文章描述
+    if (article.description) {
+      document.getElementById('article-description').innerHTML = `
+      <i class="fas fa-info-circle me-2"></i>
+      ${escapeHtml(article.description)}
+    `;
+    } else {
+      document.getElementById('article-description').style.display = 'none';
+    }
+
+    // 设置标签
+    if (article.tags) {
+      const tags = article.tags.split(',').filter(tag => tag.trim());
+      const tagsHtml = tags.map(tag =>
+        `<span class="article-tag">${escapeHtml(tag.trim())}</span>`
+      ).join('');
+      document.getElementById('article-tags').innerHTML = tagsHtml;
+    }
+
+    // 设置侧边栏信息
+    document.getElementById('info-publish-date').textContent = publishDate;
+    const updateDate = article.updated_at ? new Date(article.updated_at).toLocaleDateString('zh-CN') : '未知时间';
+    document.getElementById('info-update-date').textContent = updateDate;
+    document.getElementById('info-version').textContent = article.version || '1';
+
+    // 设置分享链接
+    const shareUrl = window.location.href;
+    document.getElementById('share-url').value = shareUrl;
+
+    // 隐藏加载状态，显示文章容器
+    hideArticleLoading();
+  }
+
+  // 渲染Markdown内容
+  async function renderMarkdownContent(content) {
+    const contentContainer = document.getElementById('article-content');
+
+    try {
+      // 使用marked.js渲染Markdown
+      const renderer = new marked.Renderer();
+
+      // 自定义渲染器
+      renderer.heading = function (text, level) {
+        const id = text.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-');
+        return `<h${level} id="${id}">${text}</h${level}>`;
+      };
+
+      renderer.code = function (code, language) {
+        const langClass = language ? ` class="language-${language}"` : '';
+        return `<pre><code${langClass}>${escapeHtml(code)}</code></pre>`;
+      };
+
+      // 配置marked选项
+      marked.setOptions({
+        renderer: renderer,
+        highlight: function (code, lang) {
+          if (window.hljs && lang && window.hljs.getLanguage(lang)) {
+            try {
+              return window.hljs.highlight(code, { language: lang }).value;
+            } catch (e) {
+              console.warn('代码高亮失败:', e);
+            }
+          }
+          return escapeHtml(code);
+        },
+        breaks: true,
+        gfm: true
+      });
+
+      // 渲染内容
+      const htmlContent = marked.parse(content);
+      contentContainer.innerHTML = htmlContent;
+
+      // 计算字数和阅读时间
+      const wordCount = content.length;
+      const readingTime = Math.ceil(wordCount / 500); // 假设每分钟阅读500字
+
+      document.getElementById('info-word-count').textContent = wordCount;
+      document.getElementById('info-read-time').textContent = `${readingTime} 分钟`;
+      document.getElementById('reading-time').textContent = readingTime;
+
+      // 高亮代码块
+      if (window.hljs) {
+        window.hljs.highlightAll();
+      }
+
+      // 显示内容
+      contentContainer.classList.remove('d-none');
+
+    } catch (error) {
+      console.error('Markdown渲染失败:', error);
+      contentContainer.innerHTML = `
+      <div class="alert alert-warning-custom">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        内容渲染出现问题，显示原始内容
+      </div>
+      <pre class="bg-light p-3 rounded">${escapeHtml(content)}</pre>
+    `;
+      contentContainer.classList.remove('d-none');
+    }
+  }
+
+  // 生成目录
+  function generateTableOfContents() {
+    const headings = document.querySelectorAll('#article-content h1, #article-content h2, #article-content h3, #article-content h4');
+
+    if (headings.length === 0) {
+      return;
+    }
+
+    const tocContainer = document.getElementById('table-of-contents');
+    const tocContent = document.getElementById('toc-content');
+    const quickNavContent = document.getElementById('quick-nav-content');
+
+    let tocHtml = '<ul class="list-unstyled">';
+    let quickNavHtml = '';
+
+    headings.forEach((heading, index) => {
+      const level = parseInt(heading.tagName[1]);
+      const text = heading.textContent;
+      const id = heading.id || `heading-${index}`;
+
+      if (!heading.id) {
+        heading.id = id;
+      }
+
+      const indent = level > 1 ? `style="margin-left: ${(level - 1) * 15}px"` : '';
+
+      tocHtml += `
+      <li ${indent}>
+        <a href="#${id}" class="text-decoration-none text-muted">${text}</a>
+      </li>
+    `;
+
+      if (level <= 3) {
+        quickNavHtml += `
+        <a href="#${id}" class="btn btn-outline-custom btn-sm mb-2 d-block text-start">
+          ${text}
+        </a>
+      `;
+      }
+    });
+
+    tocHtml += '</ul>';
+
+    tocContent.innerHTML = tocHtml;
+    tocContainer.classList.remove('d-none');
+
+    if (quickNavHtml) {
+      quickNavContent.innerHTML = quickNavHtml;
+      document.getElementById('quick-nav').style.display = 'block';
+    }
+
+    // 平滑滚动到锚点
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+  }
+
+  // 初始化阅读进度
+  function initReadingProgress() {
+    const progressBar = document.getElementById('reading-progress');
+    const progressPercent = document.getElementById('progress-percent');
+
+    window.addEventListener('scroll', function () {
+      const article = document.getElementById('article-content');
+      if (!article) return;
+
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight - windowHeight;
+      const scrollTop = window.pageYOffset;
+
+      const progress = Math.min(100, Math.max(0, (scrollTop / documentHeight) * 100));
+
+      progressBar.style.width = progress + '%';
+      progressPercent.textContent = Math.round(progress);
+    });
+  }
+
+  // 加载相关文章
+  async function loadRelatedArticles() {
+    const relatedContainer = document.getElementById('related-articles');
+
+    try {
+      // 模拟相关文章数据
+      setTimeout(() => {
+        relatedContainer.innerHTML = `
+        <div class="list-group list-group-flush">
+          <a href="/articles/2/1" class="list-group-item list-group-item-action px-0">
+            <h6 class="mb-1">JavaScript 异步编程详解</h6>
+            <small class="text-muted">相关度 85%</small>
+          </a>
+          <a href="/articles/3/1" class="list-group-item list-group-item-action px-0">
+            <h6 class="mb-1">前端性能优化实践</h6>
+            <small class="text-muted">相关度 72%</small>
+          </a>
+          <a href="/articles/4/1" class="list-group-item list-group-item-action px-0">
+            <h6 class="mb-1">Vue.js 组件设计模式</h6>
+            <small class="text-muted">相关度 68%</small>
+          </a>
+        </div>
+      `;
+      }, 1500);
+
+    } catch (error) {
+      relatedContainer.innerHTML = '<p class="text-muted small">加载相关文章失败</p>';
+    }
+  }
+
+  // 绑定事件
+  function bindArticleEvents() {
+    // 分享按钮
+    document.getElementById('share-btn')?.addEventListener('click', function () {
+      new bootstrap.Modal(document.getElementById('share-modal')).show();
+    });
+
+    // 收藏按钮
+    document.getElementById('bookmark-btn')?.addEventListener('click', function () {
+      window.blogApp.showNotification('收藏功能即将上线', 'info');
+    });
+
+    // 打印按钮
+    document.getElementById('print-btn')?.addEventListener('click', function () {
+      window.print();
+    });
+
+    // 点赞按钮
+    document.getElementById('like-btn')?.addEventListener('click', function () {
+      const likeCount = document.getElementById('like-count');
+      const currentCount = parseInt(likeCount.textContent) || 0;
+      likeCount.textContent = currentCount + 1;
+      window.blogApp.showNotification('感谢您的点赞！', 'success');
+    });
+
+    // 评论按钮
+    document.getElementById('comment-btn')?.addEventListener('click', function () {
+      window.blogApp.showNotification('评论功能即将上线', 'info');
+    });
+  }
+
+  // 显示状态函数
+  function showArticleLoading() {
+    document.getElementById('article-loading').classList.remove('d-none');
+    document.getElementById('article-container').classList.add('d-none');
+    document.getElementById('article-error').classList.add('d-none');
+  }
+
+  function hideArticleLoading() {
+    document.getElementById('article-loading').classList.add('d-none');
+    document.getElementById('article-container').classList.remove('d-none');
+  }
+
+  function showArticleError(message) {
+    document.getElementById('article-loading').classList.add('d-none');
+    document.getElementById('article-container').classList.add('d-none');
+    document.getElementById('article-error').classList.remove('d-none');
+    document.getElementById('article-error').querySelector('p').textContent = message;
+  }
+
+  function showContentLoading() {
+    document.getElementById('content-loading').classList.remove('d-none');
+    document.getElementById('article-content').classList.add('d-none');
+    document.getElementById('content-error').classList.add('d-none');
+  }
+
+  function hideContentLoading() {
+    document.getElementById('content-loading').classList.add('d-none');
+  }
+
+  function showContentError(message) {
+    document.getElementById('content-loading').classList.add('d-none');
+    document.getElementById('content-error').classList.remove('d-none');
+    document.getElementById('content-error').querySelector('p').textContent = message;
+  }
+
+  // 分享功能
+  function shareToWeibo() {
+    const title = encodeURIComponent(document.getElementById('article-title').textContent);
+    const url = encodeURIComponent(window.location.href);
+    window.open(`https://service.weibo.com/share/share.php?title=${title}&url=${url}`, '_blank');
+  }
+
+  function shareToTwitter() {
+    const title = encodeURIComponent(document.getElementById('article-title').textContent);
+    const url = encodeURIComponent(window.location.href);
+    window.open(`https://twitter.com/intent/tweet?text=${title}&url=${url}`, '_blank');
+  }
+
+  function shareToQQ() {
+    const title = encodeURIComponent(document.getElementById('article-title').textContent);
+    const url = encodeURIComponent(window.location.href);
+    window.open(`https://connect.qq.com/widget/shareqq/index.html?title=${title}&url=${url}`, '_blank');
+  }
+
+  function copyLink() {
+    copyShareUrl();
+  }
+
+  function copyShareUrl() {
+    const shareUrl = document.getElementById('share-url');
+    shareUrl.select();
+    document.execCommand('copy');
+    window.blogApp.showNotification('链接已复制到剪贴板', 'success');
+  }
+
+  // HTML转义函数
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+</script>

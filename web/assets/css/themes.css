@@ -1,0 +1,487 @@
+/* 主题系统样式文件 - themes.css */
+
+/* 主题切换动画 */
+body {
+  transition: background-color var(--transition-normal) var(--ease-out),
+              color var(--transition-normal) var(--ease-out);
+}
+
+* {
+  transition: background-color var(--transition-normal) var(--ease-out),
+              color var(--transition-normal) var(--ease-out),
+              border-color var(--transition-normal) var(--ease-out);
+}
+
+/* 亮色主题特定样式 */
+[data-theme="light"] {
+  /* 导航栏 */
+  .navbar {
+    background-color: rgba(255, 255, 255, 0.8) !important;
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+  
+  /* 毛玻璃效果 */
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+  
+  /* 代码块 */
+  pre, code {
+    background-color: var(--color-gray-6);
+    color: var(--text-primary);
+  }
+  
+  /* 表格 */
+  .table {
+    --bs-table-bg: var(--bg-primary);
+    --bs-table-border-color: var(--color-gray-5);
+  }
+  
+  /* 主题切换按钮图标 */
+  #theme-toggle .fa-moon {
+    display: inline-block;
+  }
+  
+  #theme-toggle .fa-sun {
+    display: none;
+  }
+}
+
+/* 暗色主题特定样式 */
+[data-theme="dark"] {
+  /* 导航栏 */
+  .navbar {
+    background-color: rgba(28, 28, 30, 0.8) !important;
+    backdrop-filter: saturate(180%) blur(20px);
+    border-bottom-color: var(--color-gray-4);
+  }
+  
+  /* 毛玻璃效果 */
+  .glass-effect {
+    background: rgba(28, 28, 30, 0.8);
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+  
+  /* 页脚 */
+  footer {
+    background-color: var(--bg-primary) !important;
+    border-top-color: var(--color-gray-4);
+  }
+  
+  /* 代码块 */
+  pre, code {
+    background-color: var(--color-gray-4);
+    color: var(--text-primary);
+  }
+  
+  /* 表格 */
+  .table {
+    --bs-table-bg: var(--bg-primary);
+    --bs-table-border-color: var(--color-gray-4);
+    --bs-table-color: var(--text-primary);
+  }
+  
+  /* Bootstrap 组件暗色模式覆盖 */
+  .dropdown-menu {
+    background-color: var(--bg-primary);
+    border-color: var(--color-gray-4);
+  }
+  
+  .dropdown-item {
+    color: var(--text-secondary);
+  }
+  
+  .dropdown-item:hover,
+  .dropdown-item:focus {
+    background-color: var(--color-gray-5);
+    color: var(--text-primary);
+  }
+  
+  .modal-content {
+    background-color: var(--bg-primary);
+    border-color: var(--color-gray-4);
+  }
+  
+  .offcanvas {
+    background-color: var(--bg-primary);
+  }
+  
+  /* 主题切换按钮图标 */
+  #theme-toggle .fa-moon {
+    display: none;
+  }
+  
+  #theme-toggle .fa-sun {
+    display: inline-block;
+  }
+}
+
+/* 代码高亮主题切换 */
+[data-theme="light"] .hljs {
+  background: var(--color-gray-6) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .hljs {
+  background: var(--color-gray-4) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Markdown 内容样式 */
+.markdown-content {
+  line-height: 1.7;
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+/* 标题样式增强 */
+.markdown-content .markdown-heading {
+  position: relative;
+  color: var(--text-primary);
+  margin-top: var(--spacing-xl);
+  margin-bottom: var(--spacing-md);
+  font-weight: 600;
+}
+
+.markdown-content .markdown-heading:first-child {
+  margin-top: 0;
+}
+
+.markdown-content .heading-anchor {
+  position: absolute;
+  left: -1.5rem;
+  opacity: 0;
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: opacity var(--transition-fast) var(--ease-out);
+}
+
+.markdown-content .markdown-heading:hover .heading-anchor {
+  opacity: 1;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  color: var(--text-primary);
+  margin-top: var(--spacing-xl);
+  margin-bottom: var(--spacing-md);
+}
+
+.markdown-content h1:first-child,
+.markdown-content h2:first-child,
+.markdown-content h3:first-child {
+  margin-top: 0;
+}
+
+/* 段落样式 */
+.markdown-content p {
+  margin-bottom: var(--spacing-md);
+  color: var(--text-secondary);
+}
+
+/* 引用块样式增强 */
+.markdown-content .markdown-blockquote {
+  position: relative;
+  border-left: 4px solid var(--color-primary);
+  padding: var(--spacing-md) var(--spacing-lg);
+  margin: var(--spacing-lg) 0;
+  background-color: var(--color-gray-6);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  font-style: italic;
+}
+
+.markdown-content .markdown-blockquote .quote-icon {
+  position: absolute;
+  top: var(--spacing-sm);
+  left: var(--spacing-sm);
+  color: var(--color-primary);
+  opacity: 0.7;
+}
+
+.markdown-content .markdown-blockquote p {
+  margin-bottom: 0;
+  color: var(--text-secondary);
+  padding-left: var(--spacing-lg);
+}
+
+/* 代码样式增强 */
+.markdown-content .inline-code {
+  background-color: var(--color-gray-6);
+  color: var(--color-primary);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9em;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+}
+
+.markdown-content .code-block-wrapper {
+  position: relative;
+  margin: var(--spacing-lg) 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.markdown-content .code-language {
+  background-color: var(--color-gray-4);
+  color: var(--text-primary);
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-bottom: 1px solid var(--color-gray-5);
+}
+
+.markdown-content .code-copy-btn {
+  position: absolute;
+  top: var(--spacing-xs);
+  right: var(--spacing-xs);
+  background: var(--color-gray-5);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  opacity: 0;
+  transition: all var(--transition-fast) var(--ease-out);
+  z-index: 1;
+}
+
+.markdown-content .code-block-wrapper:hover .code-copy-btn {
+  opacity: 1;
+}
+
+.markdown-content .code-copy-btn:hover {
+  background: var(--color-gray-4);
+  color: var(--text-primary);
+}
+
+.markdown-content pre {
+  background-color: var(--color-gray-6);
+  padding: var(--spacing-md);
+  margin: 0;
+  overflow-x: auto;
+  font-size: 0.875em;
+  line-height: 1.5;
+}
+
+.markdown-content pre code {
+  background: none;
+  color: inherit;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* 列表样式增强 */
+.markdown-content .markdown-list {
+  margin-bottom: var(--spacing-md);
+  padding-left: var(--spacing-lg);
+}
+
+.markdown-content .markdown-list li {
+  margin-bottom: var(--spacing-xs);
+  color: var(--text-secondary);
+}
+
+.markdown-content .markdown-list li::marker {
+  color: var(--color-primary);
+}
+
+/* 表格样式增强 */
+.markdown-content .table-wrapper {
+  margin: var(--spacing-lg) 0;
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.markdown-content .markdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+  background-color: var(--bg-primary);
+}
+
+.markdown-content .markdown-table th {
+  background-color: var(--color-gray-6);
+  font-weight: 600;
+  color: var(--text-primary);
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-align: left;
+  border-bottom: 2px solid var(--color-gray-5);
+}
+
+.markdown-content .markdown-table td {
+  color: var(--text-secondary);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid var(--color-gray-5);
+}
+
+.markdown-content .markdown-table tr:nth-child(even) {
+  background-color: var(--color-gray-6);
+}
+
+/* 图片样式增强 */
+.markdown-content .image-figure {
+  margin: var(--spacing-lg) 0;
+  text-align: center;
+}
+
+.markdown-content .markdown-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  transition: transform var(--transition-normal) var(--ease-out);
+}
+
+.markdown-content .markdown-image:hover {
+  transform: scale(1.02);
+  cursor: zoom-in;
+}
+
+.markdown-content figcaption {
+  margin-top: var(--spacing-sm);
+  font-size: 0.9rem;
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+/* 链接样式增强 */
+.markdown-content a {
+  color: var(--color-primary);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: all var(--transition-fast) var(--ease-out);
+}
+
+.markdown-content a:hover {
+  border-bottom-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.markdown-content a[target="_blank"] {
+  position: relative;
+}
+
+/* 分隔线样式 */
+.markdown-content hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--color-gray-5), transparent);
+  margin: var(--spacing-xl) 0;
+}
+
+/* 删除线和其他文本样式 */
+.markdown-content del {
+  color: var(--text-tertiary);
+  text-decoration-color: var(--color-danger);
+}
+
+.markdown-content strong {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.markdown-content em {
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+/* 任务列表样式 */
+.markdown-content input[type="checkbox"] {
+  margin-right: var(--spacing-xs);
+  transform: scale(1.1);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .markdown-content {
+    font-size: 0.95rem;
+  }
+  
+  .markdown-content .heading-anchor {
+    display: none;
+  }
+  
+  .markdown-content .code-block-wrapper {
+    margin-left: calc(-1 * var(--spacing-md));
+    margin-right: calc(-1 * var(--spacing-md));
+    border-radius: 0;
+  }
+  
+  .markdown-content .table-wrapper {
+    margin-left: calc(-1 * var(--spacing-md));
+    margin-right: calc(-1 * var(--spacing-md));
+  }
+}
+
+/* 主题切换动画效果 */
+@keyframes themeSwitch {
+  0% {
+    opacity: 0.8;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+[data-theme-switching="true"] {
+  animation: themeSwitch var(--transition-slow) var(--ease-out);
+}
+
+/* 系统主题偏好检测 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    /* 如果用户没有手动设置主题，且系统偏好暗色模式，则使用暗色主题变量 */
+    --bg-primary: #000000;
+    --bg-secondary: #1c1c1e;
+    --bg-tertiary: #2c2c2e;
+    --text-primary: #ffffff;
+    --text-secondary: #e5e5e7;
+    --text-tertiary: #8e8e93;
+  }
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  :root {
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.3);
+  }
+  
+  .btn-outline-custom {
+    border-width: 2px;
+  }
+  
+  .form-control-custom:focus {
+    border-width: 2px;
+  }
+}
+
+/* 减少动画的用户偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .skeleton {
+    animation: none;
+    background: var(--color-gray-6);
+  }
+}

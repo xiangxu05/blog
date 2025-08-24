@@ -104,12 +104,13 @@ func CreateArticle(c *gin.Context, req *message.ArticleRequest) error {
 		}
 		// 创建文章基本信息
 		article = &model_def.Article{
-			UserID:   userID,
-			Title:    req.Title,
-			Version:  1,
-			Category: category.Name,
-			Tags:     req.Tags,
-			Views:    0,
+			UserID:      userID,
+			Title:       req.Title,
+			Description: req.Description,
+			Version:     1,
+			Category:    category.Name,
+			Tags:        req.Tags,
+			Views:       0,
 		}
 		if err := tx.Article.WithContext(c.Request.Context()).Create(article); err != nil {
 			return err

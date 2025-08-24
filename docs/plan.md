@@ -2,16 +2,17 @@
 
 ## 一、 项目初始化与基础配置 (高优先级)
 
-1.  **初始化前端项目**: 在 `d:/projects/18.test-qoder-frontend/` 目录下，使用纯 HTML/CSS/JavaScript 静态页面来实现这个项目。
-2.  **后端服务器**: 后端服务器能在 `http://localhost:8080` 上运行。
-3.  **静态服务器**: 配置本地静态服务器，确保项目能在 `http://localhost:80` 上运行。
-4.  **引入核心依赖**:
+1.  **初始化前端项目**: 在 `d:/projects/personal_blog/web/` 目录下，使用纯 HTML/CSS/JavaScript 静态页面来实现这个项目，与后端部署在同一个地方。
+2.  **后端服务器**: 后端服务器在 `http://localhost:8080` 上运行，同时提供静态文件服务。
+3.  **静态文件服务**: 后端添加静态文件路由，在 8080 端口同时提供前端页面和 API 服务。
+4.  **重要说明**: 除了添加前端 web 路由外，不要修改现有的后端 API 代码逻辑。
+5.  **引入核心依赖**:
     - **路由管理**: 使用原生 JavaScript 实现 SPA 路由功能，或使用轻量级路由库如 `page.js`。
     - **状态管理**: 使用原生 JavaScript + localStorage/sessionStorage 来管理应用状态（如用户信息）。
     - **HTTP 客户端**: 使用原生 `fetch` API 或引入轻量级的 `axios` CDN 版本进行 API 交互。
     - **UI 组件**: 使用原生 CSS + JavaScript 实现 UI 组件，或引入轻量级 CSS 框架如 `Bootstrap` 或 `Tailwind CSS`。
     - **Markdown 处理**: 引入 `marked.js` 或 `markdown-it` CDN 版本用于 Markdown 解析和渲染。
-5.  **基础配置**:
+6.  **基础配置**:
     - 创建统一的 API 请求工具函数，处理认证和错误。
     - 使用原生 JavaScript 管理全局状态和主题切换。
     - 实现全局错误处理和加载状态管理。
@@ -167,47 +168,54 @@
 **推荐文件组织结构**:
 
 ```
-d:/projects/18.test-qoder-frontend/
-├── index.html                 # 主页面
-├── css/                      # 样式文件
-│   ├── style.css            # 主样式文件
-│   ├── components.css       # 组件样式
-│   └── themes.css           # 主题样式
-├── js/                       # JavaScript文件
-│   ├── app.js              # 主应用逻辑
-│   ├── router.js           # 路由管理
-│   ├── api.js              # API调用
-│   ├── auth.js             # 认证管理
-│   ├── utils.js            # 工具函数
-│   └── components/         # 组件JavaScript
-│       ├── navbar.js
-│       ├── article-card.js
-│       └── editor.js
-├── pages/                    # 页面HTML片段
-│   ├── home.html
-│   ├── login.html
-│   ├── register.html
-│   ├── articles.html
-│   ├── article-detail.html
-│   ├── profile.html
-│   └── admin/
-│       ├── dashboard.html
-│       └── article-manage.html
-├── assets/                   # 静态资源
-│   ├── images/
-│   └── icons/
-└── README.md
+d:/projects/personal_blog/
+├── web/                        # 前端静态文件目录
+│   ├── index.html                 # 主页面
+│   ├── css/                      # 样式文件
+│   │   ├── style.css            # 主样式文件
+│   │   ├── components.css       # 组件样式
+│   │   └── themes.css           # 主题样式
+│   ├── js/                       # JavaScript文件
+│   │   ├── app.js              # 主应用逻辑
+│   │   ├── router.js           # 路由管理
+│   │   ├── api.js              # API调用
+│   │   ├── auth.js             # 认证管理
+│   │   ├── utils.js            # 工具函数
+│   │   └── components/         # 组件JavaScript
+│   │       ├── navbar.js
+│   │       ├── article-card.js
+│   │       └── editor.js
+│   ├── pages/                    # 页面HTML片段
+│   │   ├── home.html
+│   │   ├── login.html
+│   │   ├── register.html
+│   │   ├── articles.html
+│   │   ├── article-detail.html
+│   │   ├── profile.html
+│   │   └── admin/
+│   │       ├── dashboard.html
+│   │       └── article-manage.html
+│   ├── assets/                   # 静态资源
+│   │   ├── images/
+│   │   └── icons/
+│   └── README.md
+├── cmd/                       # 后端命令行工具
+├── internal/                  # 后端业务逻辑
+├── model_def/                 # 数据模型
+└── main.go                   # 后端主程序
 ```
 
 **核心文件说明**:
 
-- `index.html`: SPA 的入口文件，包含基础布局结构
-- `js/app.js`: 应用主逻辑，处理路由初始化和全局状态
-- `js/router.js`: 实现客户端路由，动态加载页面内容
-- `js/api.js`: 封装所有 API 调用，统一处理认证和错误
-- `pages/`: 存放各页面的 HTML 片段，通过 JavaScript 动态加载
+- `web/index.html`: SPA 的入口文件，包含基础布局结构
+- `web/js/app.js`: 应用主逻辑，处理路由初始化和全局状态
+- `web/js/router.js`: 实现客户端路由，动态加载页面内容
+- `web/js/api.js`: 封装所有 API 调用，统一处理认证和错误
+- `web/pages/`: 存放各页面的 HTML 片段，通过 JavaScript 动态加载
 
 ## 十、 开发注意事项
+
+**重要说明**: 除了添加前端 web 静态文件路由外，不要修改现有的后端 API 代码逻辑。所有后端接口保持不变，只增加静态文件服务功能。
 
 1.  **API 调用规范**:
 
@@ -243,8 +251,15 @@ d:/projects/18.test-qoder-frontend/
     - 加载状态：使用 CSS3 keyframes 实现苹果风格的旋转指示器。
 
 6.  **静态页面开发注意事项**:
+
     - 合理组织文件结构，分离 HTML、CSS、JavaScript 代码。
     - 使用模块化的 JavaScript 代码，避免全局变量污染。
     - 优化资源加载，合理使用 CDN 资源。
     - 确保代码在各种浏览器中的兼容性。
     - 使用原生 JavaScript 替代复杂框架，保持代码轻量化。
+
+7.  **后端部署配置**:
+    - 后端服务器需要添加静态文件路由，优先级低于 API 路由。
+    - 静态文件路由映射到 `web/` 目录，支持 SPA 路由回退。
+    - 所有非 API 路由请求都返回 `web/index.html`，由前端路由处理。
+    - 保持所有现有 API 接口不变，只增加静态文件服务。

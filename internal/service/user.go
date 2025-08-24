@@ -161,6 +161,16 @@ func UpdateUser(c *gin.Context, userID int32, updateUser *message.UpdateProfileR
 	if updateUser.Nickname != "" {
 		existingUser.Nickname = updateUser.Nickname
 	}
+	if updateUser.SelfIntro != "" {
+		existingUser.SelfIntro = updateUser.SelfIntro
+	}
+	if updateUser.PersonalWeb != "" {
+		existingUser.PersonalWeb = updateUser.PersonalWeb
+	}
+	if updateUser.Location != "" {
+		existingUser.Location = updateUser.Location
+	}
+
 	// 保存更新后的用户信息
 	if _, err := dao.User.WithContext(ctx).
 		Where(dao.User.ID.Eq(userID)).

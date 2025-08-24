@@ -37,6 +37,9 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 	_user.Role = field.NewString(tableName, "role")
 	_user.Email = field.NewString(tableName, "email")
 	_user.Avatar = field.NewString(tableName, "avatar")
+	_user.SelfIntro = field.NewString(tableName, "self_intro")
+	_user.PersonalWeb = field.NewString(tableName, "personal_web")
+	_user.Location = field.NewString(tableName, "location")
 
 	_user.fillFieldMap()
 
@@ -46,17 +49,20 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 type user struct {
 	userDo userDo
 
-	ALL       field.Asterisk
-	ID        field.Int32
-	CreatedAt field.Time
-	UpdatedAt field.Time
-	DeletedAt field.Field
-	Nickname  field.String
-	Username  field.String
-	Password  field.String
-	Role      field.String
-	Email     field.String
-	Avatar    field.String
+	ALL         field.Asterisk
+	ID          field.Int32
+	CreatedAt   field.Time
+	UpdatedAt   field.Time
+	DeletedAt   field.Field
+	Nickname    field.String
+	Username    field.String
+	Password    field.String
+	Role        field.String
+	Email       field.String
+	Avatar      field.String
+	SelfIntro   field.String
+	PersonalWeb field.String
+	Location    field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -83,6 +89,9 @@ func (u *user) updateTableName(table string) *user {
 	u.Role = field.NewString(table, "role")
 	u.Email = field.NewString(table, "email")
 	u.Avatar = field.NewString(table, "avatar")
+	u.SelfIntro = field.NewString(table, "self_intro")
+	u.PersonalWeb = field.NewString(table, "personal_web")
+	u.Location = field.NewString(table, "location")
 
 	u.fillFieldMap()
 
@@ -107,7 +116,7 @@ func (u *user) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (u *user) fillFieldMap() {
-	u.fieldMap = make(map[string]field.Expr, 10)
+	u.fieldMap = make(map[string]field.Expr, 13)
 	u.fieldMap["id"] = u.ID
 	u.fieldMap["created_at"] = u.CreatedAt
 	u.fieldMap["updated_at"] = u.UpdatedAt
@@ -118,6 +127,9 @@ func (u *user) fillFieldMap() {
 	u.fieldMap["role"] = u.Role
 	u.fieldMap["email"] = u.Email
 	u.fieldMap["avatar"] = u.Avatar
+	u.fieldMap["self_intro"] = u.SelfIntro
+	u.fieldMap["personal_web"] = u.PersonalWeb
+	u.fieldMap["location"] = u.Location
 }
 
 func (u user) clone(db *gorm.DB) user {

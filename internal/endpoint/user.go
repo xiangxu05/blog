@@ -62,12 +62,16 @@ func LoginHandler(c *gin.Context) {
 	resp := &message.LoginResponse{
 		ExpiresIn: c.GetInt64("expires_in"),
 		UserInfo: message.UserInfo{
-			ID:       user.ID,
-			Username: user.Username,
-			Nickname: user.Nickname,
-			Email:    user.Email,
-			Avatar:   user.Avatar,
-			Role:     user.Role,
+			ID:          user.ID,
+			Username:    user.Username,
+			Nickname:    user.Nickname,
+			Email:       user.Email,
+			Avatar:      user.Avatar,
+			Role:        user.Role,
+			SelfIntro:   user.SelfIntro,
+			PersonalWeb: user.PersonalWeb,
+			Location:    user.Location,
+			CreateAt:    user.CreatedAt.Unix(),
 		},
 	}
 	message.SendMsg(c, http.StatusOK, "登录成功", resp)
@@ -128,12 +132,16 @@ func GetUserHandler(c *gin.Context) {
 	}
 
 	resp := &message.UserInfo{
-		ID:       user.ID,
-		Username: user.Username,
-		Nickname: user.Nickname,
-		Email:    user.Email,
-		Avatar:   user.Avatar,
-		Role:     user.Role,
+		ID:          user.ID,
+		Username:    user.Username,
+		Nickname:    user.Nickname,
+		Email:       user.Email,
+		Avatar:      user.Avatar,
+		Role:        user.Role,
+		SelfIntro:   user.SelfIntro,
+		PersonalWeb: user.PersonalWeb,
+		Location:    user.Location,
+		CreateAt:    user.CreatedAt.Unix(),
 	}
 	message.SendMsg(c, http.StatusOK, "获取成功", resp)
 }
@@ -188,11 +196,15 @@ func GetOtherUserHandler(c *gin.Context) {
 	}
 
 	resp := &message.GetUserResponse{
-		ID:       user.ID,
-		Username: user.Username,
-		Nickname: user.Nickname,
-		Avatar:   user.Avatar,
-		Role:     user.Role,
+		ID:          user.ID,
+		Username:    user.Username,
+		Nickname:    user.Nickname,
+		Avatar:      user.Avatar,
+		Role:        user.Role,
+		SelfIntro:   user.SelfIntro,
+		PersonalWeb: user.PersonalWeb,
+		Location:    user.Location,
+		CreateAt:    user.CreatedAt.Unix(),
 	}
 	message.SendMsg(c, http.StatusOK, "获取成功", resp)
 }
