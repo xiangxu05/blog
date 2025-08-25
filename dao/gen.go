@@ -24,6 +24,7 @@ var (
 	File           *file
 	Session        *session
 	User           *user
+	WebInfo        *webInfo
 )
 
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
@@ -35,6 +36,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	File = &Q.File
 	Session = &Q.Session
 	User = &Q.User
+	WebInfo = &Q.WebInfo
 }
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
@@ -47,6 +49,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		File:           newFile(db, opts...),
 		Session:        newSession(db, opts...),
 		User:           newUser(db, opts...),
+		WebInfo:        newWebInfo(db, opts...),
 	}
 }
 
@@ -60,6 +63,7 @@ type Query struct {
 	File           file
 	Session        session
 	User           user
+	WebInfo        webInfo
 }
 
 func (q *Query) Available() bool { return q.db != nil }
@@ -74,6 +78,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		File:           q.File.clone(db),
 		Session:        q.Session.clone(db),
 		User:           q.User.clone(db),
+		WebInfo:        q.WebInfo.clone(db),
 	}
 }
 
@@ -95,6 +100,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		File:           q.File.replaceDB(db),
 		Session:        q.Session.replaceDB(db),
 		User:           q.User.replaceDB(db),
+		WebInfo:        q.WebInfo.replaceDB(db),
 	}
 }
 
@@ -106,6 +112,7 @@ type queryCtx struct {
 	File           IFileDo
 	Session        ISessionDo
 	User           IUserDo
+	WebInfo        IWebInfoDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
@@ -117,6 +124,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		File:           q.File.WithContext(ctx),
 		Session:        q.Session.WithContext(ctx),
 		User:           q.User.WithContext(ctx),
+		WebInfo:        q.WebInfo.WithContext(ctx),
 	}
 }
 

@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>个人博客</title>
-    <meta name="description" content="个人博客 - 分享技术与生活">
-    
+    <title>XX者说</title>
+    <meta name="description" content="XX者说 - 分享技术与生活">
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome Icons -->
@@ -15,20 +16,25 @@
     <link href="/assets/css/components.css" rel="stylesheet">
     <link href="/assets/css/themes.css" rel="stylesheet">
     <link href="/assets/css/utilities.css" rel="stylesheet">
+    <!-- 网站图标 -->
+    <link rel="icon" type="image/png" href="/assets/img/favicon.jpg">
+    <link rel="shortcut icon" href="/assets/img/favicon.jpg">
+    <link rel="apple-touch-icon" href="/assets/img/favicon.jpg">
 </head>
+
 <body data-theme="light">
     <!-- 导航栏 -->
     <nav id="navbar" class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
         <div class="container">
             <a class="navbar-brand fw-bold" href="/">
                 <i class="fas fa-feather-alt me-2"></i>
-                个人博客
+                XX者说
             </a>
-            
+
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            
+
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
@@ -53,7 +59,9 @@
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="/profile">个人资料</a></li>
                             <li class="d-none" id="nav-admin"><a class="dropdown-item" href="/admin">管理后台</a></li>
-                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
                             <li><a class="dropdown-item" href="#" id="logout-btn">退出登录</a></li>
                         </ul>
                     </li>
@@ -108,13 +116,17 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@9.1.2/marked.min.js"></script>
     <!-- Highlight.js 代码高亮 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css" id="highlight-theme-light">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" id="highlight-theme-dark" disabled>
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css"
+        id="highlight-theme-light">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"
+        id="highlight-theme-dark" disabled>
     <!-- 数学公式支持 -->
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/contrib/auto-render.min.js"></script>
-    
+
     <!-- 应用核心文件 -->
     <script src="/assets/js/utils/markdown.js"></script>
     <script src="/assets/js/utils/ux.js"></script>
@@ -123,4 +135,5 @@
     <script src="/assets/js/core/router.js"></script>
     <script src="/assets/js/core/app.js"></script>
 </body>
+
 </html>

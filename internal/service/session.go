@@ -20,7 +20,7 @@ func StoreSession(c *gin.Context, uid int32) error {
 	// 设置会话 cookie, 生成uuid作为会话ID
 	sessionId := uuid.New().String()
 	// 将会话ID存储到数据库中
-	expiresIn := time.Now().Add(1 * time.Hour).Unix()
+	expiresIn := time.Now().Add(24 * time.Hour).Unix()
 	err = dao.Session.WithContext(c.Request.Context()).Create(&model_def.Session{
 		UserID:    uid,
 		SessionId: sessionId,
@@ -31,8 +31,8 @@ func StoreSession(c *gin.Context, uid int32) error {
 		return err
 	}
 	c.Set("expires_in", expiresIn)
-	// 设置会话 cookie
-	c.SetCookie("sid", sessionId, 3600, "/", "", false, true)
+	// 设置会话 cookie, 过期时间为24小时
+	c.SetCookie("sid", sessionId, 24*3600, "/", "", false, true)
 	return nil
 }
 

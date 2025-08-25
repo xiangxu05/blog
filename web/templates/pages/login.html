@@ -87,11 +87,21 @@
     const form = document.getElementById('login-form');
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
+    const rememberMeCheckbox = document.getElementById('remember-me');
     const togglePasswordBtn = document.getElementById('toggle-password');
     const loginBtn = document.getElementById('login-btn');
     const loginSpinner = document.getElementById('login-spinner');
     const loginError = document.getElementById('login-error');
     const loginSuccess = document.getElementById('login-success');
+
+    // 从本地存储加载保存的用户名
+    const savedUsername = localStorage.getItem('rememberedUsername');
+    if (savedUsername && usernameInput) {
+      usernameInput.value = savedUsername;
+      if (rememberMeCheckbox) {
+        rememberMeCheckbox.checked = true;
+      }
+    }
 
     // 密码显示/隐藏切换
     if (togglePasswordBtn) {
@@ -229,9 +239,19 @@
             username: formData.get('username').trim(),
             password: formData.get('password')
           };
+          const rememberMe = formData.get('remember');
 
           // 调用登录API
           const response = await window.apiClient.user.login(credentials);
+
+          // 处理"记住我"功能
+          if (rememberMe) {
+            // 保存用户名到本地存储
+            localStorage.setItem('rememberedUsername', credentials.username);
+          } else {
+            // 清除保存的用户名
+            localStorage.removeItem('rememberedUsername');
+          }
 
           // 显示成功消息
           showSuccess('登录成功，正在跳转...');
@@ -268,6 +288,16 @@
         });
       }
     });
+
+    // 处理"记住我"复选框变化
+    if (rememberMeCheckbox) {
+      rememberMeCheckbox.addEventListener('change', function () {
+        if (!this.checked) {
+          // 如果取消勾选，立即清除保存的用户名
+          localStorage.removeItem('rememberedUsername');
+        }
+      });
+    }
 
     // 检查是否有重定向参数
     const urlParams = new URLSearchParams(window.location.search);

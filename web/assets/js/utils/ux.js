@@ -26,7 +26,7 @@ class NotificationSystem {
   show(message, type = 'info', duration = 4000, options = {}) {
     const id = ++this.counter;
     const notification = this.createNotification(id, message, type, options);
-    
+
     this.container.appendChild(notification);
     this.notifications.set(id, notification);
 
@@ -49,7 +49,7 @@ class NotificationSystem {
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
     notification.style.pointerEvents = 'auto';
-    
+
     const iconMap = {
       success: 'fas fa-check-circle',
       error: 'fas fa-exclamation-circle',
@@ -162,9 +162,12 @@ class ErrorHandler {
   }
 
   handleError(error, context = '未知错误') {
+    // 安全检查：确保error不为null或undefined
+    const safeError = error || new Error('未知错误');
+
     const errorInfo = {
-      message: error.message || error,
-      stack: error.stack,
+      message: safeError.message || String(safeError),
+      stack: safeError.stack,
       context,
       timestamp: Date.now(),
       url: window.location.href,
@@ -173,12 +176,12 @@ class ErrorHandler {
 
     // 记录错误
     this.errorLog.push(errorInfo);
-    
+
     // 控制台输出
-    console.error(`[${context}]`, error);
+    console.error(`[${context}]`, safeError);
 
     // 用户友好的错误提示
-    this.showUserFriendlyError(error, context);
+    this.showUserFriendlyError(safeError, context);
 
     // 可选：发送错误到服务器
     this.reportError(errorInfo);
@@ -186,7 +189,7 @@ class ErrorHandler {
 
   showUserFriendlyError(error, context) {
     let message = '发生了一个错误，请稍后重试';
-    
+
     // 根据错误类型显示不同消息
     if (error.message && error.message.includes('网络')) {
       message = '网络连接失败，请检查网络后重试';
@@ -196,7 +199,14 @@ class ErrorHandler {
       message = '请求的资源不存在';
     }
 
-    window.blogApp.notification.show(message, 'error', 5000);
+    // 安全检查：确保notification对象存在
+    if (window.blogApp && window.blogApp.notification && typeof window.blogApp.notification.show === 'function') {
+      window.blogApp.notification.show(message, 'error', 5000);
+    } else {
+      // 降级处理：使用原生alert
+      console.error('通知系统未初始化，使用console.error输出:', message);
+      console.error('原始错误:', error);
+    }
   }
 
   reportError(errorInfo) {
@@ -343,7 +353,7 @@ class UXHelpers {
   // 浏览器后退按钮处理
   initBackButton() {
     let isNavigating = false;
-    
+
     window.addEventListener('beforeunload', (e) => {
       if (window.appState && window.appState.isDirty && !isNavigating) {
         e.preventDefault();
@@ -620,7 +630,7 @@ class UXManager {
     if (typeof element === 'string') {
       element = document.querySelector(element);
     }
-    
+
     if (element) {
       const top = element.offsetTop - offset;
       window.scrollTo({

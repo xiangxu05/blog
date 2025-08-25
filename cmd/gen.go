@@ -51,6 +51,7 @@ func GenDataBase() {
 		&model_def.Session{},
 		&model_def.File{},
 		&model_def.Category{},
+		&model_def.WebInfo{},
 	)
 
 	fmt.Println("Starting code generation execution...")

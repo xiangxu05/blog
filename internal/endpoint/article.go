@@ -39,24 +39,40 @@ func GetArticleHandler(c *gin.Context) {
 
 // GetArticleListHandler 获取文章列表
 func GetArticleListHandler(c *gin.Context) {
+	// 直接从URL参数获取
 	page := c.DefaultQuery("page", "1")
 	pageNum, err := strconv.Atoi(page)
-	if err != nil {
-		log.Errorf("参数绑定失败: %v", err)
-		message.SendMsg(c, http.StatusBadRequest, "参数绑定失败", nil)
-		return
+	if err != nil || pageNum <= 0 {
+		pageNum = 1
 	}
-	pageSize := c.DefaultQuery("pageSize", "10")
+
+	pageSize := c.DefaultQuery("page_size", "10")
 	pageSizeNum, err := strconv.Atoi(pageSize)
-	if err != nil {
-		log.Errorf("参数绑定失败: %v", err)
-		message.SendMsg(c, http.StatusBadRequest, "参数绑定失败", nil)
-		return
+	if err != nil || pageSizeNum <= 0 {
+		pageSizeNum = 10
 	}
-	articleList, err := service.GetArticleList(c, pageNum, pageSizeNum)
+	if pageSizeNum > 50 {
+		pageSizeNum = 50 // 限制最大页面大小
+	}
+
+	category := c.Query("category")
+	sort := c.DefaultQuery("sort", "created_at_desc")
+
+	articleList, err := service.GetArticleList(c, pageNum, pageSizeNum, category, sort)
 	if err != nil {
 		log.Errorf("获取文章列表失败: %v", err)
-		message.SendMsg(c, http.StatusInternalServerError, "文章不存在", nil)
+		message.SendMsg(c, http.StatusInternalServerError, "获取文章列表失败", nil)
+		return
+	}
+	message.SendMsg(c, http.StatusOK, "获取成功", articleList)
+}
+
+// GetHotArticleListHandler 获取热门文章列表
+func GetHotArticleListHandler(c *gin.Context) {
+	articleList, err := service.GetHotArticleList(c)
+	if err != nil {
+		log.Errorf("获取热门文章列表失败: %v", err)
+		message.SendMsg(c, http.StatusInternalServerError, "获取热门文章列表失败", nil)
 		return
 	}
 	message.SendMsg(c, http.StatusOK, "获取成功", articleList)
@@ -121,6 +137,17 @@ func DeleteArticleHandler(c *gin.Context) {
 		return
 	}
 	message.SendMsg(c, http.StatusOK, "删除成功", nil)
+}
+
+// GetCategoryListHandler 获取分类列表
+func GetCategoryListHandler(c *gin.Context) {
+	categoryList, err := service.GetCategoryList(c)
+	if err != nil {
+		log.Errorf("获取分类列表失败: %v", err)
+		message.SendMsg(c, http.StatusInternalServerError, "获取分类列表失败", nil)
+		return
+	}
+	message.SendMsg(c, http.StatusOK, "获取成功", categoryList)
 }
 
 // SearchArticlesHandler 搜索文章

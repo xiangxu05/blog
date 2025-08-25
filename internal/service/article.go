@@ -42,12 +42,17 @@ func IncrementArticleViewCount(c *gin.Context, articleId int32) error {
 	return err
 }
 
-// // GetArticleList 获取文章列表
-func GetArticleList(c *gin.Context, page, pageSize int) (*message.ArticleResponse, error) {
+// GetArticleList 获取文章列表
+func GetArticleList(c *gin.Context, page, pageSize int, category, sort string) (*message.ArticleResponse, error) {
 	ctx := c.Request.Context()
 
 	// 构建查询条件
 	query := dao.Article.WithContext(ctx)
+
+	// 分类筛选
+	if category != "" {
+		query = query.Where(dao.Article.Category.Eq(category))
+	}
 
 	// 获取总数
 	total, err := query.Count()
@@ -55,12 +60,30 @@ func GetArticleList(c *gin.Context, page, pageSize int) (*message.ArticleRespons
 		return nil, err
 	}
 
+	// 排序处理
+	switch sort {
+	case "created_at_asc":
+		query = query.Order(dao.Article.CreatedAt.Asc())
+	case "created_at_desc":
+		query = query.Order(dao.Article.CreatedAt.Desc())
+	case "title_asc":
+		query = query.Order(dao.Article.Title.Asc())
+	case "title_desc":
+		query = query.Order(dao.Article.Title.Desc())
+	case "views_desc":
+		query = query.Order(dao.Article.Views.Desc())
+	case "views_asc":
+		query = query.Order(dao.Article.Views.Asc())
+	default:
+		// 默认按创建时间倒序
+		query = query.Order(dao.Article.CreatedAt.Desc())
+	}
+
 	// 获取文章列表
 	offset := (page - 1) * pageSize
 	articles, err := query.
-		Order(dao.Article.CreatedAt.Desc()).
-		Limit(int(pageSize)).
-		Offset(int(offset)).
+		Limit(pageSize).
+		Offset(offset).
 		Find()
 	if err != nil {
 		return nil, err
@@ -72,16 +95,43 @@ func GetArticleList(c *gin.Context, page, pageSize int) (*message.ArticleRespons
 		articleStructs = append(articleStructs, *article)
 	}
 
+	// 计算总页数
+	totalPages := int(total) / pageSize
+	if int(total)%pageSize > 0 {
+		totalPages++
+	}
+
 	resp := &message.ArticleResponse{
 		Articles: articleStructs,
 		Pagination: message.PaginationInfo{
 			CurrentPage: page,
 			PageSize:    pageSize,
-			TotalPages:  int(total/int64(pageSize)) + 1,
+			TotalPages:  totalPages,
 			TotalCount:  int(total),
 		},
 	}
 
+	return resp, nil
+}
+
+// GetHotArticleList 获取热门文章列表
+func GetHotArticleList(c *gin.Context) (*message.ArticleResponse, error) {
+	// 获取热门文章列表
+	articles, err := dao.Article.WithContext(c.Request.Context()).
+		Order(dao.Article.Views.Desc()).
+		Limit(3).
+		Find()
+	if err != nil {
+		return nil, err
+	}
+	// 创建一个新的结构体切片
+	var articleStructs []model_def.Article
+	for _, article := range articles {
+		articleStructs = append(articleStructs, *article)
+	}
+	resp := &message.ArticleResponse{
+		Articles: articleStructs,
+	}
 	return resp, nil
 }
 
@@ -279,6 +329,14 @@ func DeleteArticle(c *gin.Context, articleID int32) error {
 		}
 		return nil
 	})
+}
+
+func GetCategoryList(c *gin.Context) ([]*model_def.Category, error) {
+	categoryList, err := dao.Category.WithContext(c.Request.Context()).Find()
+	if err != nil {
+		return nil, err
+	}
+	return categoryList, nil
 }
 
 // // GetArticlesByUser 获取用户的文章列表

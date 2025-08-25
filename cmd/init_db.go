@@ -49,7 +49,10 @@ func clearAllData(db *gorm.DB) error {
 		return fmt.Errorf("清空 file 表失败: %v", err)
 	}
 	if err := db.Unscoped().Where("1 = 1").Delete(&model_def.Category{}).Error; err != nil {
-		return fmt.Errorf("清空 file 表失败: %v", err)
+		return fmt.Errorf("清空 category 表失败: %v", err)
+	}
+	if err := db.Unscoped().Where("1 = 1").Delete(&model_def.WebInfo{}).Error; err != nil {
+		return fmt.Errorf("清空 web_info 表失败: %v", err)
 	}
 	return nil
 }
@@ -93,6 +96,9 @@ func InitDataBase() {
 		log.Fatal("Failed to create table:", err)
 	}
 	if err := db.AutoMigrate(&model_def.Category{}); err != nil {
+		log.Fatal("Failed to create table:", err)
+	}
+	if err := db.AutoMigrate(&model_def.WebInfo{}); err != nil {
 		log.Fatal("Failed to create table:", err)
 	}
 

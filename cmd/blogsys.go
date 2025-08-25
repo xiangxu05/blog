@@ -19,8 +19,10 @@ var blogsysCmd = &cobra.Command{
 		}
 		dao.SetDefault(db)
 
-		r := router.InitRouter()
-		r.Run(":8080")
+		server := router.NewServer(db)
+		if err := server.Run(":8080"); err != nil {
+			panic(err)
+		}
 	},
 }
 

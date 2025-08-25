@@ -92,6 +92,12 @@
           <p id="blogger-intro" class="text-muted small text-center">
             热爱技术，喜欢分享。专注于前端开发、后端架构和技术教学。
           </p>
+          <div id="blogger-location" class="text-center mb-3" style="display: none;">
+            <small class="text-muted">
+              <i class="fas fa-map-marker-alt me-1"></i>
+              <span id="blogger-location-text"></span>
+            </small>
+          </div>
           <div class="d-flex justify-content-center gap-2">
             <a id="blogger-github" href="#" class="btn btn-outline-custom btn-sm">
               <i class="fab fa-github"></i>
@@ -111,7 +117,7 @@
         <div class="card-body">
           <h5 class="card-title">
             <i class="fas fa-tags me-2"></i>
-            热门标签
+            标签云
           </h5>
           <div id="popular-tags">
             <!-- 标签将通过JavaScript动态加载 -->
@@ -190,7 +196,8 @@
       loadHomeArticles(),
       loadSiteStats(),
       loadRecentUpdates(),
-      loadBloggerInfo()
+      loadBloggerInfo(),
+      loadPopularTags()
     ]);
   }
 
@@ -205,8 +212,8 @@
 
         // 更新博主头像
         const avatar = document.getElementById('blogger-avatar');
-        if (avatar && user.avatar) {
-          avatar.src = user.avatar;
+        if (avatar) {
+          avatar.src = user.avatar || '/assets/images/default-avatar.svg';
         }
 
         // 更新博主介绍
@@ -237,6 +244,16 @@
           email.style.display = 'inline-block';
         } else if (email) {
           email.style.display = 'none';
+        }
+
+        // 更新位置信息
+        const locationDiv = document.getElementById('blogger-location');
+        const locationText = document.getElementById('blogger-location-text');
+        if (locationDiv && locationText && user.location) {
+          locationText.textContent = user.location;
+          locationDiv.style.display = 'block';
+        } else if (locationDiv) {
+          locationDiv.style.display = 'none';
         }
       }
     } catch (error) {
@@ -345,6 +362,66 @@
       document.getElementById('total-tags').textContent = '8';
     } catch (error) {
       console.error('加载统计信息失败:', error);
+    }
+  }
+
+  // 加载热门标签
+  async function loadPopularTags() {
+    const popularTagsContainer = document.getElementById('popular-tags');
+    if (!popularTagsContainer) return;
+
+    try {
+      // 获取最新文章列表来提取标签
+      const response = await window.apiClient.articles.getList({
+        page: 1,
+        pageSize: 10,
+        sort: 'created_at_desc'
+      });
+
+      if (response.articles && response.articles.length > 0) {
+        // 提取所有标签
+        const allTags = new Set();
+        response.articles.forEach(article => {
+          if (article.tags) {
+            const tags = article.tags.split(',').filter(tag => tag.trim());
+            tags.forEach(tag => allTags.add(tag.trim()));
+          }
+        });
+
+        // 转换为数组并限制数量
+        const tagsArray = Array.from(allTags).slice(0, 6);
+
+        if (tagsArray.length > 0) {
+          const tagsHtml = tagsArray.map(tag =>
+            `<span class="article-tag">${escapeHtml(tag)}</span>`
+          ).join('');
+
+          popularTagsContainer.innerHTML = `
+            <div class="d-flex flex-wrap gap-2">
+              ${tagsHtml}
+            </div>
+          `;
+        } else {
+          popularTagsContainer.innerHTML = `
+            <div class="d-flex flex-wrap gap-2">
+              <span class="text-muted small">暂无标签</span>
+            </div>
+          `;
+        }
+      } else {
+        popularTagsContainer.innerHTML = `
+          <div class="d-flex flex-wrap gap-2">
+            <span class="text-muted small">暂无文章</span>
+          </div>
+        `;
+      }
+    } catch (error) {
+      console.error('加载热门标签失败:', error);
+      popularTagsContainer.innerHTML = `
+        <div class="d-flex flex-wrap gap-2">
+          <span class="text-muted small">加载失败</span>
+        </div>
+      `;
     }
   }
 

@@ -193,17 +193,23 @@ class BlogApp {
   
   // 处理用户注销
   async handleLogout() {
+    console.log('handleLogout 方法被调用');
     try {
       // 显示确认对话框
+      console.log('显示确认对话框');
       if (!confirm('确定要退出登录吗？')) {
+        console.log('用户取消了退出登录');
         return;
       }
       
+      console.log('用户确认退出登录，开始调用API');
       // 显示加载状态
       window.appState.setLoading(true);
       
       // 调用注销API
+      console.log('正在调用 logout API...');
       await window.apiClient.user.logout();
+      console.log('logout API 调用成功');
       
       // 清除用户状态
       window.appState.clearUser();

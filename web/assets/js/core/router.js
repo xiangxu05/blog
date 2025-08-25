@@ -310,7 +310,7 @@ class Router {
       const usernameEl = document.getElementById('nav-username');
 
       if (avatarEl && userProfile) {
-        avatarEl.src = userProfile.avatar || '/assets/images/default-avatar.png';
+        avatarEl.src = userProfile.avatar || '/assets/images/default-avatar.svg';
         avatarEl.alt = userProfile.nickname || userProfile.username;
       }
 
