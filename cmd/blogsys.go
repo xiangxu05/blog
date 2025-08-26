@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"blog/dao"
-	"blog/internal/router"
+	"blog/internal/server"
 
 	"github.com/glebarez/sqlite"
 	"github.com/spf13/cobra"
@@ -19,7 +19,7 @@ var blogsysCmd = &cobra.Command{
 		}
 		dao.SetDefault(db)
 
-		server := router.NewServer(db)
+		server := server.NewServer(db)
 		if err := server.Run(":8080"); err != nil {
 			panic(err)
 		}

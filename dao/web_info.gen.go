@@ -31,12 +31,11 @@ func newWebInfo(db *gorm.DB, opts ...gen.DOOption) webInfo {
 	_webInfo.ArticleNum = field.NewInt(tableName, "article_num")
 	_webInfo.FileNum = field.NewInt(tableName, "file_num")
 	_webInfo.UserNum = field.NewInt(tableName, "user_num")
+	_webInfo.CategoriesNum = field.NewInt(tableName, "categories")
+	_webInfo.CommentsNum = field.NewInt(tableName, "comments")
+	_webInfo.StoreUsage = field.NewString(tableName, "store_usage")
+	_webInfo.Capacity = field.NewString(tableName, "capacity")
 	_webInfo.Views = field.NewInt(tableName, "views")
-	_webInfo.Categories = field.NewInt(tableName, "categories")
-	_webInfo.Users = field.NewInt(tableName, "users")
-	_webInfo.Comments = field.NewInt(tableName, "comments")
-	_webInfo.StoreUsage = field.NewInt(tableName, "store_usage")
-	_webInfo.Capacity = field.NewInt(tableName, "capacity")
 	_webInfo.LastUpdate = field.NewTime(tableName, "last_update")
 	_webInfo.LastLogin = field.NewTime(tableName, "last_login")
 	_webInfo.LastClear = field.NewTime(tableName, "last_clear")
@@ -50,21 +49,20 @@ func newWebInfo(db *gorm.DB, opts ...gen.DOOption) webInfo {
 type webInfo struct {
 	webInfoDo webInfoDo
 
-	ALL        field.Asterisk
-	ID         field.Uint
-	ArticleNum field.Int
-	FileNum    field.Int
-	UserNum    field.Int
-	Views      field.Int
-	Categories field.Int
-	Users      field.Int
-	Comments   field.Int
-	StoreUsage field.Int
-	Capacity   field.Int
-	LastUpdate field.Time
-	LastLogin  field.Time
-	LastClear  field.Time
-	LastBackup field.Time
+	ALL           field.Asterisk
+	ID            field.Uint
+	ArticleNum    field.Int
+	FileNum       field.Int
+	UserNum       field.Int
+	CategoriesNum field.Int
+	CommentsNum   field.Int
+	StoreUsage    field.String
+	Capacity      field.String
+	Views         field.Int
+	LastUpdate    field.Time
+	LastLogin     field.Time
+	LastClear     field.Time
+	LastBackup    field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -85,12 +83,11 @@ func (w *webInfo) updateTableName(table string) *webInfo {
 	w.ArticleNum = field.NewInt(table, "article_num")
 	w.FileNum = field.NewInt(table, "file_num")
 	w.UserNum = field.NewInt(table, "user_num")
+	w.CategoriesNum = field.NewInt(table, "categories")
+	w.CommentsNum = field.NewInt(table, "comments")
+	w.StoreUsage = field.NewString(table, "store_usage")
+	w.Capacity = field.NewString(table, "capacity")
 	w.Views = field.NewInt(table, "views")
-	w.Categories = field.NewInt(table, "categories")
-	w.Users = field.NewInt(table, "users")
-	w.Comments = field.NewInt(table, "comments")
-	w.StoreUsage = field.NewInt(table, "store_usage")
-	w.Capacity = field.NewInt(table, "capacity")
 	w.LastUpdate = field.NewTime(table, "last_update")
 	w.LastLogin = field.NewTime(table, "last_login")
 	w.LastClear = field.NewTime(table, "last_clear")
@@ -119,17 +116,16 @@ func (w *webInfo) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (w *webInfo) fillFieldMap() {
-	w.fieldMap = make(map[string]field.Expr, 14)
+	w.fieldMap = make(map[string]field.Expr, 13)
 	w.fieldMap["id"] = w.ID
 	w.fieldMap["article_num"] = w.ArticleNum
 	w.fieldMap["file_num"] = w.FileNum
 	w.fieldMap["user_num"] = w.UserNum
-	w.fieldMap["views"] = w.Views
-	w.fieldMap["categories"] = w.Categories
-	w.fieldMap["users"] = w.Users
-	w.fieldMap["comments"] = w.Comments
+	w.fieldMap["categories"] = w.CategoriesNum
+	w.fieldMap["comments"] = w.CommentsNum
 	w.fieldMap["store_usage"] = w.StoreUsage
 	w.fieldMap["capacity"] = w.Capacity
+	w.fieldMap["views"] = w.Views
 	w.fieldMap["last_update"] = w.LastUpdate
 	w.fieldMap["last_login"] = w.LastLogin
 	w.fieldMap["last_clear"] = w.LastClear

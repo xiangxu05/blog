@@ -1,18 +1,19 @@
-package router
+package server
 
 import (
 	"blog/internal/endpoint"
 	"blog/internal/middleware"
 	"blog/internal/monitor"
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/xiangxu05/logger/v2"
 	"gorm.io/gorm"
 )
 
@@ -22,22 +23,38 @@ type Server struct {
 	httpServer *http.Server
 	ctx        context.Context
 	cancel     context.CancelFunc
+	wg         *sync.WaitGroup
 }
 
 // corsMiddleware CORS中间件
 func corsMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 允许前端域名访问，不能使用*当credentials为true时
-		c.Header("Access-Control-Allow-Origin", "http://localhost:8080")
+		// 获取请求的Origin
+		origin := c.Request.Header.Get("Origin")
+		// 定义允许的域名列表
+		allowedOrigins := map[string]bool{
+			"http://localhost:8080": true, // 本地开发环境
+			"http://127.0.0.1:8080": true, // 本地开发环境
+			// "https://www.yourdomain.com":  true, // 生产环境www子域名
+			// "https://blog.yourdomain.com": true, // 博客子域名
+		}
+		// 检查请求的Origin是否在允许列表中
+		if allowedOrigins[origin] {
+			c.Header("Access-Control-Allow-Origin", origin)
+		}
+		// 允许的HTTP方法
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		// 允许的请求头
 		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+		// 允许凭证（Cookie、HTTP认证等）
 		c.Header("Access-Control-Allow-Credentials", "true")
-
+		// 预检请求的缓存时间（秒）
+		c.Header("Access-Control-Max-Age", "86400") // 24小时
+		// 如果是预检请求(OPTIONS)，直接返回204状态码
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(http.StatusNoContent)
 			return
 		}
-
 		c.Next()
 	}
 }
@@ -49,13 +66,14 @@ func NewServer(db *gorm.DB) *Server {
 	s := &Server{
 		ctx:    ctx,
 		cancel: cancel,
+		wg:     new(sync.WaitGroup),
 	}
-
-	// 初始化路由
-	s.setupRouter()
 
 	// 初始化监控
 	s.setupMonitor()
+
+	// 初始化路由
+	s.setupRouter()
 
 	return s
 }
@@ -75,7 +93,7 @@ func (s *Server) setupRouter() {
 	// 用户模块
 	user := api.Group("/users")
 	user.POST("/register", endpoint.RegisterHandler)
-	user.POST("/login", endpoint.LoginHandler)
+	user.POST("/login", s.monitor.UpdateLastLogin(), endpoint.LoginHandler)
 	// 公开访问的用户信息接口
 	user.GET("/:user_id", endpoint.GetOtherUserHandler)
 	user.Use(middleware.UserAuth())
@@ -102,9 +120,9 @@ func (s *Server) setupRouter() {
 	// 文章模块
 	articles := api.Group("/articles")
 	// 公开访问的文章接口
-	articles.GET("/:id/:version", endpoint.GetArticleHandler) // 获取文章详情
-	articles.GET("", endpoint.GetArticleListHandler)          // 获取文章列表
-	articles.GET("/hot", endpoint.GetHotArticleListHandler)   // 获取热门文章
+	articles.GET("/:id/:version", s.monitor.IncViews(), endpoint.GetArticleHandler) // 获取文章详情
+	articles.GET("", endpoint.GetArticleListHandler)                                // 获取文章列表
+	articles.GET("/hot", endpoint.GetHotArticleListHandler)                         // 获取热门文章
 	// articles.GET("/search", endpoint.SearchArticlesHandler) // 搜索文章
 	// articles.GET("/popular", endpoint.GetPopularArticlesHandler)                  // 获取热门文章
 	// articles.GET("/user/:user_id", endpoint.GetUserArticlesHandler)               // 获取用户文章
@@ -114,9 +132,9 @@ func (s *Server) setupRouter() {
 	// 需要登录和权限的文章接口
 	articles.Use(middleware.UserAuth(), middleware.RoleAuth())
 	{
-		articles.POST("", endpoint.CreateArticleHandler)       // 创建文章
-		articles.PUT("/:id", endpoint.UpdateArticleHandler)    // 更新文章
-		articles.DELETE("/:id", endpoint.DeleteArticleHandler) // 删除文章
+		articles.POST("", s.monitor.UpdateLastUpdate(), endpoint.CreateArticleHandler) // 创建文章
+		articles.PUT("/:id", endpoint.UpdateArticleHandler)                            // 更新文章
+		articles.DELETE("/:id", endpoint.DeleteArticleHandler)                         // 删除文章
 	}
 
 	// 分类模块
@@ -126,25 +144,28 @@ func (s *Server) setupRouter() {
 	}
 
 	// 管理员专用文章接口
-	// admin := api.Group("/admin")
-	// admin.Use(middleware.UserAuth(), middleware.RoleAuth())
-	// {
-	// 	adminArticles := admin.Group("/articles")
-	// 	{
-	// 		adminArticles.GET("", endpoint.GetArticleListHandler)              // 获取文章列表（管理员视图）
-	// 		adminArticles.GET("/recent", endpoint.GetArticleListHandler)       // 获取最近文章
-	// 		adminArticles.GET("/:id", endpoint.GetArticleHandler)              // 获取文章详情
-	// 		adminArticles.POST("", endpoint.CreateArticleHandler)              // 创建文章
-	// 		adminArticles.PUT("/:id", endpoint.UpdateArticleHandler)           // 更新文章
-	// 		adminArticles.DELETE("/:id", endpoint.DeleteArticleHandler)        // 删除文章
-	// 		adminArticles.PUT("/:id/publish", endpoint.UpdateArticleHandler)   // 发布文章
-	// 		adminArticles.PUT("/:id/archive", endpoint.UpdateArticleHandler)   // 归档文章
-	// 		adminArticles.PUT("/batch/publish", endpoint.UpdateArticleHandler) // 批量发布
-	// 		adminArticles.PUT("/batch/archive", endpoint.UpdateArticleHandler) // 批量归档
-	// 		adminArticles.DELETE("/batch", endpoint.DeleteArticleHandler)      // 批量删除
-	// 	}
-	// }
+	admin := api.Group("/admin")
+	admin.Use(middleware.UserAuth(), middleware.RoleAuth())
+	{
+		adminArticles := admin.Group("/articles")
+		{
+			adminArticles.GET("", endpoint.GetAdminArticleListHandler)  // 获取文章列表（管理员视图）
+			adminArticles.GET("/:id", endpoint.GetArticleHandler)       // 获取文章详情
+			adminArticles.POST("", endpoint.CreateArticleHandler)       // 创建文章
+			adminArticles.PUT("/:id", endpoint.UpdateArticleHandler)    // 更新文章
+			adminArticles.DELETE("/:id", endpoint.DeleteArticleHandler) // 删除文章
+			// 	adminArticles.GET("/recent", endpoint.GetArticleListHandler)       // 获取最近文章
+			// 	adminArticles.PUT("/:id/publish", endpoint.UpdateArticleHandler)   // 发布文章
+			// 	adminArticles.PUT("/:id/archive", endpoint.UpdateArticleHandler)   // 归档文章
+			// 	adminArticles.PUT("/batch/publish", endpoint.UpdateArticleHandler) // 批量发布
+			// 	adminArticles.PUT("/batch/archive", endpoint.UpdateArticleHandler) // 批量归档
+			// 	adminArticles.DELETE("/batch", endpoint.DeleteArticleHandler)      // 批量删除
+		}
+	}
 
+	// 网站信息查询
+	api.GET("/website_statistics", s.monitor.GetWebsiteStatisticsHandler())
+	admin.GET("/backend_statistics", middleware.RoleAuth(), s.monitor.GetBackendStatisticsHandler()) // 管理员专用
 	s.router = r
 }
 
@@ -155,8 +176,13 @@ func (s *Server) setupMonitor() {
 
 // Start 启动服务器
 func (s *Server) Start(addr string) error {
+	var log = logger.GetLogger()
 	// 启动监控
-	s.monitor.Start()
+	s.wg.Add(1)
+	go func() {
+		defer s.wg.Done()
+		s.monitor.Start()
+	}()
 
 	// 创建HTTP服务器
 	s.httpServer = &http.Server{
@@ -164,12 +190,14 @@ func (s *Server) Start(addr string) error {
 		Handler: s.router,
 	}
 
-	fmt.Printf("服务器启动在 %s\n", addr)
+	log.Infof("服务器启动在 %s", addr)
 
 	// 启动服务器
+	s.wg.Add(1)
 	go func() {
+		defer s.wg.Done()
 		if err := s.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			fmt.Printf("服务器启动失败: %v\n", err)
+			log.Errorf("服务器启动失败: %v\n", err)
 		}
 	}()
 
@@ -178,24 +206,23 @@ func (s *Server) Start(addr string) error {
 
 // Stop 停止服务器
 func (s *Server) Stop() error {
-	fmt.Println("正在关闭服务器...")
-
+	var log = logger.GetLogger()
 	// 创建关闭超时上下文
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(s.ctx, 30*time.Second)
 	defer cancel()
 
 	// 关闭HTTP服务器
 	if s.httpServer != nil {
 		if err := s.httpServer.Shutdown(ctx); err != nil {
-			fmt.Printf("HTTP服务器关闭失败: %v\n", err)
+			log.Errorf("HTTP服务器关闭失败: %v\n", err)
 			return err
 		}
 	}
 
 	// 取消上下文，通知所有组件停止
 	s.cancel()
-
-	fmt.Println("服务器已优雅关闭")
+	s.wg.Wait()
+	log.Info("服务器已关闭")
 	return nil
 }
 

@@ -57,8 +57,11 @@ func GetArticleListHandler(c *gin.Context) {
 
 	category := c.Query("category")
 	sort := c.DefaultQuery("sort", "created_at_desc")
+	search := c.Query("search")
+	searchType := c.DefaultQuery("search_type", "fuzzy")
+	searchFields := c.DefaultQuery("search_fields", "all")
 
-	articleList, err := service.GetArticleList(c, pageNum, pageSizeNum, category, sort)
+	articleList, err := service.GetArticleList(c, pageNum, pageSizeNum, category, sort, search, searchType, searchFields)
 	if err != nil {
 		log.Errorf("获取文章列表失败: %v", err)
 		message.SendMsg(c, http.StatusInternalServerError, "获取文章列表失败", nil)
@@ -137,6 +140,40 @@ func DeleteArticleHandler(c *gin.Context) {
 		return
 	}
 	message.SendMsg(c, http.StatusOK, "删除成功", nil)
+}
+
+// GetAdminArticleListHandler 获取管理员文章列表
+func GetAdminArticleListHandler(c *gin.Context) {
+	// 直接从URL参数获取
+	page := c.DefaultQuery("page", "1")
+	pageNum, err := strconv.Atoi(page)
+	if err != nil || pageNum <= 0 {
+		pageNum = 1
+	}
+
+	pageSize := c.DefaultQuery("pageSize", "10")
+	pageSizeNum, err := strconv.Atoi(pageSize)
+	if err != nil || pageSizeNum <= 0 {
+		pageSizeNum = 10
+	}
+	if pageSizeNum > 50 {
+		pageSizeNum = 50 // 限制最大页面大小
+	}
+
+	category := c.Query("category")
+	sort := c.DefaultQuery("sort", "created_at_desc")
+	search := c.Query("search")
+	searchType := c.DefaultQuery("search_type", "fuzzy")
+	searchFields := c.DefaultQuery("search_fields", "all")
+	status := c.Query("status") // 管理员可以按状态筛选
+
+	articleList, err := service.GetAdminArticleList(c, pageNum, pageSizeNum, category, sort, search, searchType, searchFields, status)
+	if err != nil {
+		log.Errorf("获取管理员文章列表失败: %v", err)
+		message.SendMsg(c, http.StatusInternalServerError, "获取文章列表失败", nil)
+		return
+	}
+	message.SendMsg(c, http.StatusOK, "获取成功", articleList)
 }
 
 // GetCategoryListHandler 获取分类列表

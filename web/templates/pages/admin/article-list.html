@@ -1,191 +1,202 @@
-<div class="container-fluid py-4">
-  <!-- 页面头部 -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h1 class="h3 mb-1">
-        <i class="fas fa-list me-2 text-primary"></i>
-        文章管理
-      </h1>
-      <p class="text-muted mb-0">管理所有文章内容</p>
-    </div>
-    <div class="d-flex gap-2">
-      <a href="/admin/articles/new" class="btn btn-primary-custom">
-        <i class="fas fa-plus me-2"></i>
-        新建文章
-      </a>
-      <a href="/admin" class="btn btn-outline-custom">
-        <i class="fas fa-arrow-left me-2"></i>
-        返回仪表板
-      </a>
-    </div>
-  </div>
-
-  <!-- 搜索和筛选 -->
-  <div class="card-custom mb-4">
-    <div class="card-body">
-      <div class="row g-3">
-        <div class="col-md-4">
-          <label class="form-label">搜索文章</label>
-          <div class="input-group">
-            <input type="text" class="form-control-custom" id="search-input" placeholder="输入标题或内容关键词...">
-            <button class="btn btn-outline-custom" id="search-btn">
-              <i class="fas fa-search"></i>
-            </button>
-          </div>
-        </div>
-        <div class="col-md-2">
-          <label class="form-label">状态</label>
-          <select class="form-select-custom" id="status-filter">
-            <option value="">所有状态</option>
-            <option value="published">已发布</option>
-            <option value="draft">草稿</option>
-            <option value="private">私有</option>
-          </select>
-        </div>
-        <div class="col-md-2">
-          <label class="form-label">分类</label>
-          <select class="form-select-custom" id="category-filter">
-            <option value="">所有分类</option>
-          </select>
-        </div>
-        <div class="col-md-2">
-          <label class="form-label">排序</label>
-          <select class="form-select-custom" id="sort-select">
-            <option value="created_at_desc">创建时间↓</option>
-            <option value="created_at_asc">创建时间↑</option>
-            <option value="updated_at_desc">更新时间↓</option>
-            <option value="title_asc">标题A-Z</option>
-          </select>
-        </div>
-        <div class="col-md-2 d-flex align-items-end">
-          <button class="btn btn-secondary-custom w-100" id="reset-filters-btn">
-            <i class="fas fa-undo me-2"></i>重置
-          </button>
-        </div>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文章管理 - 个人博客后台</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="/assets/css/base.css" rel="stylesheet">
+  <link href="/assets/css/components.css" rel="stylesheet">
+  <link href="/assets/css/themes.css" rel="stylesheet">
+  <link href="/assets/css/utilities.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container-fluid py-4">
+    <!-- 页面标题 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h2 class="mb-1">文章管理</h2>
+        <p class="text-muted mb-0">管理您的博客文章</p>
       </div>
-    </div>
-  </div>
-
-  <!-- 批量操作工具栏 -->
-  <div class="card-custom mb-4" id="bulk-actions-toolbar" style="display: none;">
-    <div class="card-body py-2">
-      <div class="d-flex justify-content-between align-items-center">
-        <div class="d-flex align-items-center">
-          <span class="text-muted me-3">已选择 <span id="selected-count">0</span> 篇文章</span>
-          <div class="btn-group">
-            <button class="btn btn-success-custom btn-sm" id="bulk-publish-btn">
-              <i class="fas fa-eye me-1"></i>批量发布
-            </button>
-            <button class="btn btn-warning-custom btn-sm" id="bulk-draft-btn">
-              <i class="fas fa-eye-slash me-1"></i>转为草稿
-            </button>
-            <button class="btn btn-danger-custom btn-sm" id="bulk-delete-btn">
-              <i class="fas fa-trash me-1"></i>批量删除
-            </button>
-          </div>
-        </div>
-        <button class="btn btn-outline-custom btn-sm" id="clear-selection-btn">
-          <i class="fas fa-times"></i>清除选择
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 文章列表 -->
-  <div class="card-custom">
-    <div class="card-body">
-      <!-- 加载状态 -->
-      <div id="articles-loading" class="text-center py-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">加载中...</span>
-        </div>
-        <p class="text-muted mt-2">正在加载文章...</p>
-      </div>
-
-      <!-- 文章表格 -->
-      <div id="articles-table-container" class="d-none">
-        <div class="table-responsive">
-          <table class="table table-hover">
-            <thead>
-              <tr>
-                <th width="40">
-                  <input type="checkbox" id="select-all-checkbox" class="form-check-input">
-                </th>
-                <th>标题</th>
-                <th width="120">状态</th>
-                <th width="100">分类</th>
-                <th width="80">浏览量</th>
-                <th width="120">创建时间</th>
-                <th width="120">更新时间</th>
-                <th width="120">操作</th>
-              </tr>
-            </thead>
-            <tbody id="articles-tbody">
-              <!-- 动态内容 -->
-            </tbody>
-          </table>
-        </div>
-
-        <!-- 分页 -->
-        <div class="d-flex justify-content-between align-items-center mt-4">
-          <div class="text-muted">
-            显示第 <span id="page-start">1</span> - <span id="page-end">10</span> 条，共 <span id="total-count">0</span> 条记录
-          </div>
-          <nav>
-            <ul class="pagination pagination-sm mb-0" id="pagination-container">
-              <!-- 动态分页内容 -->
-            </ul>
-          </nav>
-        </div>
-      </div>
-
-      <!-- 空状态 -->
-      <div id="articles-empty" class="text-center py-5 d-none">
-        <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
-        <h5 class="text-muted">暂无文章</h5>
-        <p class="text-muted">开始创建你的第一篇文章吧！</p>
+      <div>
         <a href="/admin/articles/new" class="btn btn-primary-custom">
           <i class="fas fa-plus me-2"></i>新建文章
         </a>
       </div>
     </div>
+
+    <!-- 搜索和筛选 -->
+    <div class="card card-custom mb-4">
+      <div class="card-body">
+        <div class="row g-3">
+          <!-- 搜索框 -->
+          <div class="col-md-4">
+            <div class="input-group">
+              <input type="text" id="search-input" class="form-control" placeholder="搜索文章标题、内容...">
+              <button class="btn btn-outline-secondary" type="button" id="search-btn">
+                <i class="fas fa-search"></i>
+              </button>
+            </div>
+          </div>
+          
+          <!-- 状态筛选 -->
+          <div class="col-md-2">
+            <select id="status-filter" class="form-select">
+              <option value="">全部状态</option>
+              <option value="published">已发布</option>
+              <option value="draft">草稿</option>
+              <option value="archived">已归档</option>
+            </select>
+          </div>
+          
+          <!-- 分类筛选 -->
+          <div class="col-md-2">
+            <select id="category-filter" class="form-select">
+              <option value="">全部分类</option>
+            </select>
+          </div>
+          
+          <!-- 排序 -->
+          <div class="col-md-2">
+            <select id="sort-select" class="form-select">
+              <option value="created_at_desc">创建时间↓</option>
+              <option value="created_at_asc">创建时间↑</option>
+              <option value="updated_at_desc">更新时间↓</option>
+              <option value="updated_at_asc">更新时间↑</option>
+              <option value="views_desc">浏览量↓</option>
+              <option value="views_asc">浏览量↑</option>
+            </select>
+          </div>
+          
+          <!-- 重置按钮 -->
+          <div class="col-md-2">
+            <button id="reset-filters-btn" class="btn btn-outline-secondary w-100">
+              <i class="fas fa-undo me-1"></i>重置
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 批量操作工具栏 -->
+    <div id="bulk-actions-toolbar" class="card card-custom mb-3 d-none">
+      <div class="card-body py-2">
+        <div class="d-flex align-items-center">
+          <span class="me-3">
+            <i class="fas fa-check-square text-primary me-1"></i>
+            已选择 <span id="selected-count">0</span> 项
+          </span>
+          <div class="btn-group btn-group-sm me-3">
+            <button id="bulk-publish-btn" class="btn btn-outline-success">
+              <i class="fas fa-eye me-1"></i>批量发布
+            </button>
+            <button id="bulk-draft-btn" class="btn btn-outline-warning">
+              <i class="fas fa-eye-slash me-1"></i>转为草稿
+            </button>
+            <button id="bulk-delete-btn" class="btn btn-outline-danger">
+              <i class="fas fa-trash me-1"></i>批量删除
+            </button>
+          </div>
+          <button id="clear-selection-btn" class="btn btn-outline-secondary btn-sm ms-auto">
+            <i class="fas fa-times me-1"></i>清除选择
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 文章列表 -->
+    <div class="card card-custom">
+      <div class="card-body">
+        <!-- 加载状态 -->
+        <div id="articles-loading" class="text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">正在加载文章...</span>
+          </div>
+          <p class="mt-2 text-muted">正在加载文章...</p>
+        </div>
+
+        <!-- 文章表格 -->
+        <div id="articles-table-container" class="d-none">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th width="40">
+                    <input type="checkbox" id="select-all-checkbox" class="form-check-input">
+                  </th>
+                  <th>文章信息</th>
+                  <th width="100">状态</th>
+                  <th width="120">分类</th>
+                  <th width="80">浏览量</th>
+                  <th width="120">创建时间</th>
+                  <th width="120">更新时间</th>
+                  <th width="120">操作</th>
+                </tr>
+              </thead>
+              <tbody id="articles-table-body">
+                <!-- 文章列表将在这里动态生成 -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 分页 -->
+          <nav aria-label="文章分页" class="mt-4">
+            <ul id="pagination-container" class="pagination justify-content-center">
+              <!-- 分页将在这里动态生成 -->
+            </ul>
+          </nav>
+        </div>
+
+        <!-- 空状态 -->
+        <div id="articles-empty" class="text-center py-5 d-none">
+          <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+          <h5 class="text-muted">暂无文章</h5>
+          <p class="text-muted">还没有创建任何文章，点击上方按钮开始创建吧！</p>
+          <a href="/admin/articles/new" class="btn btn-primary-custom">
+            <i class="fas fa-plus me-2"></i>创建第一篇文章
+          </a>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
 
 <script>
-// 文章管理页面初始化
-window.initArticleListPage = function(routeData) {
-  console.log('初始化文章管理页面');
-  
-  // 检查管理员权限
-  if (!window.appState.isAdmin()) {
-    window.router.push('/404');
-    return;
-  }
-  
-  // 初始化页面
-  initArticleListPage();
-};
-
-// 页面状态
+// 页面状态管理
 const pageState = {
   currentPage: 1,
-  pageSize: 10,
+  pageSize: 5,
   totalCount: 0,
   searchKeyword: '',
   statusFilter: '',
   categoryFilter: '',
   sortBy: 'created_at_desc',
-  selectedArticles: new Set(),
-  articles: []
+  selectedArticles: new Set()
 };
 
-// 初始化页面
-function initArticleListPage() {
+// 页面初始化
+// 页面初始化
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('页面初始化开始');
   bindEvents();
   loadCategories();
-  loadArticles();
-}
+  
+  // 确保API客户端已加载
+  if (window.apiClient && window.apiClient.admin) {
+    console.log('API客户端已就绪，开始加载文章');
+    loadArticles();
+  } else {
+    console.log('等待API客户端加载...');
+    // 等待API客户端加载
+    const checkApiClient = setInterval(() => {
+      if (window.apiClient && window.apiClient.admin) {
+        console.log('API客户端加载完成，开始加载文章');
+        clearInterval(checkApiClient);
+        loadArticles();
+      }
+    }, 100);
+  }
+});
 
 // 绑定事件
 function bindEvents() {
@@ -215,20 +226,20 @@ function bindEvents() {
 
 // 加载分类
 async function loadCategories() {
-  // 模拟分类数据
-  const categories = [
-    { id: 1, name: '技术博客' },
-    { id: 2, name: '生活随笔' },
-    { id: 3, name: '学习笔记' }
-  ];
-  
-  const categorySelect = document.getElementById('category-filter');
-  categories.forEach(cat => {
-    const option = document.createElement('option');
-    option.value = cat.id;
-    option.textContent = cat.name;
-    categorySelect.appendChild(option);
-  });
+  try {
+    const response = await window.apiClient.categories.getList();
+    const categories = response.data || [];
+    
+    const categorySelect = document.getElementById('category-filter');
+    categories.forEach(cat => {
+      const option = document.createElement('option');
+      option.value = cat.id;
+      option.textContent = cat.name;
+      categorySelect.appendChild(option);
+    });
+  } catch (error) {
+    console.error('加载分类失败:', error);
+  }
 }
 
 // 加载文章列表
@@ -242,81 +253,72 @@ async function loadArticles() {
   emptyState.classList.add('d-none');
   
   try {
-    const params = {
+    // 使用API客户端调用管理员文章接口
+    const apiParams = {
       page: pageState.currentPage,
-      pageSize: pageState.pageSize,
-      search: pageState.searchKeyword,
-      status: pageState.statusFilter,
-      category: pageState.categoryFilter,
-      sort: pageState.sortBy
+      pageSize: pageState.pageSize
     };
     
-    const response = await window.apiClient.admin.getArticles(params);
+    if (pageState.searchKeyword) {
+      apiParams.search = pageState.searchKeyword;
+      apiParams.search_type = 'fuzzy';
+      apiParams.search_fields = 'all';
+    }
     
-    loading.classList.add('d-none');
+    if (pageState.statusFilter) {
+      apiParams.status = pageState.statusFilter;
+    }
     
-    if (response.articles && response.articles.length > 0) {
-      pageState.articles = response.articles;
-      pageState.totalCount = response.total || response.articles.length;
-      
-      renderArticlesTable(response.articles);
+    if (pageState.categoryFilter) {
+      apiParams.category = pageState.categoryFilter;
+    }
+    
+    if (pageState.sortBy) {
+      apiParams.sort = pageState.sortBy;
+    }
+    
+    console.log('调用API参数:', apiParams);
+    const response = await window.apiClient.admin.getArticles(apiParams);
+    console.log('API响应:', response);
+    
+    if (response && response.data) {
+      pageState.totalCount = response.total || 0;
+      renderArticleTable(response.data);
       renderPagination();
-      tableContainer.classList.remove('d-none');
+      
+      if (response.data.length === 0) {
+        tableContainer.classList.add('d-none');
+        emptyState.classList.remove('d-none');
+      } else {
+        tableContainer.classList.remove('d-none');
+        emptyState.classList.add('d-none');
+      }
     } else {
+      console.error('API响应格式错误:', response);
+      tableContainer.classList.add('d-none');
       emptyState.classList.remove('d-none');
     }
     
   } catch (error) {
-    console.error('加载文章失败:', error);
+    console.error('加载文章列表失败:', error);
+    if (window.blogApp && window.blogApp.showNotification) {
+      window.blogApp.showNotification('加载文章列表失败: ' + error.message, 'error');
+    }
+    tableContainer.classList.add('d-none');
+    emptyState.classList.remove('d-none');
+  } finally {
     loading.classList.add('d-none');
-    
-    // 使用模拟数据
-    const mockArticles = generateMockArticles();
-    pageState.articles = mockArticles;
-    pageState.totalCount = mockArticles.length;
-    
-    renderArticlesTable(mockArticles);
-    renderPagination();
-    tableContainer.classList.remove('d-none');
   }
 }
 
-// 生成模拟文章数据
-function generateMockArticles() {
-  return [
-    {
-      id: 1,
-      title: 'Vue.js 3.0 深度解析',
-      status: 'published',
-      category: '技术博客',
-      views: 1250,
-      created_at: Date.now() / 1000 - 86400,
-      updated_at: Date.now() / 1000 - 3600
-    },
-    {
-      id: 2,
-      title: 'JavaScript 异步编程详解',
-      status: 'published',
-      category: '学习笔记',
-      views: 980,
-      created_at: Date.now() / 1000 - 172800,
-      updated_at: Date.now() / 1000 - 7200
-    },
-    {
-      id: 3,
-      title: '前端性能优化实践',
-      status: 'draft',
-      category: '技术博客',
-      views: 0,
-      created_at: Date.now() / 1000 - 259200,
-      updated_at: Date.now() / 1000 - 259200
-    }
-  ];
-}
-
 // 渲染文章表格
-function renderArticlesTable(articles) {
-  const tbody = document.getElementById('articles-tbody');
+function renderArticleTable(articles) {
+  const tbody = document.getElementById('articles-table-body');
+  
+  if (!articles || articles.length === 0) {
+    tbody.innerHTML = '';
+    return;
+  }
   
   const html = articles.map(article => {
     const statusBadge = getStatusBadge(article.status);
@@ -349,7 +351,10 @@ function renderArticlesTable(articles) {
             <a href="/admin/articles/${article.id}/edit" class="btn btn-outline-primary btn-sm" title="编辑">
               <i class="fas fa-edit"></i>
             </a>
-            <button class="btn btn-outline-danger btn-sm" onclick="handleDeleteArticle(${article.id})" title="删除">
+            <a href="/articles/${article.id}" target="_blank" class="btn btn-outline-info btn-sm" title="预览">
+              <i class="fas fa-eye"></i>
+            </a>
+            <button class="btn btn-outline-danger btn-sm" onclick="confirmDeleteArticle(${article.id}, '${escapeHtml(article.title)}')" title="删除">
               <i class="fas fa-trash"></i>
             </button>
           </div>
@@ -391,21 +396,14 @@ function handleResetFilters() {
   loadArticles();
 }
 
-function handleSelectAll(e) {
-  const isChecked = e.target.checked;
+function handleSelectAll() {
+  const selectAllCheckbox = document.getElementById('select-all-checkbox');
   const checkboxes = document.querySelectorAll('.article-checkbox');
   
   checkboxes.forEach(checkbox => {
-    checkbox.checked = isChecked;
-    const articleId = parseInt(checkbox.value);
-    if (isChecked) {
-      pageState.selectedArticles.add(articleId);
-    } else {
-      pageState.selectedArticles.delete(articleId);
-    }
+    checkbox.checked = selectAllCheckbox.checked;
+    handleArticleSelect(parseInt(checkbox.value), checkbox.checked);
   });
-  
-  updateBulkActionsToolbar();
 }
 
 function handleArticleSelect(articleId, isSelected) {
@@ -415,8 +413,8 @@ function handleArticleSelect(articleId, isSelected) {
     pageState.selectedArticles.delete(articleId);
   }
   
-  updateBulkActionsToolbar();
   updateSelectAllCheckbox();
+  updateBulkActionsToolbar();
 }
 
 function updateBulkActionsToolbar() {
@@ -424,10 +422,10 @@ function updateBulkActionsToolbar() {
   const selectedCount = document.getElementById('selected-count');
   
   if (pageState.selectedArticles.size > 0) {
+    toolbar.classList.remove('d-none');
     selectedCount.textContent = pageState.selectedArticles.size;
-    toolbar.style.display = 'block';
   } else {
-    toolbar.style.display = 'none';
+    toolbar.classList.add('d-none');
   }
 }
 
@@ -472,7 +470,9 @@ async function handleBulkAction(action) {
   
   try {
     // 这里应该调用相应的API
-    window.blogApp.showNotification(`成功${actionName} ${count} 篇文章`, 'success');
+    if (window.blogApp && window.blogApp.showNotification) {
+      window.blogApp.showNotification(`成功${actionName} ${count} 篇文章`, 'success');
+    }
     
     // 清除选择并重新加载
     handleClearSelection();
@@ -480,22 +480,85 @@ async function handleBulkAction(action) {
     
   } catch (error) {
     console.error(`批量${actionName}失败:`, error);
-    window.blogApp.showNotification(`${actionName}失败: ${error.message}`, 'error');
+    if (window.blogApp && window.blogApp.showNotification) {
+      window.blogApp.showNotification(`${actionName}失败: ${error.message}`, 'error');
+    }
   }
 }
 
-async function handleDeleteArticle(articleId) {
-  if (!confirm('确定要删除这篇文章吗？此操作不可恢复。')) {
-    return;
-  }
+// 确认删除文章
+function confirmDeleteArticle(articleId, articleTitle) {
+  // 创建确认对话框
+  const modal = document.createElement('div');
+  modal.className = 'modal fade';
+  modal.innerHTML = `
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">确认删除</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>警告：此操作不可恢复！</strong>
+          </div>
+          <p>您确定要删除以下文章吗？</p>
+          <div class="bg-light p-3 rounded">
+            <strong>${articleTitle}</strong>
+            <br><small class="text-muted">ID: ${articleId}</small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-danger" onclick="handleDeleteArticle(${articleId})">
+            <i class="fas fa-trash me-1"></i>确认删除
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
   
+  document.body.appendChild(modal);
+  const bootstrapModal = new bootstrap.Modal(modal);
+  bootstrapModal.show();
+  
+  // 删除后清理DOM
+  modal.addEventListener('hidden.bs.modal', () => {
+    document.body.removeChild(modal);
+  });
+}
+
+async function handleDeleteArticle(articleId) {
   try {
+    // 关闭模态框
+    const modal = document.querySelector('.modal.show');
+    if (modal) {
+      const bootstrapModal = bootstrap.Modal.getInstance(modal);
+      bootstrapModal.hide();
+    }
+    
     await window.apiClient.articles.delete(articleId);
-    window.blogApp.showNotification('文章删除成功', 'success');
+    
+    // 显示成功消息
+    if (window.blogApp && window.blogApp.showNotification) {
+      window.blogApp.showNotification('文章删除成功', 'success');
+    } else {
+      alert('文章删除成功');
+    }
+    
+    // 重新加载文章列表
     loadArticles();
+    
   } catch (error) {
     console.error('删除文章失败:', error);
-    window.blogApp.showNotification('删除失败: ' + error.message, 'error');
+    
+    // 显示错误消息
+    if (window.blogApp && window.blogApp.showNotification) {
+      window.blogApp.showNotification('删除失败: ' + error.message, 'error');
+    } else {
+      alert('删除失败: ' + error.message);
+    }
   }
 }
 
@@ -537,14 +600,6 @@ function renderPagination() {
   }
   
   container.innerHTML = html;
-  
-  // 更新统计信息
-  const start = (pageState.currentPage - 1) * pageState.pageSize + 1;
-  const end = Math.min(pageState.currentPage * pageState.pageSize, pageState.totalCount);
-  
-  document.getElementById('page-start').textContent = start;
-  document.getElementById('page-end').textContent = end;
-  document.getElementById('total-count').textContent = pageState.totalCount;
 }
 
 function changePage(page) {
@@ -556,25 +611,79 @@ function changePage(page) {
 function getStatusBadge(status) {
   const statusMap = {
     'published': '<span class="badge badge-success-custom">已发布</span>',
-    'draft': '<span class="badge badge-secondary-custom">草稿</span>',
-    'private': '<span class="badge badge-warning-custom">私有</span>',
-    'archived': '<span class="badge badge-info-custom">归档</span>'
+    'draft': '<span class="badge badge-warning-custom">草稿</span>',
+    'archived': '<span class="badge badge-secondary-custom">已归档</span>'
   };
-  
   return statusMap[status] || '<span class="badge badge-secondary-custom">未知</span>';
 }
 
-function formatDateTime(timestamp) {
-  const date = new Date(timestamp * 1000);
-  return date.toLocaleDateString('zh-CN') + ' ' + date.toLocaleTimeString('zh-CN', { 
-    hour: '2-digit', 
-    minute: '2-digit' 
+function formatDateTime(dateString) {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
   });
 }
 
 function escapeHtml(text) {
+  if (!text) return '';
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
 }
 </script>
+
+</body>
+</html>
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+</script>
+
+</body>
+</html>atus) {
+  const statusMap = {
+    'published': '<span class="badge badge-success-custom">已发布</span>',
+    'draft': '<span class="badge badge-warning-custom">草稿</span>',
+    'archived': '<span class="badge badge-secondary-custom">已归档</span>'
+  };
+  return statusMap[status] || '<span class="badge badge-secondary-custom">未知</span>';
+}
+
+function formatDateTime(dateString) {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+</script>
+
+</body>
+</html>

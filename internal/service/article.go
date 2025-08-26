@@ -21,7 +21,7 @@ func GetArticle(c *gin.Context, articleId int32, version int) (*model_def.Articl
 	// 增加浏览量
 	if err := IncrementArticleViewCount(c, articleId); err != nil {
 		// 浏览量更新失败不影响文章获取
-		fmt.Printf("Failed to increment view count: %v\n", err)
+		log.Errorf("Failed to increment view count: %v\n", err)
 	}
 	// 获取文章版本
 	articleVersion, err := dao.ArticleVersion.WithContext(c.Request.Context()).
@@ -42,8 +42,70 @@ func IncrementArticleViewCount(c *gin.Context, articleId int32) error {
 	return err
 }
 
+// applySearchFilter 应用搜索过滤器
+func applySearchFilter(query dao.IArticleDo, search, searchType, searchFields string) dao.IArticleDo {
+	if search == "" {
+		return query
+	}
+
+	// 根据搜索类型构建搜索条件
+	switch searchType {
+	case "exact":
+		// 精确匹配
+		return applyExactSearch(query, search, searchFields)
+	case "fuzzy":
+		// 模糊匹配（默认）
+		return applyFuzzySearch(query, search, searchFields)
+	default:
+		// 默认使用模糊匹配
+		return applyFuzzySearch(query, search, searchFields)
+	}
+}
+
+// applyExactSearch 应用精确搜索
+func applyExactSearch(query dao.IArticleDo, search, searchFields string) dao.IArticleDo {
+	switch searchFields {
+	case "title":
+		return query.Where(dao.Q.Article.Title.Eq(search))
+	case "content":
+		// 暂时在描述字段中搜索
+		return query.Where(dao.Q.Article.Description.Eq(search))
+	case "tags":
+		return query.Where(dao.Q.Article.Tags.Eq(search))
+	case "all":
+		fallthrough
+	default:
+		// 在标题、标签、描述中精确搜索
+		return query.Where(dao.Q.Article.Title.Eq(search)).
+			Or(query.Where(dao.Q.Article.Tags.Eq(search))).
+			Or(query.Where(dao.Q.Article.Description.Eq(search)))
+	}
+}
+
+// applyFuzzySearch 应用模糊搜索
+func applyFuzzySearch(query dao.IArticleDo, search, searchFields string) dao.IArticleDo {
+	searchPattern := "%" + search + "%"
+
+	switch searchFields {
+	case "title":
+		return query.Where(dao.Q.Article.Title.Like(searchPattern))
+	case "content":
+		// 暂时在描述字段中搜索
+		return query.Where(dao.Q.Article.Description.Like(searchPattern))
+	case "tags":
+		return query.Where(dao.Q.Article.Tags.Like(searchPattern))
+	case "all":
+		fallthrough
+	default:
+		// 在标题、标签、描述中模糊搜索
+		return query.Where(dao.Q.Article.Title.Like(searchPattern)).
+			Or(query.Where(dao.Q.Article.Tags.Like(searchPattern))).
+			Or(query.Where(dao.Q.Article.Description.Like(searchPattern)))
+	}
+}
+
 // GetArticleList 获取文章列表
-func GetArticleList(c *gin.Context, page, pageSize int, category, sort string) (*message.ArticleResponse, error) {
+func GetArticleList(c *gin.Context, page, pageSize int, category, sort, search, searchType, searchFields string) (*message.ArticleResponse, error) {
 	ctx := c.Request.Context()
 
 	// 构建查询条件
@@ -52,6 +114,11 @@ func GetArticleList(c *gin.Context, page, pageSize int, category, sort string) (
 	// 分类筛选
 	if category != "" {
 		query = query.Where(dao.Article.Category.Eq(category))
+	}
+
+	// 搜索功能
+	if search != "" {
+		query = applySearchFilter(query, search, searchType, searchFields)
 	}
 
 	// 获取总数
@@ -329,6 +396,94 @@ func DeleteArticle(c *gin.Context, articleID int32) error {
 		}
 		return nil
 	})
+}
+
+// GetAdminArticleList 获取管理员文章列表（包含所有状态的文章）
+func GetAdminArticleList(c *gin.Context, page, pageSize int, category, sort, search, searchType, searchFields, status string) (*message.ArticleResponse, error) {
+	ctx := c.Request.Context()
+
+	// 构建查询条件
+	query := dao.Article.WithContext(ctx)
+
+	// 分类筛选
+	if category != "" {
+		query = query.Where(dao.Article.Category.Eq(category))
+	}
+
+	// 状态筛选（管理员专用）
+	if status != "" {
+		// 这里可以根据实际需求添加状态字段筛选
+		// 目前模型中没有status字段，可以根据其他条件筛选
+		// 例如：根据是否有内容、创建时间等判断状态
+	}
+
+	// 搜索功能
+	if search != "" {
+		query = applySearchFilter(query, search, searchType, searchFields)
+	}
+
+	// 获取总数
+	total, err := query.Count()
+	if err != nil {
+		return nil, err
+	}
+
+	// 排序处理
+	switch sort {
+	case "created_at_asc":
+		query = query.Order(dao.Article.CreatedAt.Asc())
+	case "created_at_desc":
+		query = query.Order(dao.Article.CreatedAt.Desc())
+	case "updated_at_desc":
+		query = query.Order(dao.Article.UpdatedAt.Desc())
+	case "updated_at_asc":
+		query = query.Order(dao.Article.UpdatedAt.Asc())
+	case "title_asc":
+		query = query.Order(dao.Article.Title.Asc())
+	case "title_desc":
+		query = query.Order(dao.Article.Title.Desc())
+	case "views_desc":
+		query = query.Order(dao.Article.Views.Desc())
+	case "views_asc":
+		query = query.Order(dao.Article.Views.Asc())
+	default:
+		// 默认按创建时间倒序
+		query = query.Order(dao.Article.CreatedAt.Desc())
+	}
+
+	// 获取文章列表
+	offset := (page - 1) * pageSize
+	articles, err := query.
+		Limit(pageSize).
+		Offset(offset).
+		Find()
+	if err != nil {
+		return nil, err
+	}
+
+	// 创建一个新的结构体切片
+	var articleStructs []model_def.Article
+	for _, article := range articles {
+		articleStructs = append(articleStructs, *article)
+	}
+
+	// 计算总页数
+	totalPages := int(total) / pageSize
+	if int(total)%pageSize > 0 {
+		totalPages++
+	}
+
+	resp := &message.ArticleResponse{
+		Articles: articleStructs,
+		Pagination: message.PaginationInfo{
+			CurrentPage: page,
+			PageSize:    pageSize,
+			TotalPages:  totalPages,
+			TotalCount:  int(total),
+		},
+	}
+
+	return resp, nil
 }
 
 func GetCategoryList(c *gin.Context) ([]*model_def.Category, error) {

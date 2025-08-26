@@ -171,7 +171,7 @@ class Router {
       this.currentRoute = {
         path: ctx.pathname,
         params: ctx ? ctx.params : {},
-        query: this.parseQuery(ctx.querystring),
+        query: this.parseQuery(ctx.querystring || ''),
         config
       };
 
@@ -179,7 +179,7 @@ class Router {
 
       // 设置页面标题
       if (config.title) {
-        document.title = `${config.title} - 个人博客`;
+        document.title = `${config.title} - XX者说`;
       }
 
       // 加载页面模板
@@ -264,9 +264,21 @@ class Router {
     // 检查是否存在页面初始化函数
     if (typeof window[initFunction] === 'function') {
       try {
-        await window[initFunction](routeData);
+        // 确保 routeData 有正确的结构
+        const safeRouteData = {
+          path: routeData?.path || '',
+          params: routeData?.params || {},
+          query: routeData?.query || {},
+          config: routeData?.config || {}
+        };
+        
+        await window[initFunction](safeRouteData);
       } catch (error) {
         console.error(`页面初始化失败 (${initFunction}):`, error);
+        // 显示用户友好的错误信息
+        if (window.blogApp && window.blogApp.showNotification) {
+          window.blogApp.showNotification('页面加载出现问题，请刷新重试', 'error');
+        }
       }
     }
   }
@@ -412,7 +424,6 @@ window.router = new Router();
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = Router;
 }
-
 
 // 显式执行模板中的 <script>，确保 window.initXxxPage 已定义
 function executeTemplateScripts(container) {

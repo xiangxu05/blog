@@ -1,4 +1,4 @@
-<div class="container-fluid py-4">
+<div class="container-wide py-4">
   <!-- 管理后台头部 -->
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -22,21 +22,17 @@
 
   <!-- 统计卡片 -->
   <div class="row mb-4">
-    <div class="col-xl-3 col-md-6 mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
       <div class="card-custom h-100">
         <div class="card-body">
-          <div class="row align-items-center">
-            <div class="col">
+          <div class="d-flex align-items-center">
+            <div class="flex-grow-1">
               <div class="text-muted small fw-bold">文章总数</div>
-              <div class="h2 fw-bold" id="total-articles">-</div>
-              <div class="text-success small">
-                <i class="fas fa-arrow-up me-1"></i>
-                <span id="articles-growth">+0</span> 本月
-              </div>
+              <div class="h3 fw-bold mb-0" id="total-articles">-</div>
             </div>
-            <div class="col-auto">
-              <div class="bg-primary bg-opacity-10 p-3 rounded-circle">
-                <i class="fas fa-newspaper text-primary fa-2x"></i>
+            <div class="ms-3">
+              <div class="bg-primary bg-opacity-10 p-2 rounded">
+                <i class="fas fa-newspaper text-primary fa-lg"></i>
               </div>
             </div>
           </div>
@@ -44,21 +40,17 @@
       </div>
     </div>
     
-    <div class="col-xl-3 col-md-6 mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
       <div class="card-custom h-100">
         <div class="card-body">
-          <div class="row align-items-center">
-            <div class="col">
+          <div class="d-flex align-items-center">
+            <div class="flex-grow-1">
               <div class="text-muted small fw-bold">总浏览量</div>
-              <div class="h2 fw-bold" id="total-views">-</div>
-              <div class="text-success small">
-                <i class="fas fa-arrow-up me-1"></i>
-                <span id="views-growth">+0</span> 本月
-              </div>
+              <div class="h3 fw-bold mb-0" id="total-views">-</div>
             </div>
-            <div class="col-auto">
-              <div class="bg-success bg-opacity-10 p-3 rounded-circle">
-                <i class="fas fa-eye text-success fa-2x"></i>
+            <div class="ms-3">
+              <div class="bg-success bg-opacity-10 p-2 rounded">
+                <i class="fas fa-eye text-success fa-lg"></i>
               </div>
             </div>
           </div>
@@ -66,21 +58,17 @@
       </div>
     </div>
     
-    <div class="col-xl-3 col-md-6 mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
       <div class="card-custom h-100">
         <div class="card-body">
-          <div class="row align-items-center">
-            <div class="col">
+          <div class="d-flex align-items-center">
+            <div class="flex-grow-1">
               <div class="text-muted small fw-bold">存储文件</div>
-              <div class="h2 fw-bold" id="total-files">-</div>
-              <div class="text-info small">
-                <i class="fas fa-hdd me-1"></i>
-                <span id="storage-used">0 MB</span> 已用
-              </div>
+              <div class="h3 fw-bold mb-0" id="total-files">-</div>
             </div>
-            <div class="col-auto">
-              <div class="bg-info bg-opacity-10 p-3 rounded-circle">
-                <i class="fas fa-folder text-info fa-2x"></i>
+            <div class="ms-3">
+              <div class="bg-info bg-opacity-10 p-2 rounded">
+                <i class="fas fa-folder text-info fa-lg"></i>
               </div>
             </div>
           </div>
@@ -88,21 +76,17 @@
       </div>
     </div>
     
-    <div class="col-xl-3 col-md-6 mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
       <div class="card-custom h-100">
         <div class="card-body">
-          <div class="row align-items-center">
-            <div class="col">
+          <div class="d-flex align-items-center">
+            <div class="flex-grow-1">
               <div class="text-muted small fw-bold">注册用户</div>
-              <div class="h2 fw-bold" id="total-users">-</div>
-              <div class="text-warning small">
-                <i class="fas fa-user-plus me-1"></i>
-                <span id="users-growth">+0</span> 本月
-              </div>
+              <div class="h3 fw-bold mb-0" id="total-users">-</div>
             </div>
-            <div class="col-auto">
-              <div class="bg-warning bg-opacity-10 p-3 rounded-circle">
-                <i class="fas fa-users text-warning fa-2x"></i>
+            <div class="ms-3">
+              <div class="bg-warning bg-opacity-10 p-2 rounded">
+                <i class="fas fa-users text-warning fa-lg"></i>
               </div>
             </div>
           </div>
@@ -111,12 +95,13 @@
     </div>
   </div>
 
+  <!-- 主要内容区域 -->
   <div class="row">
     <!-- 最近文章 -->
     <div class="col-lg-8 mb-4">
-      <div class="card-custom">
+      <div class="card-custom h-100">
         <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="card-title mb-0">
               <i class="fas fa-clock me-2"></i>
               最近文章
@@ -149,157 +134,90 @@
       </div>
     </div>
     
-    <!-- 快捷操作 -->
+    <!-- 快捷操作和系统状态 -->
     <div class="col-lg-4 mb-4">
-      <div class="card-custom">
+      <!-- 快捷操作 -->
+      <div class="card-custom mb-4">
         <div class="card-body">
           <h5 class="card-title">
             <i class="fas fa-bolt me-2"></i>
             快捷操作
           </h5>
           
-          <div class="d-grid gap-3">
-            <a href="/admin/articles/new" class="btn btn-primary-custom">
-              <i class="fas fa-pen me-2"></i>
-              写新文章
-            </a>
-            <a href="/admin/articles" class="btn btn-outline-custom">
-              <i class="fas fa-list me-2"></i>
-              管理文章
-            </a>
-            <a href="/admin/files" class="btn btn-outline-custom">
-              <i class="fas fa-folder-open me-2"></i>
-              文件管理
-            </a>
-            <button class="btn btn-outline-custom" id="clear-cache-btn">
-              <i class="fas fa-broom me-2"></i>
-              清理缓存
-            </button>
-            <button class="btn btn-outline-custom" id="backup-data-btn">
-              <i class="fas fa-download me-2"></i>
-              数据备份
-            </button>
+          <div class="row g-2">
+            <div class="col-6">
+              <a href="/admin/articles/new" class="btn btn-primary-custom w-100">
+                <i class="fas fa-pen me-2"></i>
+                写新文章
+              </a>
+            </div>
+            <div class="col-6">
+              <a href="/admin/articles" class="btn btn-outline-custom w-100">
+                <i class="fas fa-list me-2"></i>
+                管理文章
+              </a>
+            </div>
+            <div class="col-6">
+              <a href="/admin/files" class="btn btn-outline-custom w-100">
+                <i class="fas fa-folder-open me-2"></i>
+                文件管理
+              </a>
+            </div>
+            <div class="col-6">
+              <button class="btn btn-outline-custom w-100" id="backup-data-btn">
+                <i class="fas fa-download me-2"></i>
+                数据备份
+              </button>
+            </div>
           </div>
         </div>
       </div>
       
       <!-- 系统状态 -->
-      <div class="card-custom mt-4">
+      <div class="card-custom">
         <div class="card-body">
           <h5 class="card-title">
             <i class="fas fa-server me-2"></i>
             系统状态
           </h5>
           
-          <div class="mb-3">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <span class="small">服务器状态</span>
-              <span class="badge badge-success-custom">运行中</span>
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="text-center">
+                <div class="badge badge-success-custom mb-1">运行中</div>
+                <div class="small text-muted">服务器状态</div>
+              </div>
             </div>
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <span class="small">数据库</span>
-              <span class="badge badge-success-custom">正常</span>
+            <div class="col-6">
+              <div class="text-center">
+                <div class="badge badge-success-custom mb-1">正常</div>
+                <div class="small text-muted">数据库</div>
+              </div>
             </div>
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <span class="small">存储空间</span>
-              <span class="badge badge-warning-custom">75%</span>
+            <div class="col-6">
+              <div class="text-center">
+                <div class="badge badge-warning-custom mb-1" id="storage-usage">-</div>
+                <div class="small text-muted">存储使用</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="text-center">
+                <div class="badge badge-info-custom mb-1" id="storage-capacity">-</div>
+                <div class="small text-muted">存储容量</div>
+              </div>
             </div>
           </div>
           
-          <div class="mb-3">
-            <div class="small text-muted mb-1">内存使用率</div>
-            <div class="progress progress-custom">
-              <div class="progress-bar bg-info" style="width: 65%"></div>
-            </div>
-            <small class="text-muted">65% (2.1GB / 3.2GB)</small>
-          </div>
+          <hr class="my-3">
           
           <div class="small text-muted">
-            <div class="d-flex justify-content-between">
+            <div class="d-flex justify-content-between mb-1">
               <span>上次备份:</span>
-              <span>2024-12-20</span>
+              <span id="last-backup">-</span>
             </div>
             <div class="d-flex justify-content-between">
               <span>运行时间:</span>
-              <span id="uptime">15天 3小时</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <!-- 浏览量统计图表 -->
-  <div class="row">
-    <div class="col-lg-8 mb-4">
-      <div class="card-custom">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <h5 class="card-title mb-0">
-              <i class="fas fa-chart-line me-2"></i>
-              访问统计
-            </h5>
-            <div class="btn-group btn-group-sm" role="group">
-              <input type="radio" class="btn-check" name="chart-period" id="chart-7d" value="7d" checked>
-              <label class="btn btn-outline-custom" for="chart-7d">7天</label>
-              
-              <input type="radio" class="btn-check" name="chart-period" id="chart-30d" value="30d">
-              <label class="btn btn-outline-custom" for="chart-30d">30天</label>
-              
-              <input type="radio" class="btn-check" name="chart-period" id="chart-90d" value="90d">
-              <label class="btn btn-outline-custom" for="chart-90d">90天</label>
-            </div>
-          </div>
-          
-          <div id="visitor-chart" style="height: 300px;">
-            <!-- 图表占位 -->
-            <div class="d-flex align-items-center justify-content-center h-100 text-muted">
-              <div class="text-center">
-                <i class="fas fa-chart-line fa-3x mb-3"></i>
-                <p>图表功能即将上线</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- 热门文章排行 -->
-    <div class="col-lg-4 mb-4">
-      <div class="card-custom">
-        <div class="card-body">
-          <h5 class="card-title">
-            <i class="fas fa-fire me-2"></i>
-            热门文章
-          </h5>
-          
-          <div id="popular-articles">
-            <div class="text-center py-4">
-              <div class="spinner-border spinner-border-sm text-primary" role="status">
-                <span class="visually-hidden">加载中...</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <!-- 最近活动 -->
-  <div class="row">
-    <div class="col-12">
-      <div class="card-custom">
-        <div class="card-body">
-          <h5 class="card-title">
-            <i class="fas fa-history me-2"></i>
-            最近活动
-          </h5>
-          
-          <div id="recent-activities">
-            <div class="text-center py-4">
-              <div class="spinner-border spinner-border-sm text-primary" role="status">
-                <span class="visually-hidden">加载中...</span>
-              </div>
+              <span id="uptime">-</span>
             </div>
           </div>
         </div>
@@ -340,33 +258,68 @@ async function loadDashboardData() {
 // 加载统计数据
 async function loadStatistics() {
   try {
-    // 模拟统计数据（实际应该从API获取）
-    const stats = {
-      totalArticles: 42,
-      articlesGrowth: 8,
-      totalViews: 15420,
-      viewsGrowth: 1250,
-      totalFiles: 128,
-      storageUsed: 256,
-      totalUsers: 1205,
-      usersGrowth: 32
-    };
+    const response = await fetch('/api/admin/backend_statistics', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include' // 包含认证信息
+    });
     
-    // 更新统计卡片
-    document.getElementById('total-articles').textContent = stats.totalArticles;
-    document.getElementById('articles-growth').textContent = `+${stats.articlesGrowth}`;
-    
-    document.getElementById('total-views').textContent = formatNumber(stats.totalViews);
-    document.getElementById('views-growth').textContent = `+${formatNumber(stats.viewsGrowth)}`;
-    
-    document.getElementById('total-files').textContent = stats.totalFiles;
-    document.getElementById('storage-used').textContent = `${stats.storageUsed} MB`;
-    
-    document.getElementById('total-users').textContent = formatNumber(stats.totalUsers);
-    document.getElementById('users-growth').textContent = `+${stats.usersGrowth}`;
+    if (response.ok) {
+      const result = await response.json();
+      console.log('后台统计数据:', result);
+      
+      // 数据在 result.data 中
+      const data = result.data || {};
+      
+      // 更新统计卡片
+      document.getElementById('total-articles').textContent = data.articles_num || '0';
+      document.getElementById('total-views').textContent = formatNumber(data.views || 0);
+      document.getElementById('total-files').textContent = data.files_num || '0';
+      document.getElementById('total-users').textContent = data.users_num || '0';
+      
+      // 更新系统状态
+      document.getElementById('storage-usage').textContent = data.store_usage || '-';
+      document.getElementById('storage-capacity').textContent = data.capacity || '-';
+      
+      // 更新最后备份时间
+      const lastBackupElement = document.getElementById('last-backup');
+      if (data.last_backup) {
+        try {
+          const backupDate = new Date(data.last_backup);
+          if (!isNaN(backupDate.getTime())) {
+            lastBackupElement.textContent = backupDate.toLocaleDateString('zh-CN');
+          } else {
+            lastBackupElement.textContent = '未知';
+          }
+        } catch (error) {
+          console.error('解析备份时间失败:', error);
+          lastBackupElement.textContent = '未知';
+        }
+      } else {
+        lastBackupElement.textContent = '从未备份';
+      }
+      
+      // 更新运行时间（这个可能需要单独的API或计算）
+      document.getElementById('uptime').textContent = '运行中';
+      
+    } else {
+      console.error('获取后台统计数据失败:', response.status, response.statusText);
+      // 显示错误状态
+      document.getElementById('total-articles').textContent = '-';
+      document.getElementById('total-views').textContent = '-';
+      document.getElementById('total-files').textContent = '-';
+      document.getElementById('total-users').textContent = '-';
+    }
     
   } catch (error) {
     console.error('加载统计数据失败:', error);
+    // 显示错误状态
+    document.getElementById('total-articles').textContent = '-';
+    document.getElementById('total-views').textContent = '-';
+    document.getElementById('total-files').textContent = '-';
+    document.getElementById('total-users').textContent = '-';
   }
 }
 
@@ -461,6 +414,12 @@ function renderRecentArticles(articles) {
 async function loadPopularArticles() {
   const popularArticles = document.getElementById('popular-articles');
   
+  // 检查元素是否存在，如果不存在则跳过
+  if (!popularArticles) {
+    console.log('热门文章容器不存在，跳过加载');
+    return;
+  }
+  
   try {
     // 模拟热门文章数据
     setTimeout(() => {
@@ -485,17 +444,27 @@ async function loadPopularArticles() {
         </div>
       `).join('');
       
-      popularArticles.innerHTML = popularHtml;
+      if (popularArticles) {
+        popularArticles.innerHTML = popularHtml;
+      }
     }, 1000);
     
   } catch (error) {
-    popularArticles.innerHTML = '<p class="text-muted small">加载失败</p>';
+    if (popularArticles) {
+      popularArticles.innerHTML = '<p class="text-muted small">加载失败</p>';
+    }
   }
 }
 
 // 加载最近活动
 async function loadRecentActivities() {
   const recentActivities = document.getElementById('recent-activities');
+  
+  // 检查元素是否存在，如果不存在则跳过
+  if (!recentActivities) {
+    console.log('最近活动容器不存在，跳过加载');
+    return;
+  }
   
   try {
     // 模拟活动数据
@@ -552,11 +521,15 @@ async function loadRecentActivities() {
         </div>
       `).join('');
       
-      recentActivities.innerHTML = activitiesHtml;
+      if (recentActivities) {
+        recentActivities.innerHTML = activitiesHtml;
+      }
     }, 1200);
     
   } catch (error) {
-    recentActivities.innerHTML = '<p class="text-muted small">加载活动记录失败</p>';
+    if (recentActivities) {
+      recentActivities.innerHTML = '<p class="text-muted small">加载活动记录失败</p>';
+    }
   }
 }
 

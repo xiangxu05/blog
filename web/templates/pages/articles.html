@@ -1,4 +1,4 @@
-<div class="container py-4">
+<div class="container-wide py-4">
   <div class="row">
     <!-- 搜索和筛选栏 -->
     <div class="col-12 mb-4">
@@ -6,7 +6,7 @@
         <div class="card-body">
           <div class="row align-items-center">
             <!-- 搜索框 -->
-            <div class="col-md-6 mb-3 mb-md-0">
+            <div class="col-md-4 mb-3 mb-md-0">
               <div class="search-box">
                 <i class="fas fa-search search-icon"></i>
                 <input type="text" class="form-control form-control-custom" id="search-input"
@@ -14,8 +14,26 @@
               </div>
             </div>
 
+            <!-- 搜索选项 -->
+            <div class="col-md-2 mb-3 mb-md-0">
+              <select class="form-select-custom" id="search-type-filter" title="搜索类型">
+                <option value="fuzzy">模糊搜索</option>
+                <option value="exact">精确搜索</option>
+              </select>
+            </div>
+
+            <!-- 搜索字段 -->
+            <div class="col-md-2 mb-3 mb-md-0">
+              <select class="form-select-custom" id="search-fields-filter" title="搜索范围">
+                <option value="all">全部字段</option>
+                <option value="title">仅标题</option>
+                <option value="content">仅内容</option>
+                <option value="tags">仅标签</option>
+              </select>
+            </div>
+
             <!-- 分类筛选 -->
-            <div class="col-md-3 mb-3 mb-md-0">
+            <div class="col-md-2 mb-3 mb-md-0">
               <select class="form-select-custom" id="category-filter">
                 <option value="">全部分类</option>
                 <!-- 分类选项将通过JavaScript动态加载 -->
@@ -23,7 +41,7 @@
             </div>
 
             <!-- 排序方式 -->
-            <div class="col-md-3 mb-3 mb-md-0">
+            <div class="col-md-2 mb-3 mb-md-0">
               <select class="form-select-custom" id="sort-filter">
                 <option value="created_at_desc">最新发布</option>
                 <option value="created_at_asc">最早发布</option>
@@ -202,6 +220,8 @@
       page: 1,
       pageSize: 10,
       search: '',
+      search_type: 'fuzzy',
+      search_fields: 'all',
       category: '',
       sort: 'created_at_desc'
     };
@@ -244,12 +264,16 @@
     const urlParams = new URLSearchParams(window.location.search);
 
     window.currentFilters.search = urlParams.get('search') || '';
+    window.currentFilters.search_type = urlParams.get('search_type') || 'fuzzy';
+    window.currentFilters.search_fields = urlParams.get('search_fields') || 'all';
     window.currentFilters.category = urlParams.get('category') || '';
     window.currentFilters.sort = urlParams.get('sort') || 'created_at_desc';
     window.currentFilters.page = parseInt(urlParams.get('page')) || 1;
 
     // 设置筛选器值
     document.getElementById('search-input').value = window.currentFilters.search;
+    document.getElementById('search-type-filter').value = window.currentFilters.search_type;
+    document.getElementById('search-fields-filter').value = window.currentFilters.search_fields;
     document.getElementById('category-filter').value = window.currentFilters.category;
     document.getElementById('sort-filter').value = window.currentFilters.sort;
   }
@@ -346,7 +370,7 @@
 
   // 创建文章卡片
   function createArticleCard(article, viewMode = 'list') {
-    const publishDate = formatDate(new Date(article.created_at).getTime());
+    const publishDate = formatDate(article.created_at);
     const tags = article.tags ? article.tags.split(',').filter(tag => tag.trim()) : [];
 
     const gridClass = viewMode === 'grid' ? 'col-md-6 mb-4' : 'mb-4';
@@ -481,6 +505,8 @@
     const params = new URLSearchParams();
 
     if (window.currentFilters.search) params.set('search', window.currentFilters.search);
+    if (window.currentFilters.search_type !== 'fuzzy') params.set('search_type', window.currentFilters.search_type);
+    if (window.currentFilters.search_fields !== 'all') params.set('search_fields', window.currentFilters.search_fields);
     if (window.currentFilters.category) params.set('category', window.currentFilters.category);
     if (window.currentFilters.sort !== 'created_at_desc') params.set('sort', window.currentFilters.sort);
     if (window.currentFilters.page > 1) params.set('page', window.currentFilters.page.toString());
@@ -515,6 +541,18 @@
         window.currentFilters.search = e.target.value.trim();
         loadArticlesList(true);
       }, 500);
+    });
+
+    // 搜索类型筛选
+    document.getElementById('search-type-filter')?.addEventListener('change', function (e) {
+      window.currentFilters.search_type = e.target.value;
+      loadArticlesList(true);
+    });
+
+    // 搜索字段筛选
+    document.getElementById('search-fields-filter')?.addEventListener('change', function (e) {
+      window.currentFilters.search_fields = e.target.value;
+      loadArticlesList(true);
     });
 
     // 分类筛选
@@ -568,7 +606,7 @@
           <div class="popular-article-item mb-2">
             <a href="/articles/${article.id}/${article.version}" class="text-decoration-none">
               <h6 class="mb-1 text-truncate">${escapeHtml(article.title)}</h6>
-              <small class="text-muted">${formatDate(new Date(article.created_at).getTime())}</small>
+              <small class="text-muted">${formatDate(article.created_at)}</small>
             </a>
           </div>
         `).join('');
@@ -639,13 +677,32 @@
   }
 
   // 格式化日期函数
-  function formatDate(timestamp) {
-    const date = new Date(timestamp * 1000);
+  function formatDate(dateInput) {
+    // 处理不同的日期输入格式
+    let date;
+    if (typeof dateInput === 'string') {
+      // ISO 8601 字符串格式 (Go time.Time 默认序列化格式)
+      date = new Date(dateInput);
+    } else if (typeof dateInput === 'number') {
+      // 时间戳格式，判断是秒还是毫秒
+      if (dateInput < 10000000000) {
+        // 秒级时间戳
+        date = new Date(dateInput * 1000);
+      } else {
+        // 毫秒级时间戳
+        date = new Date(dateInput);
+      }
+    } else {
+      date = new Date(dateInput);
+    }
+
     const now = new Date();
     const diffTime = Math.abs(now - date);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 1) {
+    if (diffDays === 0) {
+      return '今天';
+    } else if (diffDays === 1) {
       return '昨天';
     } else if (diffDays < 7) {
       return `${diffDays}天前`;

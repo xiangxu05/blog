@@ -325,3 +325,42 @@ footer {
   white-space: nowrap;
   border: 0;
 }
+
+/* 自定义容器 - 比标准container更宽 */
+.container-wide {
+  width: 100%;
+  padding-right: var(--bs-gutter-x, 0.75rem);
+  padding-left: var(--bs-gutter-x, 0.75rem);
+  margin-right: auto;
+  margin-left: auto;
+}
+
+@media (min-width: 576px) {
+  .container-wide {
+    max-width: 540px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container-wide {
+    max-width: 720px;
+  }
+}
+
+@media (min-width: 992px) {
+  .container-wide {
+    max-width: 1140px; /* 比标准的960px更宽 */
+  }
+}
+
+@media (min-width: 1200px) {
+  .container-wide {
+    max-width: 1320px; /* 比标准的1140px更宽 */
+  }
+}
+
+@media (min-width: 1400px) {
+  .container-wide {
+    max-width: 1500px; /* 比标准的1320px更宽 */
+  }
+}

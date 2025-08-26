@@ -2,7 +2,7 @@
 
 class ApiClient {
   constructor() {
-    this.baseURL = 'http://localhost:8080/api';
+    this.baseURL = `${window.location.origin}/api`;
     this.defaultHeaders = {
       'Content-Type': 'application/json'
     };
@@ -154,6 +154,8 @@ class ApiClient {
       if (params.pageSize) queryParams.append('pageSize', params.pageSize);
       if (params.category) queryParams.append('category', params.category);
       if (params.search) queryParams.append('search', params.search);
+      if (params.search_type) queryParams.append('search_type', params.search_type);
+      if (params.search_fields) queryParams.append('search_fields', params.search_fields);
       if (params.sort) queryParams.append('sort', params.sort);
 
       const queryString = queryParams.toString();
@@ -323,6 +325,11 @@ class ApiClient {
       if (params.page) queryParams.append('page', params.page);
       if (params.pageSize) queryParams.append('pageSize', params.pageSize);
       if (params.status) queryParams.append('status', params.status);
+      if (params.category) queryParams.append('category', params.category);
+      if (params.search) queryParams.append('search', params.search);
+      if (params.search_type) queryParams.append('search_type', params.search_type);
+      if (params.search_fields) queryParams.append('search_fields', params.search_fields);
+      if (params.sort) queryParams.append('sort', params.sort);
 
       const queryString = queryParams.toString();
       const endpoint = queryString ? `/admin/articles?${queryString}` : '/admin/articles';
