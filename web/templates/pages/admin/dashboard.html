@@ -543,8 +543,69 @@ function bindDashboardEvents() {
   });
   
   // 数据备份按钮
-  document.getElementById('backup-data-btn')?.addEventListener('click', function() {
-    window.blogApp.showNotification('数据备份功能即将上线', 'info');
+  document.getElementById('backup-data-btn')?.addEventListener('click', async function() {
+    if (!confirm('确定要进行数据备份吗？')) {
+      return;
+    }
+    
+    const btn = this;
+    const originalText = btn.textContent;
+    
+    try {
+      // 显示加载状态
+      btn.disabled = true;
+      btn.textContent = '备份中...';
+      window.blogApp.showNotification('正在进行数据备份...', 'info');
+      
+      const response = await fetch('/api/files/backup', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        // 检查响应类型
+        const contentType = response.headers.get('content-type');
+        
+        if (contentType && contentType.includes('application/json')) {
+          // 如果是JSON响应，说明有错误
+          const errorData = await response.json();
+          throw new Error(errorData.message || '备份失败');
+        } else {
+          // 如果是文件响应，处理下载
+          const blob = await response.blob();
+          const filename = response.headers.get('Content-Disposition')?.match(/filename="(.+)"/)?.[1] || `backup_${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.zip`;
+          
+          // 创建下载链接
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+          
+          window.blogApp.showNotification('数据备份成功！文件已开始下载', 'success');
+        }
+      } else {
+        // 尝试解析错误响应
+        try {
+          const errorData = await response.json();
+          throw new Error(errorData.message || '备份失败');
+        } catch {
+          throw new Error(`备份失败: HTTP ${response.status}`);
+        }
+      }
+    } catch (error) {
+      console.error('备份失败:', error);
+      window.blogApp.showNotification(`备份失败: ${error.message}`, 'error');
+    } finally {
+      // 恢复按钮状态
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
   });
   
   // 图表时间范围切换

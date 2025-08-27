@@ -115,6 +115,7 @@ func (s *Server) setupRouter() {
 		file.GET("/", endpoint.GetFileListHandler)
 		file.POST("/upload", endpoint.UploadFileHandler)
 		file.DELETE("/:file_id", endpoint.DeleteFileHandler)
+		file.GET("/backup", s.monitor.UpdateLastBackup(), endpoint.BackupHandler)
 	}
 
 	// 文章模块
@@ -154,12 +155,6 @@ func (s *Server) setupRouter() {
 			adminArticles.POST("", endpoint.CreateArticleHandler)       // 创建文章
 			adminArticles.PUT("/:id", endpoint.UpdateArticleHandler)    // 更新文章
 			adminArticles.DELETE("/:id", endpoint.DeleteArticleHandler) // 删除文章
-			// 	adminArticles.GET("/recent", endpoint.GetArticleListHandler)       // 获取最近文章
-			// 	adminArticles.PUT("/:id/publish", endpoint.UpdateArticleHandler)   // 发布文章
-			// 	adminArticles.PUT("/:id/archive", endpoint.UpdateArticleHandler)   // 归档文章
-			// 	adminArticles.PUT("/batch/publish", endpoint.UpdateArticleHandler) // 批量发布
-			// 	adminArticles.PUT("/batch/archive", endpoint.UpdateArticleHandler) // 批量归档
-			// 	adminArticles.DELETE("/batch", endpoint.DeleteArticleHandler)      // 批量删除
 		}
 	}
 

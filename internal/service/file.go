@@ -1,15 +1,19 @@
 package service
 
 import (
+	"archive/zip"
 	"blog/dao"
 	"blog/internal/message"
 	"blog/model_def"
 	"errors"
+	"fmt"
+	"io"
 	"mime/multipart"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -167,4 +171,78 @@ func DeleteFile(c *gin.Context, fileID string) error {
 		return err
 	}
 	return nil
+}
+
+// Backup 实现备份功能
+func Backup(c *gin.Context) error {
+	// 生成备份文件名（包含时间戳）
+	timestamp := time.Now().Format("20060102_150405")
+	backupName := fmt.Sprintf("backup_%s.zip", timestamp)
+	backupPath := filepath.Join("backup", backupName)
+
+	// 确保备份目录存在
+	err := os.MkdirAll("backup", os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("创建备份目录失败: %w", err)
+	}
+
+	// 打包数据目录
+	err = ZipFolder("data", backupPath)
+	if err != nil {
+		return fmt.Errorf("备份失败: %w", err)
+	}
+	c.FileAttachment(backupPath, backupName)
+	return nil
+}
+
+// ZipFolder 将指定文件夹打包成ZIP文件
+func ZipFolder(sourceDir, zipPath string) error {
+	// 创建ZIP文件
+	zipFile, err := os.Create(zipPath)
+	if err != nil {
+		return fmt.Errorf("创建ZIP文件失败: %w", err)
+	}
+	defer zipFile.Close()
+
+	// 创建ZIP写入器
+	zipWriter := zip.NewWriter(zipFile)
+	defer zipWriter.Close()
+
+	// 遍历源目录
+	return filepath.Walk(sourceDir, func(filePath string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// 跳过目录本身
+		if info.IsDir() {
+			return nil
+		}
+
+		// 计算ZIP内的相对路径
+		relPath, err := filepath.Rel(sourceDir, filePath)
+		if err != nil {
+			return err
+		}
+
+		// 统一使用正斜杠（ZIP标准）
+		relPath = strings.ReplaceAll(relPath, "\\", "/")
+
+		// 在ZIP中创建文件
+		zipFileWriter, err := zipWriter.Create(relPath)
+		if err != nil {
+			return err
+		}
+
+		// 打开源文件
+		srcFile, err := os.Open(filePath)
+		if err != nil {
+			return err
+		}
+		defer srcFile.Close()
+
+		// 复制文件内容
+		_, err = io.Copy(zipFileWriter, srcFile)
+		return err
+	})
 }

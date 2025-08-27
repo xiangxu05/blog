@@ -61,3 +61,13 @@ func DeleteFileHandler(c *gin.Context) {
 	}
 	message.SendMsg(c, http.StatusOK, "文件删除成功", nil)
 }
+
+func BackupHandler(c *gin.Context) {
+	err := service.Backup(c)
+	if err != nil {
+		message.SendMsg(c, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+	// 如果没有错误，service.Backup已经通过c.FileAttachment发送了文件
+	// 不需要额外的响应
+}
