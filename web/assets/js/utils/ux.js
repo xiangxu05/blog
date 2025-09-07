@@ -249,7 +249,7 @@ class PerformanceMonitor {
     window.addEventListener('load', () => {
       const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
       this.metrics.pageLoadTime = loadTime;
-      console.log(`页面加载时间: ${loadTime}ms`);
+      // console.log(`页面加载时间: ${loadTime}ms`);
     });
 
     // 定期监控内存使用情况

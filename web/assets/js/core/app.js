@@ -16,6 +16,8 @@ class BlogApp {
       
       // 1. 初始化UX管理器
       this.ux = new UXManager();
+      // 暴露通知系统以兼容内联调用
+      this.notification = this.ux.notification;
       
       // 2. 初始化主题系统
       this.initTheme();

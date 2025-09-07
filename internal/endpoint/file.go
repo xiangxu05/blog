@@ -19,7 +19,11 @@ func GetFileHandler(c *gin.Context) {
 }
 
 func GetFileListHandler(c *gin.Context) {
-	fileInfos, err := service.GetFileList(c)
+	// 获取查询参数
+	search := c.Query("search")
+	fileType := c.Query("type")
+
+	fileInfos, err := service.GetFileList(c, search, fileType)
 	if err != nil {
 		message.SendMsg(c, http.StatusInternalServerError, "获取文件列表失败", nil)
 		return

@@ -40,8 +40,29 @@ func GetFileInfo(c *gin.Context, fileID string) (*message.FileInfo, error) {
 	return fileInfo, nil
 }
 
-func GetFileList(c *gin.Context) ([]*message.FileInfo, error) {
-	files, err := dao.File.WithContext(c.Request.Context()).Find()
+func GetFileList(c *gin.Context, search, fileType string) ([]*message.FileInfo, error) {
+	query := dao.File.WithContext(c.Request.Context())
+
+	// 添加搜索条件
+	if search != "" {
+		query = query.Where(dao.File.Filename.Like("%" + search + "%"))
+	}
+
+	// 添加文件类型筛选
+	if fileType != "" {
+		switch fileType {
+		case "image":
+			query = query.Where(dao.File.MimeType.In(".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp", ".ico"))
+		case "document":
+			query = query.Where(dao.File.MimeType.In(".pdf", ".doc", ".docx", ".txt", ".md", ".xls", ".xlsx", ".ppt", ".pptx"))
+		case "video":
+			query = query.Where(dao.File.MimeType.In(".mp4", ".avi", ".mov", ".wmv", ".webm", ".mkv", ".flv"))
+		case "audio":
+			query = query.Where(dao.File.MimeType.In(".mp3", ".wav", ".flac", ".aac", ".ogg", ".wma"))
+		}
+	}
+
+	files, err := query.Find()
 	if err != nil {
 		return nil, err
 	}

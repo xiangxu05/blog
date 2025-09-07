@@ -9,274 +9,290 @@
       <p class="text-muted mb-0">管理上传的文件和资源</p>
     </div>
 
-<script>
-// 文件管理页面初始化函数
-window.initAdminFileManagerPage = function(routeData) {
-  console.log('初始化文件管理页面');
-  
-  // 检查管理员权限
-  if (!window.appState.isAdmin()) {
-    window.router.push('/404');
-    return;
-  }
-  
-  // 初始化页面状态
-  initPageState();
-  
-  // 绑定事件
-  bindEvents();
-  
-  // 加载文件列表
-  loadFiles();
-};
+    <script>
+      // 文件管理页面初始化函数
+      window.initAdminFileManagerPage = function (routeData) {
+        console.log('初始化文件管理页面');
 
-// 页面状态
-if (typeof window.filePageState === 'undefined') {
-  window.filePageState = {
-    currentPage: 1,
-    pageSize: 24,
-    totalCount: 0,
-    totalPages: 1,
-    searchKeyword: '',
-    typeFilter: '',
-    sortBy: 'created_at_desc',
-    viewMode: 'grid',
-    selectedFiles: new Set(),
-    files: []
-  };
-}
-var pageState = window.filePageState;
+        // 检查管理员权限
+        if (!window.appState.isAdmin()) {
+          window.router.push('/404');
+          return;
+        }
 
-// 初始化页面状态
-function initPageState() {
-  const urlParams = new URLSearchParams(window.location.search);
-  pageState.currentPage = parseInt(urlParams.get('page')) || 1;
-  pageState.pageSize = parseInt(urlParams.get('pageSize')) || 24;
-  pageState.searchKeyword = urlParams.get('search') || '';
-  pageState.typeFilter = urlParams.get('type') || '';
-  pageState.sortBy = urlParams.get('sort') || 'created_at_desc';
-  pageState.viewMode = urlParams.get('view') || 'grid';
-  
-  // 更新表单控件
-  document.getElementById('search-input').value = pageState.searchKeyword;
-  document.getElementById('type-filter').value = pageState.typeFilter;
-  document.getElementById('sort-filter').value = pageState.sortBy;
-  document.getElementById('page-size-filter').value = pageState.pageSize;
-  document.querySelector(`input[name="view-mode"][value="${pageState.viewMode}"]`).checked = true;
-}
+        // 初始化页面状态
+        initPageState();
 
-// 绑定事件
-function bindEvents() {
-  // 搜索输入框
-  const searchInput = document.getElementById('search-input');
-  let searchTimeout;
-  searchInput.addEventListener('input', function() {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-      pageState.searchKeyword = this.value.trim();
-      pageState.currentPage = 1;
-      loadFiles();
-    }, 500);
-  });
-  
-  // 类型筛选
-  document.getElementById('type-filter').addEventListener('change', function() {
-    pageState.typeFilter = this.value;
-    pageState.currentPage = 1;
-    loadFiles();
-  });
-  
-  // 排序筛选
-  document.getElementById('sort-filter').addEventListener('change', function() {
-    pageState.sortBy = this.value;
-    pageState.currentPage = 1;
-    loadFiles();
-  });
-  
-  // 每页条数
-  document.getElementById('page-size-filter').addEventListener('change', function() {
-    pageState.pageSize = parseInt(this.value);
-    pageState.currentPage = 1;
-    loadFiles();
-  });
-  
-  // 视图模式切换
-  document.querySelectorAll('input[name="view-mode"]').forEach(radio => {
-    radio.addEventListener('change', function() {
-      pageState.viewMode = this.value;
-      updateViewMode();
-      updateURL();
-    });
-  });
-  
-  // 刷新按钮
-  document.getElementById('refresh-btn').addEventListener('click', function() {
-    loadFiles();
-  });
-  
-  // 上传按钮
-  document.getElementById('upload-btn').addEventListener('click', showUploadModal);
-  document.getElementById('upload-btn-empty')?.addEventListener('click', showUploadModal);
-  
-  // 全选复选框
-  document.getElementById('select-all').addEventListener('change', handleSelectAll);
-  document.getElementById('select-all-list')?.addEventListener('change', handleSelectAll);
-  
-  // 批量操作按钮
-  document.getElementById('batch-delete-btn').addEventListener('click', showBatchDeleteModal);
-  document.getElementById('batch-download-btn').addEventListener('click', batchDownloadFiles);
-  document.getElementById('clear-selection-btn').addEventListener('click', clearSelection);
-  
-  // 删除确认按钮
-  document.getElementById('confirm-delete-btn').addEventListener('click', confirmDeleteFile);
-  document.getElementById('confirm-batch-delete-btn').addEventListener('click', confirmBatchDelete);
-  
-  // 重试按钮
-  document.getElementById('retry-btn').addEventListener('click', loadFiles);
-  
-  // 文件上传相关事件
-  bindUploadEvents();
-}
+        // 绑定事件
+        bindEvents();
 
-// 绑定上传相关事件
-function bindUploadEvents() {
-  const fileInput = document.getElementById('file-input');
-  const uploadArea = document.getElementById('upload-area');
-  const selectFilesBtn = document.getElementById('select-files-btn');
-  const startUploadBtn = document.getElementById('start-upload-btn');
-  
-  selectFilesBtn.addEventListener('click', () => fileInput.click());
-  fileInput.addEventListener('change', handleFileSelect);
-  uploadArea.addEventListener('dragover', handleDragOver);
-  uploadArea.addEventListener('drop', handleDrop);
-  uploadArea.addEventListener('dragleave', handleDragLeave);
-  startUploadBtn.addEventListener('click', startUpload);
-}
+        // 加载文件列表
+        loadFiles();
+      };
 
-// 加载文件列表
-async function loadFiles() {
-  showLoading();
-  
-  try {
-    const params = new URLSearchParams({
-      page: pageState.currentPage,
-      pageSize: pageState.pageSize,
-      search: pageState.searchKeyword,
-      type: pageState.typeFilter,
-      sort: pageState.sortBy
-    });
-    
-    const response = await fetch(`/api/files?${params}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include'
-    });
-    
-    if (response.ok) {
-      const result = await response.json();
-      console.log('文件列表数据:', result);
-      
-      if (result.code === 200 && result.data) {
-        // API 返回的数据直接是文件数组
-        pageState.files = Array.isArray(result.data) ? result.data : [];
-        pageState.totalCount = pageState.files.length;
-        pageState.totalPages = Math.ceil(pageState.totalCount / pageState.pageSize);
-        
-        // 转换字段名以匹配前端期望的格式
-        pageState.files = pageState.files.map(file => ({
-          id: file.file_id,
-          name: file.filename,
-          size: file.size,
-          type: getMimeTypeFromExtension(file.mime_type),
-          created_at: file.created_at || new Date().toISOString(),
-          updated_at: file.updated_at || file.created_at || new Date().toISOString()
-        }));
-        
-        renderFiles();
-        renderPagination();
-        updateStatistics();
-        updateURL();
-      } else {
-        console.error('API返回错误:', result.msg || '未知错误');
-        showError();
+      // 页面状态
+      if (typeof window.filePageState === 'undefined') {
+        window.filePageState = {
+          currentPage: 1,
+          pageSize: 24,
+          totalCount: 0,
+          totalPages: 1,
+          searchKeyword: '',
+          typeFilter: '',
+          sortBy: 'created_at_desc',
+          viewMode: 'grid',
+          selectedFiles: new Set(),
+          files: []
+        };
       }
-    } else {
-      console.error('获取文件列表失败:', response.status, response.statusText);
-      showError();
-    }
-    
-  } catch (error) {
-    console.error('加载文件列表失败:', error);
-    showError();
-  }
-}
+      var pageState = window.filePageState;
 
-// 显示加载状态
-function showLoading() {
-  document.getElementById('files-loading').classList.remove('d-none');
-  document.getElementById('files-grid').classList.add('d-none');
-  document.getElementById('files-list').classList.add('d-none');
-  document.getElementById('files-empty').classList.add('d-none');
-  document.getElementById('files-error').classList.add('d-none');
-  document.getElementById('pagination-container').style.display = 'none';
-}
+      // 初始化页面状态
+      function initPageState() {
+        const urlParams = new URLSearchParams(window.location.search);
+        pageState.currentPage = parseInt(urlParams.get('page')) || 1;
+        pageState.pageSize = parseInt(urlParams.get('pageSize')) || 24;
+        pageState.searchKeyword = urlParams.get('search') || '';
+        pageState.typeFilter = urlParams.get('type') || '';
+        pageState.sortBy = urlParams.get('sort') || 'created_at_desc';
+        pageState.viewMode = urlParams.get('view') || 'grid';
 
-// 显示错误状态
-function showError() {
-  document.getElementById('files-loading').classList.add('d-none');
-  document.getElementById('files-grid').classList.add('d-none');
-  document.getElementById('files-list').classList.add('d-none');
-  document.getElementById('files-empty').classList.add('d-none');
-  document.getElementById('files-error').classList.remove('d-none');
-  document.getElementById('pagination-container').style.display = 'none';
-}
-// 渲染文件列表
-function renderFiles() {
-  if (pageState.files.length === 0) {
-    document.getElementById('files-loading').classList.add('d-none');
-    document.getElementById('files-grid').classList.add('d-none');
-    document.getElementById('files-list').classList.add('d-none');
-    document.getElementById('files-empty').classList.remove('d-none');
-    document.getElementById('files-error').classList.add('d-none');
-    document.getElementById('pagination-container').style.display = 'none';
-    return;
-  }
-  
-  if (pageState.viewMode === 'grid') {
-    renderGridView();
-  } else {
-    renderListView();
-  }
-  
-  document.getElementById('files-loading').classList.add('d-none');
-  document.getElementById('files-empty').classList.add('d-none');
-  document.getElementById('files-error').classList.add('d-none');
-  document.getElementById('pagination-container').style.display = 'flex';
-  
-  updateViewMode();
-}
+        // 更新表单控件
+        document.getElementById('search-input').value = pageState.searchKeyword;
+        document.getElementById('type-filter').value = pageState.typeFilter;
+        document.getElementById('sort-filter').value = pageState.sortBy;
+        document.getElementById('page-size-filter').value = pageState.pageSize;
+        document.querySelector(`input[name="view-mode"][value="${pageState.viewMode}"]`).checked = true;
+      }
 
-// 渲染网格视图
-function renderGridView() {
-  const container = document.getElementById('files-grid-container');
-  
-  const filesHtml = pageState.files.map(file => {
-    const fileIcon = getFileIcon(file.type);
-    const fileSize = formatFileSize(file.size);
-    const uploadTime = formatDate(file.created_at);
-    const isImage = file.type?.startsWith('image/');
-    
-    return `
+      // 绑定事件
+      function bindEvents() {
+        // 搜索输入框
+        const searchInput = document.getElementById('search-input');
+        let searchTimeout;
+        searchInput.addEventListener('input', function () {
+          clearTimeout(searchTimeout);
+          searchTimeout = setTimeout(() => {
+            pageState.searchKeyword = this.value.trim();
+            pageState.currentPage = 1;
+            loadFiles();
+          }, 500);
+        });
+
+        // 类型筛选
+        document.getElementById('type-filter').addEventListener('change', function () {
+          pageState.typeFilter = this.value;
+          pageState.currentPage = 1;
+          loadFiles();
+        });
+
+        // 排序筛选
+        document.getElementById('sort-filter').addEventListener('change', function () {
+          pageState.sortBy = this.value;
+          pageState.currentPage = 1;
+          loadFiles();
+        });
+
+        // 每页条数
+        document.getElementById('page-size-filter').addEventListener('change', function () {
+          pageState.pageSize = parseInt(this.value);
+          pageState.currentPage = 1;
+          loadFiles();
+        });
+
+        // 视图模式切换
+        document.querySelectorAll('input[name="view-mode"]').forEach(radio => {
+          radio.addEventListener('change', function () {
+            pageState.viewMode = this.value;
+            // 重新渲染文件列表以应用新的视图模式
+            if (pageState.files.length > 0) {
+              renderFiles();
+            }
+            updateViewMode();
+            updateURL();
+          });
+        });
+
+        // 刷新按钮
+        document.getElementById('refresh-btn').addEventListener('click', function () {
+          loadFiles();
+        });
+
+        // 上传按钮
+        document.getElementById('upload-btn').addEventListener('click', showUploadModal);
+        document.getElementById('upload-btn-empty')?.addEventListener('click', showUploadModal);
+
+        // 全选复选框
+        document.getElementById('select-all').addEventListener('change', handleSelectAll);
+        document.getElementById('select-all-list')?.addEventListener('change', handleSelectAll);
+
+        // 批量操作按钮
+        document.getElementById('batch-delete-btn').addEventListener('click', showBatchDeleteModal);
+        document.getElementById('batch-download-btn').addEventListener('click', batchDownloadFiles);
+        document.getElementById('clear-selection-btn').addEventListener('click', clearSelection);
+
+        // 删除确认按钮
+        document.getElementById('confirm-delete-btn').addEventListener('click', confirmDeleteFile);
+        document.getElementById('confirm-batch-delete-btn').addEventListener('click', confirmBatchDelete);
+
+        // 重试按钮
+        document.getElementById('retry-btn').addEventListener('click', loadFiles);
+
+        // 文件上传相关事件
+        bindUploadEvents();
+
+        // 监听上传模态框关闭事件
+        const uploadModal = document.getElementById('uploadModal');
+        if (uploadModal) {
+          uploadModal.addEventListener('hidden.bs.modal', function () {
+            clearUploadList();
+          });
+        }
+      }
+
+      // 绑定上传相关事件
+      function bindUploadEvents() {
+        const fileInput = document.getElementById('file-input');
+        const uploadArea = document.getElementById('upload-area');
+        const selectFilesBtn = document.getElementById('select-files-btn');
+        const startUploadBtn = document.getElementById('start-upload-btn');
+
+        selectFilesBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('drop', handleDrop);
+        uploadArea.addEventListener('dragleave', handleDragLeave);
+        startUploadBtn.addEventListener('click', startUpload);
+      }
+
+      // 加载文件列表
+      async function loadFiles() {
+        showLoading();
+
+        try {
+          const params = new URLSearchParams({
+            page: pageState.currentPage,
+            pageSize: pageState.pageSize,
+            search: pageState.searchKeyword,
+            type: pageState.typeFilter,
+            view: pageState.viewMode,
+            sort: pageState.sortBy
+          });
+
+          const response = await fetch(`/api/files?${params}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include'
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            console.log('文件列表数据:', result);
+
+            if (result.code === 200 && result.data) {
+              // API 返回的数据直接是文件数组
+              pageState.files = Array.isArray(result.data) ? result.data : [];
+              pageState.totalCount = pageState.files.length;
+              pageState.totalPages = Math.ceil(pageState.totalCount / pageState.pageSize);
+
+              // 转换字段名以匹配前端期望的格式
+              pageState.files = pageState.files.map(file => ({
+                id: file.file_id,
+                name: file.filename,
+                size: file.size,
+                type: getMimeTypeFromExtension(file.mime_type),
+                created_at: file.created_at || new Date().toISOString(),
+                updated_at: file.updated_at || file.created_at || new Date().toISOString()
+              }));
+
+              renderFiles();
+              renderPagination();
+              updateStatistics();
+              updateURL();
+            } else {
+              console.error('API返回错误:', result.msg || '未知错误');
+              showError();
+            }
+          } else {
+            console.error('获取文件列表失败:', response.status, response.statusText);
+            showError();
+          }
+
+        } catch (error) {
+          console.error('加载文件列表失败:', error);
+          showError();
+        }
+      }
+
+      // 显示加载状态
+      function showLoading() {
+        document.getElementById('files-loading').classList.remove('d-none');
+        document.getElementById('files-grid').classList.add('d-none');
+        document.getElementById('files-list').classList.add('d-none');
+        document.getElementById('files-empty').classList.add('d-none');
+        document.getElementById('files-error').classList.add('d-none');
+        document.getElementById('pagination-container').style.display = 'none';
+      }
+
+      // 显示错误状态
+      function showError() {
+        document.getElementById('files-loading').classList.add('d-none');
+        document.getElementById('files-grid').classList.add('d-none');
+        document.getElementById('files-list').classList.add('d-none');
+        document.getElementById('files-empty').classList.add('d-none');
+        document.getElementById('files-error').classList.remove('d-none');
+        document.getElementById('pagination-container').style.display = 'none';
+      }
+      // 渲染文件列表
+      function renderFiles() {
+        if (pageState.files.length === 0) {
+          document.getElementById('files-loading').classList.add('d-none');
+          document.getElementById('files-grid').classList.add('d-none');
+          document.getElementById('files-list').classList.add('d-none');
+          document.getElementById('files-empty').classList.remove('d-none');
+          document.getElementById('files-error').classList.add('d-none');
+          document.getElementById('pagination-container').style.display = 'none';
+          return;
+        }
+
+        if (pageState.viewMode === 'grid') {
+          renderGridView();
+        } else {
+          renderListView();
+        }
+
+        document.getElementById('files-loading').classList.add('d-none');
+        document.getElementById('files-empty').classList.add('d-none');
+        document.getElementById('files-error').classList.add('d-none');
+        document.getElementById('pagination-container').style.display = 'flex';
+
+        updateViewMode();
+      }
+
+      // 渲染网格视图
+      function renderGridView() {
+        const container = document.getElementById('files-grid-container');
+
+        const filesHtml = pageState.files.map(file => {
+          const fileIcon = getFileIcon(file.type);
+          const fileSize = formatFileSize(file.size);
+          const uploadTime = formatDate(file.created_at);
+          const isImage = file.type?.startsWith('image/');
+          const previewInner = isImage
+            ? `<img src="/api/files/download/${file.id}" alt="${escapeHtml(file.name)}" style="height: 120px; width: 100%; object-fit: cover;">`
+            : `<i class="${fileIcon} fa-3x text-muted"></i>`;
+
+          return `
       <div class="col-lg-2 col-md-3 col-sm-4 col-6">
-        <div class="card file-card h-100" data-file-id="${file.id}">
+        <div class="card file-card h-100 rounded-0" data-file-id="${file.id}">
           <div class="position-relative">
             <input type="checkbox" class="form-check-input position-absolute top-0 start-0 m-2" 
                    name="file-checkbox" value="${file.id}" style="z-index: 10;">
             <div class="card-img-top d-flex align-items-center justify-content-center bg-light" 
                  style="height: 120px; cursor: pointer;" onclick="previewFile(${file.id})">
-              <i class="${fileIcon} fa-3x text-muted"></i>
+              ${previewInner}
             </div>
           </div>
           <div class="card-body p-2">
@@ -304,32 +320,35 @@ function renderGridView() {
         </div>
       </div>
     `;
-  }).join('');
-  
-  container.innerHTML = filesHtml;
-  bindFileEvents();
-}
+        }).join('');
 
-// 渲染列表视图
-function renderListView() {
-  const container = document.getElementById('files-list-container');
-  
-  const filesHtml = pageState.files.map(file => {
-    const fileIcon = getFileIcon(file.type);
-    const fileSize = formatFileSize(file.size);
-    const uploadTime = formatDate(file.created_at);
-    const fileType = getFileTypeLabel(file.type);
-    const isImage = file.type?.startsWith('image/');
-    
-    return `
+        container.innerHTML = filesHtml;
+        bindFileEvents();
+      }
+
+      // 渲染列表视图
+      function renderListView() {
+        const container = document.getElementById('files-list-container');
+
+        const filesHtml = pageState.files.map(file => {
+          const fileIcon = getFileIcon(file.type);
+          const fileSize = formatFileSize(file.size);
+          const uploadTime = formatDate(file.created_at);
+          const fileType = getFileTypeLabel(file.type);
+          const isImage = file.type?.startsWith('image/');
+          const previewInner = isImage
+            ? `<img src="/api/files/download/${file.id}" alt="${escapeHtml(file.name)}" style="width: 40px; height: 40px; object-fit: cover;">`
+            : `<i class="${fileIcon} text-muted"></i>`;
+
+          return `
       <tr data-file-id="${file.id}">
         <td>
           <input type="checkbox" class="form-check-input" name="file-checkbox" value="${file.id}">
         </td>
         <td>
-          <div class="d-flex align-items-center justify-content-center bg-light rounded" 
+          <div class="d-flex align-items-center justify-content-center bg-light rounded-0" 
                style="width: 40px; height: 40px; cursor: pointer;" onclick="previewFile(${file.id})">
-            <i class="${fileIcon} text-muted"></i>
+            ${previewInner}
           </div>
         </td>
         <td>
@@ -361,234 +380,259 @@ function renderListView() {
         </td>
       </tr>
     `;
-  }).join('');
-  
-  container.innerHTML = filesHtml;
-  bindFileEvents();
-}
+        }).join('');
 
-// 绑定文件相关事件
-function bindFileEvents() {
-  document.querySelectorAll('input[name="file-checkbox"]').forEach(checkbox => {
-    checkbox.addEventListener('change', function() {
-      const fileId = parseInt(this.value);
-      if (this.checked) {
-        pageState.selectedFiles.add(fileId);
-      } else {
-        pageState.selectedFiles.delete(fileId);
+        container.innerHTML = filesHtml;
+        bindFileEvents();
       }
-      updateBatchActions();
-    });
-  });
-}
 
-// 更新视图模式
-function updateViewMode() {
-  if (pageState.viewMode === 'grid') {
-    document.getElementById('files-grid').classList.remove('d-none');
-    document.getElementById('files-list').classList.add('d-none');
-  } else {
-    document.getElementById('files-grid').classList.add('d-none');
-    document.getElementById('files-list').classList.remove('d-none');
-  }
-}
+      // 绑定文件相关事件
+      function bindFileEvents() {
+        document.querySelectorAll('input[name="file-checkbox"]').forEach(checkbox => {
+          checkbox.addEventListener('change', function () {
+            const fileId = parseInt(this.value);
+            if (this.checked) {
+              pageState.selectedFiles.add(fileId);
+            } else {
+              pageState.selectedFiles.delete(fileId);
+            }
+            updateBatchActions();
+          });
+        });
+      }
 
-// 渲染分页
-function renderPagination() {
-  const pagination = document.getElementById('pagination');
-  
-  if (pageState.totalPages <= 1) {
-    pagination.innerHTML = '';
-    return;
-  }
-  
-  let paginationHtml = '';
-  
-  if (pageState.currentPage > 1) {
-    paginationHtml += `
+      // 更新视图模式
+      function updateViewMode() {
+        if (pageState.viewMode === 'grid') {
+          document.getElementById('files-grid').classList.remove('d-none');
+          document.getElementById('files-list').classList.add('d-none');
+        } else {
+          document.getElementById('files-grid').classList.add('d-none');
+          document.getElementById('files-list').classList.remove('d-none');
+        }
+      }
+
+      // 渲染分页
+      function renderPagination() {
+        const pagination = document.getElementById('pagination');
+
+        // 无论是否只有一页，都先更新统计显示
+        document.getElementById('total-count').textContent = pageState.totalCount;
+        document.getElementById('current-page').textContent = pageState.currentPage;
+        document.getElementById('total-pages').textContent = pageState.totalPages;
+
+        if (pageState.totalPages <= 1) {
+          // 仅清空分页按钮，不提前返回统计文本
+          pagination.innerHTML = '';
+          return;
+        }
+
+        let paginationHtml = '';
+
+        if (pageState.currentPage > 1) {
+          paginationHtml += `
       <li class="page-item">
         <a class="page-link" href="#" onclick="goToPage(${pageState.currentPage - 1})">
           <i class="fas fa-chevron-left"></i>
         </a>
       </li>
     `;
-  }
-  
-  const startPage = Math.max(1, pageState.currentPage - 2);
-  const endPage = Math.min(pageState.totalPages, pageState.currentPage + 2);
-  
-  if (startPage > 1) {
-    paginationHtml += `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(1)">1</a></li>`;
-    if (startPage > 2) {
-      paginationHtml += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
-    }
-  }
-  
-  for (let i = startPage; i <= endPage; i++) {
-    paginationHtml += `
+        }
+
+        const startPage = Math.max(1, pageState.currentPage - 2);
+        const endPage = Math.min(pageState.totalPages, pageState.currentPage + 2);
+
+        if (startPage > 1) {
+          paginationHtml += `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(1)">1</a></li>`;
+          if (startPage > 2) {
+            paginationHtml += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+          }
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+          paginationHtml += `
       <li class="page-item ${i === pageState.currentPage ? 'active' : ''}">
         <a class="page-link" href="#" onclick="goToPage(${i})">${i}</a>
       </li>
     `;
-  }
-  
-  if (endPage < pageState.totalPages) {
-    if (endPage < pageState.totalPages - 1) {
-      paginationHtml += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
-    }
-    paginationHtml += `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${pageState.totalPages})">${pageState.totalPages}</a></li>`;
-  }
-  
-  if (pageState.currentPage < pageState.totalPages) {
-    paginationHtml += `
+        }
+
+        if (endPage < pageState.totalPages) {
+          if (endPage < pageState.totalPages - 1) {
+            paginationHtml += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+          }
+          paginationHtml += `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${pageState.totalPages})">${pageState.totalPages}</a></li>`;
+        }
+
+        if (pageState.currentPage < pageState.totalPages) {
+          paginationHtml += `
       <li class="page-item">
         <a class="page-link" href="#" onclick="goToPage(${pageState.currentPage + 1})">
           <i class="fas fa-chevron-right"></i>
         </a>
       </li>
     `;
-  }
-  
-  pagination.innerHTML = paginationHtml;
-  
-  document.getElementById('total-count').textContent = pageState.totalCount;
-  document.getElementById('current-page').textContent = pageState.currentPage;
-  document.getElementById('total-pages').textContent = pageState.totalPages;
-}
+        }
 
-// 跳转到指定页面
-function goToPage(page) {
-  pageState.currentPage = page;
-  loadFiles();
-}
+        pagination.innerHTML = paginationHtml;
+      }
 
-// 更新统计信息
-function updateStatistics() {
-  let totalSize = 0;
-  let imageCount = 0;
-  let documentCount = 0;
-  
-  pageState.files.forEach(file => {
-    totalSize += file.size || 0;
-    if (file.type?.startsWith('image/')) {
-      imageCount++;
-    } else if (file.type?.includes('document') || file.type?.includes('pdf') || file.type?.includes('text')) {
-      documentCount++;
-    }
-  });
-  
-  document.getElementById('total-files').textContent = pageState.totalCount;
-  document.getElementById('total-size').textContent = formatFileSize(totalSize);
-  document.getElementById('image-files').textContent = imageCount;
-  document.getElementById('document-files').textContent = documentCount;
-}
+      // 跳转到指定页面
+      function goToPage(page) {
+        pageState.currentPage = page;
+        loadFiles();
+      }
 
-// 更新批量操作
-function updateBatchActions() {
-  const selectedCount = pageState.selectedFiles.size;
-  const batchActions = document.getElementById('batch-actions');
-  const selectedCountElement = document.getElementById('selected-count');
-  
-  if (selectedCount > 0) {
-    batchActions.style.display = 'block';
-    selectedCountElement.textContent = selectedCount;
-  } else {
-    batchActions.style.display = 'none';
-  }
-  
-  updateSelectAllState();
-}
+      // 更新统计信息
+      function updateStatistics() {
+        let totalSize = 0;
+        let imageCount = 0;
+        let documentCount = 0;
 
-// 更新全选状态
-function updateSelectAllState() {
-  const selectAllCheckboxes = [
-    document.getElementById('select-all'),
-    document.getElementById('select-all-list')
-  ].filter(Boolean);
-  
-  const checkboxes = document.querySelectorAll('input[name="file-checkbox"]');
-  const checkedCount = document.querySelectorAll('input[name="file-checkbox"]:checked').length;
-  
-  selectAllCheckboxes.forEach(selectAllCheckbox => {
-    if (checkedCount === 0) {
-      selectAllCheckbox.indeterminate = false;
-      selectAllCheckbox.checked = false;
-    } else if (checkedCount === checkboxes.length) {
-      selectAllCheckbox.indeterminate = false;
-      selectAllCheckbox.checked = true;
-    } else {
-      selectAllCheckbox.indeterminate = true;
-    }
-  });
-}
+        pageState.files.forEach(file => {
+          totalSize += file.size || 0;
+          if (file.type?.startsWith('image/')) {
+            imageCount++;
+          } else if (file.type?.includes('document') || file.type?.includes('pdf') || file.type?.includes('text')) {
+            documentCount++;
+          }
+        });
 
-// 处理全选
-function handleSelectAll(event) {
-  const checkboxes = document.querySelectorAll('input[name="file-checkbox"]');
-  checkboxes.forEach(checkbox => {
-    checkbox.checked = event.target.checked;
-    const fileId = parseInt(checkbox.value);
-    if (event.target.checked) {
-      pageState.selectedFiles.add(fileId);
-    } else {
-      pageState.selectedFiles.delete(fileId);
-    }
-  });
-  updateBatchActions();
-}
+        document.getElementById('total-files').textContent = pageState.totalCount;
+        document.getElementById('total-size').textContent = formatFileSize(totalSize);
+        document.getElementById('image-files').textContent = imageCount;
+        document.getElementById('document-files').textContent = documentCount;
+      }
 
-// 清除选择
-function clearSelection() {
-  pageState.selectedFiles.clear();
-  document.querySelectorAll('input[name="file-checkbox"]').forEach(checkbox => {
-    checkbox.checked = false;
-  });
-  updateBatchActions();
-}
+      // 更新批量操作
+      function updateBatchActions() {
+        const selectedCount = pageState.selectedFiles.size;
+        const batchActions = document.getElementById('batch-actions');
+        const selectedCountElement = document.getElementById('selected-count');
 
-// 显示上传模态框
-function showUploadModal() {
-  const modal = new bootstrap.Modal(document.getElementById('uploadModal'));
-  modal.show();
-}
+        if (selectedCount > 0) {
+          batchActions.style.display = 'block';
+          selectedCountElement.textContent = selectedCount;
+        } else {
+          batchActions.style.display = 'none';
+        }
 
-// 文件选择处理
-function handleFileSelect(event) {
-  const files = Array.from(event.target.files);
-  displayUploadList(files);
-}
+        updateSelectAllState();
+      }
 
-// 拖拽处理
-function handleDragOver(event) {
-  event.preventDefault();
-  event.currentTarget.classList.add('drag-over');
-}
+      // 更新全选状态
+      function updateSelectAllState() {
+        const selectAllCheckboxes = [
+          document.getElementById('select-all'),
+          document.getElementById('select-all-list')
+        ].filter(Boolean);
 
-function handleDragLeave(event) {
-  event.currentTarget.classList.remove('drag-over');
-}
+        const checkboxes = document.querySelectorAll('input[name="file-checkbox"]');
+        const checkedCount = document.querySelectorAll('input[name="file-checkbox"]:checked').length;
 
-function handleDrop(event) {
-  event.preventDefault();
-  event.currentTarget.classList.remove('drag-over');
-  
-  const files = Array.from(event.dataTransfer.files);
-  displayUploadList(files);
-}
+        selectAllCheckboxes.forEach(selectAllCheckbox => {
+          if (checkedCount === 0) {
+            selectAllCheckbox.indeterminate = false;
+            selectAllCheckbox.checked = false;
+          } else if (checkedCount === checkboxes.length) {
+            selectAllCheckbox.indeterminate = false;
+            selectAllCheckbox.checked = true;
+          } else {
+            selectAllCheckbox.indeterminate = true;
+          }
+        });
+      }
 
-// 显示上传列表
-function displayUploadList(files) {
-  const uploadList = document.getElementById('upload-list');
-  const uploadItems = document.getElementById('upload-items');
-  const startUploadBtn = document.getElementById('start-upload-btn');
-  
-  if (files.length === 0) {
-    uploadList.style.display = 'none';
-    startUploadBtn.disabled = true;
-    return;
-  }
-  
-  const itemsHtml = files.map((file, index) => `
+      // 处理全选
+      function handleSelectAll(event) {
+        const checkboxes = document.querySelectorAll('input[name="file-checkbox"]');
+        checkboxes.forEach(checkbox => {
+          checkbox.checked = event.target.checked;
+          const fileId = parseInt(checkbox.value);
+          if (event.target.checked) {
+            pageState.selectedFiles.add(fileId);
+          } else {
+            pageState.selectedFiles.delete(fileId);
+          }
+        });
+        updateBatchActions();
+      }
+
+      // 清除选择
+      function clearSelection() {
+        pageState.selectedFiles.clear();
+        document.querySelectorAll('input[name="file-checkbox"]').forEach(checkbox => {
+          checkbox.checked = false;
+        });
+        updateBatchActions();
+      }
+
+      // 显示上传模态框
+      function showUploadModal() {
+        const modal = new bootstrap.Modal(document.getElementById('uploadModal'));
+        modal.show();
+      }
+
+      // 文件选择处理
+      function handleFileSelect(event) {
+        const files = Array.from(event.target.files);
+
+        // 过滤掉重复的文件（基于文件名和大小）
+        const existingFiles = window.uploadFiles || [];
+        const newFiles = files.filter(file => {
+          return !existingFiles.some(existing =>
+            existing.name === file.name && existing.size === file.size
+          );
+        });
+
+        if (newFiles.length < files.length) {
+          window.blogApp.showNotification(
+            `已过滤 ${files.length - newFiles.length} 个重复文件`,
+            'warning'
+          );
+        }
+
+        if (newFiles.length > 0) {
+          // 合并新文件和现有文件
+          const allFiles = [...existingFiles, ...newFiles];
+          displayUploadList(allFiles);
+        }
+
+        // 重置文件输入框，允许重新选择相同文件
+        event.target.value = '';
+      }
+
+      // 拖拽处理
+      function handleDragOver(event) {
+        event.preventDefault();
+        event.currentTarget.classList.add('drag-over');
+      }
+
+      function handleDragLeave(event) {
+        event.currentTarget.classList.remove('drag-over');
+      }
+
+      function handleDrop(event) {
+        event.preventDefault();
+        event.currentTarget.classList.remove('drag-over');
+
+        const files = Array.from(event.dataTransfer.files);
+        displayUploadList(files);
+      }
+
+      // 显示上传列表
+      function displayUploadList(files) {
+        const uploadList = document.getElementById('upload-list');
+        const uploadItems = document.getElementById('upload-items');
+        const startUploadBtn = document.getElementById('start-upload-btn');
+
+        if (files.length === 0) {
+          uploadList.style.display = 'none';
+          startUploadBtn.disabled = true;
+          return;
+        }
+
+        const itemsHtml = files.map((file, index) => `
     <div class="upload-item d-flex align-items-center justify-content-between p-2 border rounded mb-2" data-index="${index}">
       <div class="d-flex align-items-center">
         <i class="${getFileIcon(file.type)} me-2"></i>
@@ -607,382 +651,411 @@ function displayUploadList(files) {
       </div>
     </div>
   `).join('');
-  
-  uploadItems.innerHTML = itemsHtml;
-  uploadList.style.display = 'block';
-  startUploadBtn.disabled = false;
-  
-  window.uploadFiles = files;
-}
 
-// 移除上传项
-function removeUploadItem(index) {
-  const uploadItems = document.getElementById('upload-items');
-  const item = uploadItems.querySelector(`[data-index="${index}"]`);
-  if (item) {
-    item.remove();
-  }
-  
-  if (window.uploadFiles) {
-    window.uploadFiles = window.uploadFiles.filter((_, i) => i !== index);
-    if (window.uploadFiles.length === 0) {
-      document.getElementById('upload-list').style.display = 'none';
-      document.getElementById('start-upload-btn').disabled = true;
-    }
-  }
-}
+        uploadItems.innerHTML = itemsHtml;
+        uploadList.style.display = 'block';
+        startUploadBtn.disabled = false;
 
-// 开始上传
-async function startUpload() {
-  if (!window.uploadFiles || window.uploadFiles.length === 0) {
-    return;
-  }
-  
-  const startUploadBtn = document.getElementById('start-upload-btn');
-  startUploadBtn.disabled = true;
-  startUploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>上传中...';
-  
-  try {
-    for (let i = 0; i < window.uploadFiles.length; i++) {
-      const file = window.uploadFiles[i];
-      const uploadItem = document.querySelector(`[data-index="${i}"]`);
-      
-      if (!uploadItem) continue;
-      
-      const progressBar = uploadItem.querySelector('.progress');
-      const progressBarInner = uploadItem.querySelector('.progress-bar');
-      
-      progressBar.style.display = 'block';
-      
-      await uploadSingleFile(file, (progress) => {
-        progressBarInner.style.width = progress + '%';
-      });
-    }
-    
-    window.blogApp.showNotification('文件上传成功', 'success');
-    
-    const modal = bootstrap.Modal.getInstance(document.getElementById('uploadModal'));
-    modal.hide();
-    
-    loadFiles();
-    
-  } catch (error) {
-    console.error('上传失败:', error);
-    window.blogApp.showNotification('上传失败，请稍后重试', 'error');
-  } finally {
-    startUploadBtn.disabled = false;
-    startUploadBtn.innerHTML = '<i class="fas fa-upload me-2"></i>开始上传';
-  }
-}
-
-// 上传单个文件
-function uploadSingleFile(file, onProgress) {
-  return new Promise((resolve, reject) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    const xhr = new XMLHttpRequest();
-    
-    xhr.upload.addEventListener('progress', (event) => {
-      if (event.lengthComputable) {
-        const progress = Math.round((event.loaded / event.total) * 100);
-        onProgress(progress);
+        window.uploadFiles = files;
       }
-    });
-    
-    xhr.addEventListener('load', () => {
-      if (xhr.status === 200) {
-        resolve(JSON.parse(xhr.responseText));
-      } else {
-        reject(new Error('Upload failed'));
-      }
-    });
-    
-    xhr.addEventListener('error', () => {
-      reject(new Error('Upload failed'));
-    });
-    
-    xhr.open('POST', '/api/files/upload');
-    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-    xhr.send(formData);
-  });
-}
 
-// 预览文件
-function previewFile(fileId) {
-  const file = pageState.files.find(f => f.id === fileId);
-  if (!file) return;
-  
-  const modal = new bootstrap.Modal(document.getElementById('previewModal'));
-  const previewTitle = document.getElementById('preview-title');
-  const previewContent = document.getElementById('preview-content');
-  const downloadBtn = document.getElementById('download-btn');
-  
-  previewTitle.textContent = file.name;
-  downloadBtn.href = `/api/files/download/${fileId}`;
-  
-  if (file.type?.startsWith('image/')) {
-    previewContent.innerHTML = `
-      <img src="/api/files/${fileId}" alt="${escapeHtml(file.name)}" 
+      // 移除上传项
+      function removeUploadItem(index) {
+        const uploadItems = document.getElementById('upload-items');
+        const item = uploadItems.querySelector(`[data-index="${index}"]`);
+        if (item) {
+          item.remove();
+        }
+
+        if (window.uploadFiles) {
+          window.uploadFiles = window.uploadFiles.filter((_, i) => i !== index);
+          if (window.uploadFiles.length === 0) {
+            document.getElementById('upload-list').style.display = 'none';
+            document.getElementById('start-upload-btn').disabled = true;
+          }
+        }
+      }
+
+      // 清空上传列表
+      function clearUploadList() {
+        const uploadItems = document.getElementById('upload-items');
+        const uploadList = document.getElementById('upload-list');
+        const startUploadBtn = document.getElementById('start-upload-btn');
+
+        // 清空上传项
+        if (uploadItems) {
+          uploadItems.innerHTML = '';
+        }
+
+        // 隐藏上传列表
+        if (uploadList) {
+          uploadList.style.display = 'none';
+        }
+
+        // 重置按钮状态
+        if (startUploadBtn) {
+          startUploadBtn.disabled = true;
+          startUploadBtn.innerHTML = '<i class="fas fa-upload me-2"></i>开始上传';
+        }
+
+        // 清空文件数组
+        window.uploadFiles = [];
+      }
+
+      // 开始上传
+      async function startUpload() {
+        if (!window.uploadFiles || window.uploadFiles.length === 0) {
+          return;
+        }
+
+        const startUploadBtn = document.getElementById('start-upload-btn');
+        startUploadBtn.disabled = true;
+        startUploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>上传中...';
+
+        try {
+          for (let i = 0; i < window.uploadFiles.length; i++) {
+            const file = window.uploadFiles[i];
+            const uploadItem = document.querySelector(`[data-index="${i}"]`);
+
+            if (!uploadItem) continue;
+
+            const progressBar = uploadItem.querySelector('.progress');
+            const progressBarInner = uploadItem.querySelector('.progress-bar');
+
+            progressBar.style.display = 'block';
+
+            await uploadSingleFile(file, (progress) => {
+              progressBarInner.style.width = progress + '%';
+            });
+          }
+
+          window.blogApp.showNotification('文件上传成功', 'success');
+
+          // 清空上传列表
+          clearUploadList();
+
+          const modal = bootstrap.Modal.getInstance(document.getElementById('uploadModal'));
+          modal.hide();
+
+          loadFiles();
+
+        } catch (error) {
+          console.error('上传失败:', error);
+          window.blogApp.showNotification('上传失败，请稍后重试', 'error');
+        } finally {
+          startUploadBtn.disabled = false;
+          startUploadBtn.innerHTML = '<i class="fas fa-upload me-2"></i>开始上传';
+        }
+      }
+
+      // 上传单个文件
+      function uploadSingleFile(file, onProgress) {
+        return new Promise((resolve, reject) => {
+          const formData = new FormData();
+          formData.append('file', file);
+
+          const xhr = new XMLHttpRequest();
+
+          xhr.upload.addEventListener('progress', (event) => {
+            if (event.lengthComputable) {
+              const progress = Math.round((event.loaded / event.total) * 100);
+              onProgress(progress);
+            }
+          });
+
+          xhr.addEventListener('load', () => {
+            if (xhr.status === 200) {
+              resolve(JSON.parse(xhr.responseText));
+            } else {
+              reject(new Error('Upload failed'));
+            }
+          });
+
+          xhr.addEventListener('error', () => {
+            reject(new Error('Upload failed'));
+          });
+
+          xhr.open('POST', '/api/files/upload');
+          xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+          xhr.send(formData);
+        });
+      }
+
+      // 预览文件
+      function previewFile(fileId) {
+        const file = pageState.files.find(f => f.id === fileId);
+        if (!file) return;
+
+        const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+        const previewTitle = document.getElementById('preview-title');
+        const previewContent = document.getElementById('preview-content');
+        const downloadBtn = document.getElementById('download-btn');
+
+        previewTitle.textContent = file.name;
+        downloadBtn.href = `/api/files/download/${fileId}`;
+
+        if (file.type?.startsWith('image/')) {
+          previewContent.innerHTML = `
+      <img src="/api/files/download/${fileId}" alt="${escapeHtml(file.name)}" 
            class="img-fluid" style="max-height: 70vh;">
     `;
-  } else if (file.type?.startsWith('video/')) {
-    previewContent.innerHTML = `
+        } else if (file.type?.startsWith('video/')) {
+          previewContent.innerHTML = `
       <video controls class="w-100" style="max-height: 70vh;">
-        <source src="/api/files/${fileId}" type="${file.type}">
+        <source src="/api/files/download/${fileId}" type="${file.type}">
         您的浏览器不支持视频播放。
       </video>
     `;
-  } else if (file.type?.startsWith('audio/')) {
-    previewContent.innerHTML = `
+        } else if (file.type?.startsWith('audio/')) {
+          previewContent.innerHTML = `
       <audio controls class="w-100">
-        <source src="/api/files/${fileId}" type="${file.type}">
+        <source src="/api/files/download/${fileId}" type="${file.type}">
         您的浏览器不支持音频播放。
       </audio>
     `;
-  } else {
-    previewContent.innerHTML = `
+        } else {
+          previewContent.innerHTML = `
       <div class="text-center py-5">
         <i class="${getFileIcon(file.type)} fa-5x text-muted mb-3"></i>
         <h5>${escapeHtml(file.name)}</h5>
         <p class="text-muted">此文件类型不支持预览</p>
       </div>
     `;
-  }
-  
-  modal.show();
-}
+        }
 
-// 显示删除模态框
-function showDeleteModal(fileId, fileName) {
-  document.getElementById('delete-file-name').textContent = fileName;
-  document.getElementById('confirm-delete-btn').setAttribute('data-file-id', fileId);
-  
-  const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
-  modal.show();
-}
+        modal.show();
+      }
 
-// 确认删除文件
-async function confirmDeleteFile() {
-  const fileId = document.getElementById('confirm-delete-btn').getAttribute('data-file-id');
-  
-  try {
-    const response = await fetch(`/api/files/${fileId}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include'
-    });
-    
-    if (response.ok) {
-      window.blogApp.showNotification('文件删除成功', 'success');
-      
-      const modal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
-      modal.hide();
-      
-      loadFiles();
-    } else {
-      const result = await response.json();
-      window.blogApp.showNotification(result.message || '删除失败', 'error');
-    }
-    
-  } catch (error) {
-    console.error('删除文件失败:', error);
-    window.blogApp.showNotification('删除失败，请稍后重试', 'error');
-  }
-}
+      // 显示删除模态框
+      function showDeleteModal(fileId, fileName) {
+        document.getElementById('delete-file-name').textContent = fileName;
+        document.getElementById('confirm-delete-btn').setAttribute('data-file-id', fileId);
 
-// 显示批量删除模态框
-function showBatchDeleteModal() {
-  const selectedCount = pageState.selectedFiles.size;
-  document.getElementById('batch-delete-count').textContent = selectedCount;
-  
-  const modal = new bootstrap.Modal(document.getElementById('batchDeleteModal'));
-  modal.show();
-}
+        const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        modal.show();
+      }
 
-// 确认批量删除
-async function confirmBatchDelete() {
-  const selectedIds = Array.from(pageState.selectedFiles);
-  
-  try {
-    const promises = selectedIds.map(id => 
-      fetch(`/api/files/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include'
-      })
-    );
-    
-    const results = await Promise.allSettled(promises);
-    const successCount = results.filter(result => result.status === 'fulfilled' && result.value.ok).length;
-    const failCount = selectedIds.length - successCount;
-    
-    if (successCount > 0) {
-      window.blogApp.showNotification(`成功删除 ${successCount} 个文件${failCount > 0 ? `，${failCount} 个失败` : ''}`, 
-        failCount > 0 ? 'warning' : 'success');
-    } else {
-      window.blogApp.showNotification('批量删除失败', 'error');
-    }
-    
-    const modal = bootstrap.Modal.getInstance(document.getElementById('batchDeleteModal'));
-    modal.hide();
-    
-    clearSelection();
-    loadFiles();
-    
-  } catch (error) {
-    console.error('批量删除失败:', error);
-    window.blogApp.showNotification('批量删除失败，请稍后重试', 'error');
-  }
-}
+      // 确认删除文件
+      async function confirmDeleteFile() {
+        const fileId = document.getElementById('confirm-delete-btn').getAttribute('data-file-id');
 
-// 批量下载文件
-function batchDownloadFiles() {
-  const selectedIds = Array.from(pageState.selectedFiles);
-  selectedIds.forEach(id => {
-    const link = document.createElement('a');
-    link.href = `/api/files/download/${id}`;
-    link.target = '_blank';
-    link.click();
-  });
-}
+        try {
+          const response = await fetch(`/api/files/${fileId}`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include'
+          });
 
-// 更新URL参数
-function updateURL() {
-  const params = new URLSearchParams();
-  if (pageState.currentPage > 1) params.set('page', pageState.currentPage);
-  if (pageState.pageSize !== 24) params.set('pageSize', pageState.pageSize);
-  if (pageState.searchKeyword) params.set('search', pageState.searchKeyword);
-  if (pageState.typeFilter) params.set('type', pageState.typeFilter);
-  if (pageState.sortBy !== 'created_at_desc') params.set('sort', pageState.sortBy);
-  if (pageState.viewMode !== 'grid') params.set('view', pageState.viewMode);
-  
-  const newURL = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
-  window.history.replaceState({}, '', newURL);
-}
+          if (response.ok) {
+            window.blogApp.showNotification('文件删除成功', 'success');
 
-// 工具函数
-function formatDate(dateString) {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  });
-}
+            const modal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+            modal.hide();
 
-function formatFileSize(bytes) {
-  if (!bytes) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
+            loadFiles();
+          } else {
+            const result = await response.json();
+            window.blogApp.showNotification(result.message || '删除失败', 'error');
+          }
 
-function getFileIcon(mimeType) {
-  if (!mimeType) return 'fas fa-file';
-  
-  if (mimeType.startsWith('image/')) return 'fas fa-image';
-  if (mimeType.startsWith('video/')) return 'fas fa-video';
-  if (mimeType.startsWith('audio/')) return 'fas fa-music';
-  if (mimeType.includes('pdf')) return 'fas fa-file-pdf';
-  if (mimeType.includes('word')) return 'fas fa-file-word';
-  if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'fas fa-file-excel';
-  if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return 'fas fa-file-powerpoint';
-  if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('7z')) return 'fas fa-file-archive';
-  if (mimeType.includes('text')) return 'fas fa-file-alt';
-  
-  return 'fas fa-file';
-}
+        } catch (error) {
+          console.error('删除文件失败:', error);
+          window.blogApp.showNotification('删除失败，请稍后重试', 'error');
+        }
+      }
 
-function getFileTypeLabel(mimeType) {
-  if (!mimeType) return '未知';
-  
-  if (mimeType.startsWith('image/')) return '图片';
-  if (mimeType.startsWith('video/')) return '视频';
-  if (mimeType.startsWith('audio/')) return '音频';
-  if (mimeType.includes('pdf')) return 'PDF';
-  if (mimeType.includes('word')) return 'Word';
-  if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'Excel';
-  if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return 'PPT';
-  if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('7z')) return '压缩包';
-  if (mimeType.includes('text')) return '文本';
-  
-  return '其他';
-}
+      // 显示批量删除模态框
+      function showBatchDeleteModal() {
+        const selectedCount = pageState.selectedFiles.size;
+        document.getElementById('batch-delete-count').textContent = selectedCount;
 
-function escapeHtml(text) {
-  if (!text) return '';
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
+        const modal = new bootstrap.Modal(document.getElementById('batchDeleteModal'));
+        modal.show();
+      }
 
-// 从文件扩展名获取MIME类型
-function getMimeTypeFromExtension(extension) {
-  if (!extension) return 'application/octet-stream';
-  
-  const ext = extension.toLowerCase().replace('.', '');
-  const mimeTypes = {
-    // 图片
-    'jpg': 'image/jpeg',
-    'jpeg': 'image/jpeg',
-    'png': 'image/png',
-    'gif': 'image/gif',
-    'webp': 'image/webp',
-    'svg': 'image/svg+xml',
-    'bmp': 'image/bmp',
-    'ico': 'image/x-icon',
-    
-    // 文档
-    'pdf': 'application/pdf',
-    'doc': 'application/msword',
-    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'xls': 'application/vnd.ms-excel',
-    'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'ppt': 'application/vnd.ms-powerpoint',
-    'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-    'txt': 'text/plain',
-    'md': 'text/markdown',
-    'html': 'text/html',
-    'css': 'text/css',
-    'js': 'text/javascript',
-    'json': 'application/json',
-    'xml': 'text/xml',
-    
-    // 视频
-    'mp4': 'video/mp4',
-    'avi': 'video/x-msvideo',
-    'mov': 'video/quicktime',
-    'wmv': 'video/x-ms-wmv',
-    'flv': 'video/x-flv',
-    'webm': 'video/webm',
-    'mkv': 'video/x-matroska',
-    
-    // 音频
-    'mp3': 'audio/mpeg',
-    'wav': 'audio/wav',
-    'flac': 'audio/flac',
-    'aac': 'audio/aac',
-    'ogg': 'audio/ogg',
-    'wma': 'audio/x-ms-wma',
-    
-    // 压缩包
-    'zip': 'application/zip',
-    'rar': 'application/x-rar-compressed',
-    '7z': 'application/x-7z-compressed',
-    'tar': 'application/x-tar',
-    'gz': 'application/gzip'
-  };
-  
-  return mimeTypes[ext] || 'application/octet-stream';
-}
-</script>
+      // 确认批量删除
+      async function confirmBatchDelete() {
+        const selectedIds = Array.from(pageState.selectedFiles);
+
+        try {
+          const promises = selectedIds.map(id =>
+            fetch(`/api/files/${id}`, {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              credentials: 'include'
+            })
+          );
+
+          const results = await Promise.allSettled(promises);
+          const successCount = results.filter(result => result.status === 'fulfilled' && result.value.ok).length;
+          const failCount = selectedIds.length - successCount;
+
+          if (successCount > 0) {
+            window.blogApp.showNotification(`成功删除 ${successCount} 个文件${failCount > 0 ? `，${failCount} 个失败` : ''}`,
+              failCount > 0 ? 'warning' : 'success');
+          } else {
+            window.blogApp.showNotification('批量删除失败', 'error');
+          }
+
+          const modal = bootstrap.Modal.getInstance(document.getElementById('batchDeleteModal'));
+          modal.hide();
+
+          clearSelection();
+          loadFiles();
+
+        } catch (error) {
+          console.error('批量删除失败:', error);
+          window.blogApp.showNotification('批量删除失败，请稍后重试', 'error');
+        }
+      }
+
+      // 批量下载文件
+      function batchDownloadFiles() {
+        const selectedIds = Array.from(pageState.selectedFiles);
+        selectedIds.forEach(id => {
+          const link = document.createElement('a');
+          link.href = `/api/files/download/${id}`;
+          link.target = '_blank';
+          link.click();
+        });
+      }
+
+      // 更新URL参数
+      function updateURL() {
+        const params = new URLSearchParams();
+        if (pageState.currentPage > 1) params.set('page', pageState.currentPage);
+        if (pageState.pageSize !== 24) params.set('pageSize', pageState.pageSize);
+        if (pageState.searchKeyword) params.set('search', pageState.searchKeyword);
+        if (pageState.typeFilter) params.set('type', pageState.typeFilter);
+        if (pageState.sortBy !== 'created_at_desc') params.set('sort', pageState.sortBy);
+        if (pageState.viewMode !== 'grid') params.set('view', pageState.viewMode);
+
+        const newURL = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+        window.history.replaceState({}, '', newURL);
+      }
+
+      // 工具函数
+      function formatDate(dateString) {
+        if (!dateString) return '-';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('zh-CN', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        });
+      }
+
+      function formatFileSize(bytes) {
+        if (!bytes) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+      }
+
+      function getFileIcon(mimeType) {
+        if (!mimeType) return 'fas fa-file';
+
+        if (mimeType.startsWith('image/')) return 'fas fa-image';
+        if (mimeType.startsWith('video/')) return 'fas fa-video';
+        if (mimeType.startsWith('audio/')) return 'fas fa-music';
+        if (mimeType.includes('pdf')) return 'fas fa-file-pdf';
+        if (mimeType.includes('word')) return 'fas fa-file-word';
+        if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'fas fa-file-excel';
+        if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return 'fas fa-file-powerpoint';
+        if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('7z')) return 'fas fa-file-archive';
+        if (mimeType.includes('text')) return 'fas fa-file-alt';
+
+        return 'fas fa-file';
+      }
+
+      function getFileTypeLabel(mimeType) {
+        if (!mimeType) return '未知';
+
+        if (mimeType.startsWith('image/')) return '图片';
+        if (mimeType.startsWith('video/')) return '视频';
+        if (mimeType.startsWith('audio/')) return '音频';
+        if (mimeType.includes('pdf')) return 'PDF';
+        if (mimeType.includes('word')) return 'Word';
+        if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'Excel';
+        if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return 'PPT';
+        if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('7z')) return '压缩包';
+        if (mimeType.includes('text')) return '文本';
+
+        return '其他';
+      }
+
+      function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // 从文件扩展名获取MIME类型
+      function getMimeTypeFromExtension(extension) {
+        if (!extension) return 'application/octet-stream';
+
+        const ext = extension.toLowerCase().replace('.', '');
+        const mimeTypes = {
+          // 图片
+          'jpg': 'image/jpeg',
+          'jpeg': 'image/jpeg',
+          'png': 'image/png',
+          'gif': 'image/gif',
+          'webp': 'image/webp',
+          'svg': 'image/svg+xml',
+          'bmp': 'image/bmp',
+          'ico': 'image/x-icon',
+
+          // 文档
+          'pdf': 'application/pdf',
+          'doc': 'application/msword',
+          'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'xls': 'application/vnd.ms-excel',
+          'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'ppt': 'application/vnd.ms-powerpoint',
+          'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+          'txt': 'text/plain',
+          'md': 'text/markdown',
+          'html': 'text/html',
+          'css': 'text/css',
+          'js': 'text/javascript',
+          'json': 'application/json',
+          'xml': 'text/xml',
+
+          // 视频
+          'mp4': 'video/mp4',
+          'avi': 'video/x-msvideo',
+          'mov': 'video/quicktime',
+          'wmv': 'video/x-ms-wmv',
+          'flv': 'video/x-flv',
+          'webm': 'video/webm',
+          'mkv': 'video/x-matroska',
+
+          // 音频
+          'mp3': 'audio/mpeg',
+          'wav': 'audio/wav',
+          'flac': 'audio/flac',
+          'aac': 'audio/aac',
+          'ogg': 'audio/ogg',
+          'wma': 'audio/x-ms-wma',
+
+          // 压缩包
+          'zip': 'application/zip',
+          'rar': 'application/x-rar-compressed',
+          '7z': 'application/x-7z-compressed',
+          'tar': 'application/x-tar',
+          'gz': 'application/gzip'
+        };
+
+        return mimeTypes[ext] || 'application/octet-stream';
+      }
+    </script>
     <div class="d-flex gap-2">
       <button class="btn btn-primary-custom" id="upload-btn">
         <i class="fas fa-upload me-2"></i>
@@ -1014,7 +1087,7 @@ function getMimeTypeFromExtension(extension) {
         </div>
       </div>
     </div>
-    
+
     <div class="col-lg-3 col-md-6 mb-3">
       <div class="card-custom h-100">
         <div class="card-body">
@@ -1032,7 +1105,7 @@ function getMimeTypeFromExtension(extension) {
         </div>
       </div>
     </div>
-    
+
     <div class="col-lg-3 col-md-6 mb-3">
       <div class="card-custom h-100">
         <div class="card-body">
@@ -1050,7 +1123,7 @@ function getMimeTypeFromExtension(extension) {
         </div>
       </div>
     </div>
-    
+
     <div class="col-lg-3 col-md-6 mb-3">
       <div class="card-custom h-100">
         <div class="card-body">
@@ -1073,7 +1146,7 @@ function getMimeTypeFromExtension(extension) {
   <!-- 搜索和筛选 -->
   <div class="card-custom mb-4">
     <div class="card-body">
-      <div class="row g-3">
+      <div class="row g-2 align-items-center">
         <div class="col-md-4">
           <div class="input-group">
             <span class="input-group-text">
@@ -1089,7 +1162,6 @@ function getMimeTypeFromExtension(extension) {
             <option value="document">文档</option>
             <option value="video">视频</option>
             <option value="audio">音频</option>
-            <option value="other">其他</option>
           </select>
         </div>
         <div class="col-md-2">
@@ -1110,7 +1182,7 @@ function getMimeTypeFromExtension(extension) {
         </div>
         <div class="col-md-2">
           <button class="btn btn-outline-custom w-100" id="refresh-btn">
-            <i class="fas fa-sync-alt me-2"></i>
+            <i class="fas fa-sync-alt me-1"></i>
             刷新
           </button>
         </div>
@@ -1206,9 +1278,11 @@ function getMimeTypeFromExtension(extension) {
       </div>
 
       <!-- 分页 -->
-      <div class="d-flex justify-content-between align-items-center mt-4" id="pagination-container" style="display: none;">
+      <div class="d-flex justify-content-between align-items-center mt-4" id="pagination-container"
+        style="display: none;">
         <div class="text-muted">
-          共 <strong id="total-count">0</strong> 个文件，第 <strong id="current-page">1</strong> 页，共 <strong id="total-pages">1</strong> 页
+          共 <strong id="total-count">0</strong> 个文件，第 <strong id="current-page">1</strong> 页，共 <strong
+            id="total-pages">1</strong> 页
         </div>
         <nav>
           <ul class="pagination mb-0" id="pagination">
@@ -1266,7 +1340,7 @@ function getMimeTypeFromExtension(extension) {
             </button>
           </div>
         </div>
-        
+
         <!-- 上传列表 -->
         <div id="upload-list" class="mt-3" style="display: none;">
           <h6>上传队列</h6>
@@ -1359,13 +1433,6 @@ function getMimeTypeFromExtension(extension) {
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
         <button type="button" class="btn btn-danger" id="confirm-batch-delete-btn">
-          <i class="fas fa-trash me-2"></i>
-          确认批量删除
-        </button>
-      </div>
-    </div>
-  </div>
-</div>h-delete-btn">
           <i class="fas fa-trash me-2"></i>
           确认批量删除
         </button>

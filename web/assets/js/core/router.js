@@ -13,13 +13,13 @@ class Router {
   init() {
     if (this.initialized) return;
 
-    // 注册路由配置
-    this.registerRoutes();
-
-    // 设置全局导航守卫
+    // 设置全局导航守卫（需在注册具体路由之前）
     page('*', (ctx, next) => {
       this.globalGuard(ctx, next);
     });
+
+    // 注册路由配置
+    this.registerRoutes();
 
     // 启动路由
     page.start();
@@ -198,7 +198,7 @@ class Router {
       this.showNotification('页面加载失败', 'error');
 
       // 加载错误页面
-      await this.loadTemplate('error.html', { error });
+      await this.loadTemplate('404.html', { error });
     } finally {
       // 隐藏加载状态
       window.appState.setLoading(false);
@@ -427,9 +427,20 @@ if (typeof module !== 'undefined' && module.exports) {
 
 // 显式执行模板中的 <script>，确保 window.initXxxPage 已定义
 function executeTemplateScripts(container) {
+  // 清理之前添加的页面脚本，避免重复声明
+  const existingPageScripts = document.querySelectorAll('script[data-page-script]');
+  existingPageScripts.forEach(script => {
+    if (script.parentNode) {
+      script.parentNode.removeChild(script);
+    }
+  });
+  
   const scripts = Array.from(container.querySelectorAll('script'));
   scripts.forEach((oldScript) => {
     const newScript = document.createElement('script');
+    // 标记为页面脚本，便于后续清理
+    newScript.setAttribute('data-page-script', 'true');
+    
     if (oldScript.type) {
       newScript.type = oldScript.type;
     }

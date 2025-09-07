@@ -9,9 +9,6 @@
       <p class="text-muted mb-0">使用 Markdown 语法编写文章</p>
     </div>
     <div class="d-flex gap-2">
-      <button class="btn btn-outline-custom" id="save-draft-btn">
-        <i class="fas fa-save me-2"></i>保存草稿
-      </button>
       <button class="btn btn-success-custom" id="publish-btn">
         <i class="fas fa-paper-plane me-2"></i>发布文章
       </button>
@@ -22,70 +19,122 @@
   </div>
 
   <div class="row">
-    <!-- 编辑器部分 -->
-    <div class="col-lg-8">
-      <!-- 文章基本信息 -->
-      <div class="card-custom mb-4">
+    <!-- 文章基本信息 -->
+    <div class="col-lg-8 d-flex">
+      <div class="card-custom mb-4 w-100">
         <div class="card-body">
           <div class="mb-3">
             <label for="article-title" class="form-label">文章标题 *</label>
-            <input type="text" class="form-control-custom" id="article-title" 
-                   placeholder="请输入文章标题" maxlength="100" required>
+            <input type="text" class="form-control" id="article-title" placeholder="请输入文章标题" maxlength="100" required>
             <div class="form-text">标题长度不超过100个字符</div>
           </div>
-          
+
           <div class="mb-3">
             <label for="article-description" class="form-label">文章摘要</label>
-            <textarea class="form-control-custom" id="article-description" rows="3" 
-                      placeholder="请输入文章摘要（可选）" maxlength="200"></textarea>
+            <textarea class="form-control" id="article-description" rows="3" placeholder="请输入文章摘要（可选）"
+              maxlength="200"></textarea>
             <div class="form-text">摘要长度不超过200个字符</div>
           </div>
-          
+
           <div class="row">
             <div class="col-md-6">
               <label for="article-category" class="form-label">分类</label>
-              <select class="form-select-custom" id="article-category">
-                <option value="">选择分类</option>
-                <option value="tech">技术博客</option>
-                <option value="life">生活随笔</option>
-                <option value="study">学习笔记</option>
-              </select>
+              <input type="text" class="form-control" id="article-category" placeholder="输入文章分类">
             </div>
             <div class="col-md-6">
               <label for="article-tags" class="form-label">标签</label>
-              <input type="text" class="form-control-custom" id="article-tags" 
-                     placeholder="输入标签，用逗号分隔">
+              <input type="text" class="form-control" id="article-tags" placeholder="输入标签，用逗号分隔">
             </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Markdown 编辑器 -->
+    <!-- Markdown 语法帮助 -->
+    <div class="col-lg-4 d-flex">
+      <div class="card-custom mb-4 w-100">
+        <div class="card-body d-flex flex-column">
+          <h6 class="card-title">
+            <i class="fab fa-markdown me-2"></i>
+            Markdown 语法
+          </h6>
+          <div class="markdown-help flex-grow-1">
+            <small class="text-muted">
+              <div class="row">
+                <div class="col-6">
+                  <div class="mb-1"><strong>标题：</strong></div>
+                  <div class="mb-1"><code># 一级标题</code></div>
+                  <div class="mb-1"><code>## 二级标题</code></div>
+
+                  <div class="mb-1 mt-2"><strong>文本样式：</strong></div>
+                  <div class="mb-1"><code>**粗体文字**</code></div>
+                  <div class="mb-1"><code>*斜体文字*</code></div>
+                  <div class="mb-1"><code>`行内代码`</code></div>
+
+                  <div class="mb-1 mt-2"><strong>列表：</strong></div>
+                  <div class="mb-1"><code>- 无序列表</code></div>
+                  <div class="mb-1"><code>1. 有序列表</code></div>
+                </div>
+                <div class="col-6">
+                  <div class="mb-1"><strong>链接图片：</strong></div>
+                  <div class="mb-1"><code>[链接文字](网址)</code></div>
+                  <div class="mb-1"><code>![图片描述](图片链接)</code></div>
+
+                  <div class="mb-1 mt-2"><strong>引用分割：</strong></div>
+                  <div class="mb-1"><code>> 引用文字</code></div>
+                  <div class="mb-1"><code>---</code> 分割线</div>
+
+                  <div class="mb-1 mt-2"><strong>代码块：</strong></div>
+                  <div class="mb-1"><code>```语言名</code></div>
+                  <div class="mb-1"><code>代码内容</code></div>
+                  <div class="mb-1"><code>```</code></div>
+                </div>
+              </div>
+            </small>
+          </div>
+          <div class="mt-auto pt-2 border-top text-center">
+            <small class="text-muted">
+              <strong>Ctrl+S</strong> 发布文章
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 全宽编辑器 -->
+  <div class="row">
+    <div class="col-12">
       <div class="card-custom">
         <div class="card-header d-flex justify-content-between align-items-center">
           <h6 class="mb-0">
             <i class="fab fa-markdown me-2"></i>
             文章内容
           </h6>
-          <div class="btn-group btn-group-sm">
-            <button class="btn btn-outline-custom" id="toggle-preview-btn" title="切换预览">
-              <i class="fas fa-eye"></i>
+          <div class="btn-group" role="group">
+            <button type="button" class="btn btn-sm btn-outline-success" onclick="manualPreview()" title="手动刷新预览">
+              <i class="fas fa-sync-alt"></i> 刷新预览
             </button>
-            <button class="btn btn-outline-custom" id="fullscreen-btn" title="全屏编辑">
-              <i class="fas fa-expand"></i>
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="toggleAutoPreview()"
+              id="auto-preview-btn" title="切换自动预览">
+              <i class="fas fa-play"></i> 自动预览
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-info" onclick="toggleScrollSync()" id="scroll-sync-btn"
+              title="切换滚动同步">
+              <i class="fas fa-arrows-alt-v"></i> 滚动同步
             </button>
           </div>
         </div>
         <div class="card-body p-0">
-          <div class="editor-container" id="editor-container">
+          <div class="editor-container-split" id="editor-container">
             <!-- 编辑区 -->
-            <div class="editor-pane" id="editor-pane">
-              <textarea class="form-control editor-textarea" id="markdown-editor" 
-                        placeholder="请输入 Markdown 内容..."></textarea>
+            <div class="editor-pane-split" id="editor-pane">
+              <textarea class="form-control editor-textarea-split" id="markdown-editor"
+                placeholder="请输入 Markdown 内容..."></textarea>
             </div>
-            
+
             <!-- 预览区 -->
-            <div class="preview-pane d-none" id="preview-pane">
+            <div class="preview-pane-split" id="preview-pane">
               <div class="preview-content markdown-content" id="preview-content">
                 <p class="text-muted text-center py-5">
                   <i class="fas fa-eye-slash fa-2x mb-2"></i><br>
@@ -97,578 +146,879 @@
         </div>
       </div>
     </div>
-
-    <!-- 侧边栏 -->
-    <div class="col-lg-4">
-      <!-- 发布设置 -->
-      <div class="card-custom mb-4">
-        <div class="card-body">
-          <h6 class="card-title">
-            <i class="fas fa-cog me-2"></i>
-            发布设置
-          </h6>
-          
-          <div class="mb-3">
-            <label class="form-label">文章状态</label>
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="article-status" 
-                     id="status-draft" value="draft" checked>
-              <label class="form-check-label" for="status-draft">
-                草稿
-              </label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="article-status" 
-                     id="status-published" value="published">
-              <label class="form-check-label" for="status-published">
-                发布
-              </label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="article-status" 
-                     id="status-private" value="private">
-              <label class="form-check-label" for="status-private">
-                私有
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 图片上传 -->
-      <div class="card-custom mb-4">
-        <div class="card-body">
-          <h6 class="card-title">
-            <i class="fas fa-image me-2"></i>
-            图片上传
-          </h6>
-          
-          <div class="upload-area" id="upload-area">
-            <input type="file" id="image-upload" accept="image/*" multiple style="display: none;">
-            <div class="upload-placeholder text-center py-4">
-              <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
-              <p class="text-muted mb-2">点击或拖拽图片到此处上传</p>
-              <button class="btn btn-outline-custom btn-sm" id="select-images-btn">
-                选择图片
-              </button>
-            </div>
-          </div>
-          
-          <div id="uploaded-images" class="mt-3">
-            <!-- 已上传的图片列表 -->
-          </div>
-        </div>
-      </div>
-
-      <!-- 编辑器帮助 -->
-      <div class="card-custom">
-        <div class="card-body">
-          <h6 class="card-title">
-            <i class="fas fa-question-circle me-2"></i>
-            Markdown 语法
-          </h6>
-          <div class="markdown-help">
-            <small class="text-muted">
-              <div class="mb-2"><code># 标题</code> - 一级标题</div>
-              <div class="mb-2"><code>## 标题</code> - 二级标题</div>
-              <div class="mb-2"><code>**粗体**</code> - <strong>粗体</strong></div>
-              <div class="mb-2"><code>*斜体*</code> - <em>斜体</em></div>
-              <div class="mb-2"><code>[链接](url)</code> - 链接</div>
-              <div class="mb-2"><code>![图片](url)</code> - 图片</div>
-              <div class="mb-2"><code>```代码```</code> - 代码块</div>
-            </small>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </div>
 
 <script>
-// 文章编辑器页面初始化
-window.initArticleEditorPage = function(routeData) {
-  console.log('初始化文章编辑器页面', routeData);
-  
-  // 检查管理员权限
-  if (!window.appState.isAdmin()) {
-    window.router.push('/404');
-    return;
+  // 文章编辑器页面初始化
+  window.initAdminArticleEditorPage = function (routeData) {
+    console.log('初始化文章编辑器页面', routeData);
+
+    // 检查管理员权限
+    if (!window.appState.isAdmin()) {
+      window.router.push('/404');
+      return;
+    }
+
+    // 初始化编辑器
+    initArticleEditor(routeData);
+  };
+
+  // 编辑器状态（避免重复声明）
+  if (typeof window.editorState === 'undefined') {
+    window.editorState = {
+      isEditing: false,
+      articleId: null,
+      isDirty: false,
+      autoSaveTimer: null,
+      previewMode: false
+    };
   }
-  
+
   // 初始化编辑器
-  initArticleEditor(routeData);
-};
+  function initArticleEditor(routeData) {
+    // console.log('initArticleEditor 开始执行');
 
-// 编辑器状态
-const editorState = {
-  isEditing: false,
-  articleId: null,
-  isDirty: false,
-  autoSaveTimer: null,
-  previewMode: false
-};
+    // 重置编辑器状态
+    window.editorState.isEditing = false;
+    window.editorState.articleId = null;
+    window.editorState.isDirty = false;
+    window.editorState.previewMode = false;
 
-// 初始化编辑器
-function initArticleEditor(routeData) {
-  // 判断是编辑还是新建
-  if (routeData.params && routeData.params.id) {
-    editorState.isEditing = true;
-    editorState.articleId = routeData.params.id;
-    document.getElementById('editor-title').textContent = '编辑文章';
-    loadArticleForEdit(routeData.params.id);
-  } else {
-    document.getElementById('editor-title').textContent = '新建文章';
+    // 初始化预览状态
+    if (!window.previewState) {
+      window.previewState = {
+        autoRefresh: true,  // 默认开启自动预览
+        refreshInterval: null,
+        lastContent: '',
+        scrollSyncEnabled: false  // 滚动同步默认关闭，用户手动开启
+      };
+    }
+
+    // 清除之前的自动保存定时器
+    if (window.editorState.autoSaveTimer) {
+      clearInterval(window.editorState.autoSaveTimer);
+      window.editorState.autoSaveTimer = null;
+    }
+
+    // 判断是编辑还是新建
+    if (routeData.params && routeData.params.id) {
+      window.editorState.isEditing = true;
+      window.editorState.articleId = routeData.params.id;
+      document.getElementById('editor-title').textContent = '编辑文章';
+      loadArticleForEdit(routeData.params.id);
+    } else {
+      document.getElementById('editor-title').textContent = '新建文章';
+    }
+
+    // console.log('开始绑定事件和初始化');
+    bindEditorEvents();
+    initMarkdownEditor();
+    startAutoSave();
+    // console.log('initArticleEditor 执行完成');
   }
-  
-  bindEditorEvents();
-  initMarkdownEditor();
-  initImageUpload();
-  startAutoSave();
-}
 
-// 绑定事件
-function bindEditorEvents() {
-  // 保存草稿
-  document.getElementById('save-draft-btn').addEventListener('click', () => saveArticle('draft'));
-  
-  // 发布文章
-  document.getElementById('publish-btn').addEventListener('click', () => saveArticle('published'));
-  
-  // 切换预览
-  document.getElementById('toggle-preview-btn').addEventListener('click', togglePreview);
-  
-  // 全屏编辑
-  document.getElementById('fullscreen-btn').addEventListener('click', toggleFullscreen);
-  
-  // 选择图片
-  document.getElementById('select-images-btn').addEventListener('click', () => {
-    document.getElementById('image-upload').click();
-  });
-  
-  // 监听内容变化
-  document.getElementById('markdown-editor').addEventListener('input', handleContentChange);
-  document.getElementById('article-title').addEventListener('input', markDirty);
-  document.getElementById('article-description').addEventListener('input', markDirty);
-}
+  // 绑定事件
+  function bindEditorEvents() {
+    // console.log('开始绑定编辑器事件');
 
-// 初始化 Markdown 编辑器
-function initMarkdownEditor() {
-  const editor = document.getElementById('markdown-editor');
-  
-  // 设置样式
-  editor.style.minHeight = '500px';
-  editor.style.border = 'none';
-  editor.style.outline = 'none';
-  editor.style.resize = 'vertical';
-  editor.style.fontFamily = 'Monaco, Consolas, "Courier New", monospace';
-  editor.style.fontSize = '14px';
-  editor.style.lineHeight = '1.6';
-  editor.style.padding = '20px';
-  
-  // 添加快捷键支持
-  editor.addEventListener('keydown', handleEditorKeydown);
-}
+    // 发布文章
+    const publishBtn = document.getElementById('publish-btn');
+    if (publishBtn) {
+      publishBtn.addEventListener('click', () => saveArticle('published'));
+      // console.log('发布按钮事件已绑定');
+    }
 
-// 处理编辑器快捷键
-function handleEditorKeydown(e) {
-  if (e.ctrlKey || e.metaKey) {
-    switch (e.key) {
-      case 's':
-        e.preventDefault();
-        saveArticle('draft');
-        break;
-      case 'Enter':
-        e.preventDefault();
-        saveArticle('published');
-        break;
+    // 监听内容变化
+    const markdownEditor = document.getElementById('markdown-editor');
+    const articleTitle = document.getElementById('article-title');
+    const articleDescription = document.getElementById('article-description');
+
+    // console.log('查找编辑器元素:', {
+    //   markdownEditor,
+    //   articleTitle,
+    //   articleDescription
+    // });
+
+    if (markdownEditor) {
+      // 初始化预览状态（如果还没有初始化）
+      if (!window.previewState) {
+        window.previewState = {
+          autoRefresh: true,  // 默认开启自动预览
+          refreshInterval: null,
+          lastContent: '',
+          scrollSyncEnabled: false  // 滚动同步默认关闭，用户手动开启
+        };
+      }
+
+      // 绑定多种事件（提高触发成功率）
+      const events = ['input', 'keyup', 'paste', 'change'];
+      events.forEach(eventType => {
+        markdownEditor.addEventListener(eventType, function () {
+          if (window.previewState.autoRefresh) {
+            manualPreview();
+          }
+        });
+      });
+
+
+      // 初始化预览和按钮状态
+      setTimeout(() => {
+        manualPreview();
+
+        // 设置自动预览按钮状态
+        const autoPreviewBtn = document.getElementById('auto-preview-btn');
+        if (autoPreviewBtn && window.previewState.autoRefresh) {
+          // 启动自动预览定时器
+          window.previewState.refreshInterval = setInterval(() => {
+            const editor = document.getElementById('markdown-editor');
+            if (editor && editor.value !== window.previewState.lastContent) {
+              manualPreview();
+            }
+          }, 2000);
+
+          autoPreviewBtn.innerHTML = '<i class="fas fa-pause"></i> 自动预览';
+          autoPreviewBtn.className = 'btn btn-sm btn-success';
+        }
+
+        // 滚动同步将在用户主动开启时初始化
+
+        // 初始化文件拖拽和粘贴上传功能
+        initFileUpload();
+      }, 100);
+    } else {
+      console.error('找不到markdown编辑器元素');
+    }
+
+    if (articleTitle) {
+      articleTitle.addEventListener('input', markDirty);
+    }
+    if (articleDescription) {
+      articleDescription.addEventListener('input', markDirty);
     }
   }
-}
 
-// 处理内容变化
-function handleContentChange() {
-  markDirty();
-  
-  if (editorState.previewMode) {
-    updatePreview();
+  // 初始化 Markdown 编辑器
+  function initMarkdownEditor() {
+    const editor = document.getElementById('markdown-editor');
+
+    if (!editor) {
+      console.error('找不到 markdown-editor 元素');
+      return;
+    }
+
+    // 设置样式
+    editor.style.outline = 'none';
+    editor.style.fontFamily = 'Monaco, Consolas, "Courier New", monospace';
+    editor.style.fontSize = '14px';
+    editor.style.lineHeight = '1.6';
+    editor.style.padding = '20px';
+
+    // 添加快捷键支持
+    editor.addEventListener('keydown', handleEditorKeydown);
   }
-}
 
-// 标记为已修改
-function markDirty() {
-  editorState.isDirty = true;
-}
+  // 处理编辑器快捷键
+  function handleEditorKeydown(e) {
+    if (e.ctrlKey || e.metaKey) {
+      switch (e.key) {
+        case 's':
+          e.preventDefault();
+          saveArticle('published');
+          break;
+        case 'Enter':
+          e.preventDefault();
+          saveArticle('published');
+          break;
+      }
+    }
+  }
 
-// 更新预览
-function updatePreview() {
-  const content = document.getElementById('markdown-editor').value;
-  const previewContent = document.getElementById('preview-content');
-  
-  if (content.trim()) {
-    // 使用 marked.js 渲染 Markdown
-    if (window.marked) {
-      previewContent.innerHTML = window.marked.parse(content);
-      // 应用代码高亮
-      if (window.hljs) {
-        previewContent.querySelectorAll('pre code').forEach(block => {
-          window.hljs.highlightElement(block);
-        });
+  // 处理内容变化
+  function handleContentChange() {
+    console.log('handleContentChange 被调用');
+    markDirty();
+  }
+
+  // 标记为已修改
+  function markDirty() {
+    window.editorState.isDirty = true;
+  }
+
+  // 更新预览（简化版本）
+  function updatePreview() {
+    console.log('updatePreview 被调用');
+    const editor = document.getElementById('markdown-editor');
+    const previewDiv = document.getElementById('preview-content');
+
+    if (!editor || !previewDiv) {
+      console.error('找不到编辑器或预览容器');
+      return;
+    }
+
+    const content = editor.value;
+
+    if (content.trim()) {
+      if (window.marked) {
+        previewDiv.innerHTML = window.marked.parse(content);
+      } else {
+        previewDiv.innerHTML = `<pre style="white-space: pre-wrap; font-family: inherit;">${escapeHtml(content)}</pre>`;
       }
     } else {
-      previewContent.innerHTML = `<pre>${escapeHtml(content)}</pre>`;
+      previewDiv.innerHTML = `
+        <p class="text-muted text-center py-5">
+          <i class="fas fa-eye-slash fa-2x mb-2"></i><br>
+          开始输入内容查看预览
+        </p>
+      `;
     }
-  } else {
-    previewContent.innerHTML = `
-      <p class="text-muted text-center py-5">
-        <i class="fas fa-eye-slash fa-2x mb-2"></i><br>
-        开始输入内容查看预览
-      </p>
-    `;
   }
-}
 
-// 切换预览模式
-function togglePreview() {
-  const editorPane = document.getElementById('editor-pane');
-  const previewPane = document.getElementById('preview-pane');
-  const toggleBtn = document.getElementById('toggle-preview-btn');
-  
-  editorState.previewMode = !editorState.previewMode;
-  
-  if (editorState.previewMode) {
-    editorPane.classList.add('d-none');
-    previewPane.classList.remove('d-none');
-    toggleBtn.innerHTML = '<i class="fas fa-edit"></i>';
-    toggleBtn.title = '返回编辑';
-    updatePreview();
-  } else {
-    editorPane.classList.remove('d-none');
-    previewPane.classList.add('d-none');
-    toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
-    toggleBtn.title = '切换预览';
-  }
-}
 
-// 切换全屏
-function toggleFullscreen() {
-  const container = document.getElementById('editor-container');
-  const btn = document.getElementById('fullscreen-btn');
-  
-  if (!document.fullscreenElement) {
-    container.requestFullscreen().then(() => {
-      btn.innerHTML = '<i class="fas fa-compress"></i>';
-      btn.title = '退出全屏';
-    });
-  } else {
-    document.exitFullscreen().then(() => {
-      btn.innerHTML = '<i class="fas fa-expand"></i>';
-      btn.title = '全屏编辑';
-    });
-  }
-}
 
-// 初始化图片上传
-function initImageUpload() {
-  const uploadArea = document.getElementById('upload-area');
-  const fileInput = document.getElementById('image-upload');
-  
-  // 拖拽上传
-  uploadArea.addEventListener('dragover', e => {
-    e.preventDefault();
-    uploadArea.classList.add('dragover');
-  });
-  
-  uploadArea.addEventListener('dragleave', e => {
-    e.preventDefault();
-    uploadArea.classList.remove('dragover');
-  });
-  
-  uploadArea.addEventListener('drop', e => {
-    e.preventDefault();
-    uploadArea.classList.remove('dragover');
-    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-    if (files.length > 0) {
-      handleImageUpload(files);
+  // 保存文章
+  async function saveArticle(status = 'published') {
+    const title = document.getElementById('article-title').value.trim();
+    const description = document.getElementById('article-description').value.trim();
+    const content = document.getElementById('markdown-editor').value;
+    const category = document.getElementById('article-category').value;
+    const tags = document.getElementById('article-tags').value;
+
+    if (!title) {
+      window.blogApp.showNotification('请输入文章标题', 'error');
+      return;
     }
-  });
-  
-  // 文件选择上传
-  fileInput.addEventListener('change', e => {
-    if (e.target.files.length > 0) {
-      handleImageUpload(Array.from(e.target.files));
-    }
-  });
-}
 
-// 处理图片上传
-async function handleImageUpload(files) {
-  const container = document.getElementById('uploaded-images');
-  
-  for (const file of files) {
+    if (!content) {
+      window.blogApp.showNotification('请输入文章内容', 'error');
+      return;
+    }
+
     try {
-      // 创建上传项
-      const uploadItem = createUploadItem(file);
-      container.appendChild(uploadItem);
-      
-      // 上传文件
-      const result = await window.apiClient.files.upload(file);
-      
-      // 更新上传项状态
-      updateUploadItem(uploadItem, result, file.name);
-      
-    } catch (error) {
-      console.error('图片上传失败:', error);
-      window.blogApp.showNotification(`图片 ${file.name} 上传失败`, 'error');
-    }
-  }
-}
+      // 显示保存状态
+      const saveBtn = document.getElementById('publish-btn');
+      if (!saveBtn) {
+        console.error('找不到发布按钮');
+        return;
+      }
 
-// 创建上传项
-function createUploadItem(file) {
-  const div = document.createElement('div');
-  div.className = 'upload-item mb-2 p-2 border rounded';
-  div.innerHTML = `
-    <div class="d-flex align-items-center">
-      <div class="upload-preview me-2">
-        <i class="fas fa-image fa-2x text-muted"></i>
-      </div>
-      <div class="flex-grow-1">
-        <div class="upload-name small fw-bold">${escapeHtml(file.name)}</div>
-        <div class="upload-status small text-muted">上传中...</div>
-      </div>
-      <div class="upload-progress">
-        <div class="spinner-border spinner-border-sm" role="status"></div>
-      </div>
-    </div>
-  `;
-  
-  return div;
-}
+      const originalText = saveBtn.textContent;
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>发布中...';
 
-// 更新上传项状态
-function updateUploadItem(uploadItem, result, filename) {
-  const statusEl = uploadItem.querySelector('.upload-status');
-  const progressEl = uploadItem.querySelector('.upload-progress');
-  
-  if (result && result.id) {
-    statusEl.textContent = '上传成功';
-    statusEl.className = 'small text-success';
-    
-    // 创建插入按钮
-    progressEl.innerHTML = `
-      <button class="btn btn-outline-primary btn-sm" onclick="insertImageMarkdown('${result.id}', '${filename}')">
-        <i class="fas fa-plus"></i>
-      </button>
-    `;
-  } else {
-    statusEl.textContent = '上传失败';
-    statusEl.className = 'small text-danger';
-    progressEl.innerHTML = `<i class="fas fa-times text-danger"></i>`;
-  }
-}
+      // 准备文章数据
+      const articleData = {
+        title,
+        description,
+        content,
+        category,
+        tags: tags.split(',').map(t => t.trim()).filter(t => t),
+        status
+      };
 
-// 插入图片 Markdown 语法
-function insertImageMarkdown(fileId, filename) {
-  const editor = document.getElementById('markdown-editor');
-  const imageUrl = `/api/files/download/${fileId}`;
-  const markdown = `![${filename}](${imageUrl})`;
-  
-  const start = editor.selectionStart;
-  const end = editor.selectionEnd;
-  const value = editor.value;
-  
-  editor.value = value.substring(0, start) + markdown + value.substring(end);
-  editor.selectionStart = editor.selectionEnd = start + markdown.length;
-  editor.focus();
-  
-  markDirty();
-  window.blogApp.showNotification('图片链接已插入', 'success');
-}
+      let result;
+      if (window.editorState.isEditing) {
+        result = await window.apiClient.articles.update(window.editorState.articleId, articleData);
+      } else {
+        result = await window.apiClient.articles.create(articleData);
+        window.editorState.isEditing = true;
+        window.editorState.articleId = result.id;
+      }
 
-// 保存文章
-async function saveArticle(status = 'draft') {
-  const title = document.getElementById('article-title').value.trim();
-  const description = document.getElementById('article-description').value.trim();
-  const content = document.getElementById('markdown-editor').value;
-  const category = document.getElementById('article-category').value;
-  const tags = document.getElementById('article-tags').value;
-  
-  if (!title) {
-    window.blogApp.showNotification('请输入文章标题', 'error');
-    return;
-  }
-  
-  if (!content) {
-    window.blogApp.showNotification('请输入文章内容', 'error');
-    return;
-  }
-  
-  try {
-    // 显示保存状态
-    const saveBtn = status === 'draft' ? 
-      document.getElementById('save-draft-btn') : 
-      document.getElementById('publish-btn');
-    
-    const originalText = saveBtn.textContent;
-    saveBtn.disabled = true;
-    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>保存中...';
-    
-    // 准备文章数据
-    const articleData = {
-      title,
-      description,
-      content,
-      category,
-      tags: tags.split(',').map(t => t.trim()).filter(t => t),
-      status
-    };
-    
-    let result;
-    if (editorState.isEditing) {
-      result = await window.apiClient.articles.update(editorState.articleId, articleData);
-    } else {
-      result = await window.apiClient.articles.create(articleData);
-      editorState.isEditing = true;
-      editorState.articleId = result.id;
-    }
-    
-    editorState.isDirty = false;
-    
-    // 恢复按钮状态
-    saveBtn.disabled = false;
-    saveBtn.innerHTML = originalText;
-    
-    const message = status === 'published' ? '文章发布成功' : '草稿保存成功';
-    window.blogApp.showNotification(message, 'success');
-    
-    // 如果是发布，跳转到列表页
-    if (status === 'published') {
+      window.editorState.isDirty = false;
+
+      // 恢复按钮状态
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = originalText;
+
+      window.blogApp.showNotification('文章发布成功', 'success');
+
+      // 跳转到列表页
       setTimeout(() => {
         window.router.push('/admin/articles');
       }, 1000);
+
+    } catch (error) {
+      console.error('保存失败:', error);
+      window.blogApp.showNotification('保存失败: ' + error.message, 'error');
+
+      // 恢复按钮状态
+      const saveBtn = document.getElementById('publish-btn');
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>发布文章';
+      }
     }
-    
-  } catch (error) {
-    console.error('保存失败:', error);
-    window.blogApp.showNotification('保存失败: ' + error.message, 'error');
-    
-    // 恢复按钮状态
-    const saveBtn = status === 'draft' ? 
-      document.getElementById('save-draft-btn') : 
-      document.getElementById('publish-btn');
-    saveBtn.disabled = false;
-    saveBtn.innerHTML = saveBtn === document.getElementById('save-draft-btn') ?
-      '<i class="fas fa-save me-2"></i>保存草稿' :
-      '<i class="fas fa-paper-plane me-2"></i>发布文章';
   }
-}
 
-// 加载文章内容（编辑模式）
-async function loadArticleForEdit(articleId) {
-  try {
-    const article = await window.apiClient.articles.getDetail(articleId, 'latest');
-    
-    // 填充表单
-    document.getElementById('article-title').value = article.title || '';
-    document.getElementById('article-description').value = article.description || '';
-    document.getElementById('article-category').value = article.category || '';
-    document.getElementById('article-tags').value = (article.tags || []).join(', ');
-    document.getElementById('markdown-editor').value = article.content || '';
-    
-    // 设置状态
-    const statusRadio = document.querySelector(`input[name="article-status"][value="${article.status}"]`);
-    if (statusRadio) {
-      statusRadio.checked = true;
+  // 加载文章内容（编辑模式）
+  async function loadArticleForEdit(articleId) {
+    try {
+      const article = await window.apiClient.articles.getDetail(articleId, 'latest');
+
+      // 填充表单
+      document.getElementById('article-title').value = article.title || '';
+      document.getElementById('article-description').value = article.description || '';
+      document.getElementById('article-category').value = article.category || '';
+      document.getElementById('article-tags').value = (article.tags || []).join(', ');
+      document.getElementById('markdown-editor').value = article.content || '';
+
+      // 设置状态
+      const statusRadio = document.querySelector(`input[name="article-status"][value="${article.status}"]`);
+      if (statusRadio) {
+        statusRadio.checked = true;
+      }
+
+      window.editorState.isDirty = false;
+
+    } catch (error) {
+      console.error('加载文章失败:', error);
+      window.blogApp.showNotification('加载文章失败: ' + error.message, 'error');
     }
-    
-    editorState.isDirty = false;
-    
-  } catch (error) {
-    console.error('加载文章失败:', error);
-    window.blogApp.showNotification('加载文章失败: ' + error.message, 'error');
   }
-}
 
-// 自动保存
-function startAutoSave() {
-  editorState.autoSaveTimer = setInterval(() => {
-    if (editorState.isDirty && editorState.isEditing) {
-      console.log('自动保存草稿...');
-      // 这里可以实现自动保存逻辑
+  // 自动保存
+  function startAutoSave() {
+    window.editorState.autoSaveTimer = setInterval(() => {
+      if (window.editorState.isDirty && window.editorState.isEditing) {
+        console.log('自动保存草稿...');
+        // 这里可以实现自动保存逻辑
+      }
+    }, 30000); // 30秒自动保存一次
+  }
+
+  // 页面离开前检查
+  window.addEventListener('beforeunload', function (e) {
+    if (window.editorState.isDirty) {
+      e.preventDefault();
+      e.returnValue = '您有未保存的更改，确定要离开吗？';
+      return e.returnValue;
     }
-  }, 30000); // 30秒自动保存一次
-}
+  });
 
-// 页面离开前检查
-window.addEventListener('beforeunload', function(e) {
-  if (editorState.isDirty) {
-    e.preventDefault();
-    e.returnValue = '您有未保存的更改，确定要离开吗？';
-    return e.returnValue;
+  // 手动刷新预览
+  function manualPreview() {
+    // console.log('手动刷新预览');
+    const editor = document.getElementById('markdown-editor');
+    const previewDiv = document.getElementById('preview-content');
+
+    if (!editor || !previewDiv) {
+      console.error('找不到编辑器或预览元素');
+      return;
+    }
+
+    // 确保预览状态已初始化
+    if (!window.previewState) {
+      window.previewState = {
+        autoRefresh: false,
+        refreshInterval: null,
+        lastContent: ''
+      };
+      console.log('在手动预览中初始化预览状态');
+    }
+
+    const content = editor.value;
+    // console.log('当前内容长度:', content.length);
+
+    if (content.trim()) {
+      if (window.marked) {
+        try {
+          previewDiv.innerHTML = window.marked.parse(content);
+          // console.log('✅ 使用marked.js渲染成功');
+        } catch (error) {
+          console.error('marked.js渲染失败:', error);
+          previewDiv.innerHTML = `<pre style="white-space: pre-wrap; font-family: inherit;">${escapeHtml(content)}</pre>`;
+        }
+      } else {
+        previewDiv.innerHTML = `<pre style="white-space: pre-wrap; font-family: inherit;">${escapeHtml(content)}</pre>`;
+        console.log('✅ 使用纯文本渲染');
+      }
+    } else {
+      previewDiv.innerHTML = `
+        <p class="text-muted text-center py-5">
+          <i class="fas fa-eye-slash fa-2x mb-2"></i><br>
+          开始输入内容查看预览
+        </p>
+      `;
+      // console.log('✅ 显示空内容提示');
+    }
+
+    // 更新最后内容
+    window.previewState.lastContent = content;
   }
-});
 
-// 工具函数
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
+  // 初始化滚动同步
+  function initScrollSync() {
+    const editor = document.getElementById('markdown-editor');
+    const preview = document.getElementById('preview-content');
+
+    if (!editor || !preview) {
+      return false;
+    }
+
+    // 清除之前的事件监听器（如果存在）
+    if (window.scrollSyncHandlers) {
+      editor.removeEventListener('scroll', window.scrollSyncHandlers.editor);
+      preview.removeEventListener('scroll', window.scrollSyncHandlers.preview);
+    }
+
+    // 防抖变量，避免循环触发
+    let isEditorScrolling = false;
+    let isPreviewScrolling = false;
+
+    // 编辑器滚动时同步预览
+    const editorScrollHandler = function (event) {
+      // 检查是否启用滚动同步
+      if (!window.previewState || !window.previewState.scrollSyncEnabled) {
+        return;
+      }
+
+      if (isPreviewScrolling) {
+        return;
+      }
+
+      isEditorScrolling = true;
+
+      // 计算编辑器滚动比例
+      const scrollTop = editor.scrollTop;
+      const scrollHeight = editor.scrollHeight - editor.clientHeight;
+      const scrollRatio = scrollHeight > 0 ? scrollTop / scrollHeight : 0;
+
+      // 同步到预览区域
+      const previewScrollHeight = preview.scrollHeight - preview.clientHeight;
+      const previewScrollTop = previewScrollHeight * scrollRatio;
+
+      preview.scrollTop = previewScrollTop;
+
+      // 延迟重置标志
+      setTimeout(() => {
+        isEditorScrolling = false;
+      }, 50);
+    };
+
+    editor.addEventListener('scroll', editorScrollHandler);
+
+    // 预览区域滚动时同步编辑器
+    const previewScrollHandler = function (event) {
+      // 检查是否启用滚动同步
+      if (!window.previewState || !window.previewState.scrollSyncEnabled) {
+        return;
+      }
+
+      if (isEditorScrolling) {
+        return;
+      }
+
+      isPreviewScrolling = true;
+
+      // 计算预览区域滚动比例
+      const scrollTop = preview.scrollTop;
+      const scrollHeight = preview.scrollHeight - preview.clientHeight;
+      const scrollRatio = scrollHeight > 0 ? scrollTop / scrollHeight : 0;
+
+      // 同步到编辑器
+      const editorScrollHeight = editor.scrollHeight - editor.clientHeight;
+      const editorScrollTop = editorScrollHeight * scrollRatio;
+
+      editor.scrollTop = editorScrollTop;
+
+      // 延迟重置标志
+      setTimeout(() => {
+        isPreviewScrolling = false;
+      }, 50);
+    };
+
+    preview.addEventListener('scroll', previewScrollHandler);
+
+    // 保存处理器引用以便后续移除
+    window.scrollSyncHandlers = {
+      editor: editorScrollHandler,
+      preview: previewScrollHandler
+    };
+
+    return true;
+  }
+
+  // 初始化文件拖拽和粘贴上传功能
+  function initFileUpload() {
+    // console.log('=== 开始初始化文件上传功能 ===');
+
+    const editor = document.getElementById('markdown-editor');
+    const editorContainer = document.getElementById('editor-pane');
+
+    // console.log('查找元素结果:');
+    // console.log('- editor:', editor);
+    // console.log('- editorContainer:', editorContainer);
+
+    if (!editor) {
+      console.error('❌ 找不到 markdown-editor 元素');
+      return;
+    }
+
+    if (!editorContainer) {
+      console.error('❌ 找不到 editor-pane 容器');
+      return;
+    }
+
+    // console.log('✅ 元素找到，开始绑定事件');
+
+    // 添加测试点击事件来验证元素可访问性
+    editorContainer.addEventListener('click', function () {
+      // console.log('🎯 编辑器容器被点击了！');
+    });
+
+    editor.addEventListener('focus', function () {
+      // console.log('🎯 编辑器获得焦点！');
+    });
+
+    // 添加全局拖拽测试
+    document.addEventListener('dragover', function (e) {
+      // console.log('🌍 全局拖拽悬停:', e.target);
+    });
+
+    document.addEventListener('drop', function (e) {
+      // console.log('🌍 全局拖拽放置:', e.target);
+    });
+
+    // 在编辑器容器上监听拖拽事件
+    editorContainer.addEventListener('dragover', function (e) {
+      // console.log('拖拽悬停事件触发');
+      e.preventDefault();
+      e.stopPropagation();
+      editor.classList.add('drag-over');
+      editorContainer.classList.add('drag-over');
+    });
+
+    editorContainer.addEventListener('dragleave', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      // 只有当离开整个容器时才移除样式
+      if (!editorContainer.contains(e.relatedTarget)) {
+        editor.classList.remove('drag-over');
+        editorContainer.classList.remove('drag-over');
+      }
+    });
+
+    // 处理文件拖拽放置
+    editorContainer.addEventListener('drop', function (e) {
+      console.log('拖拽放置事件触发', e);
+      e.preventDefault();
+      e.stopPropagation();
+      editor.classList.remove('drag-over');
+      editorContainer.classList.remove('drag-over');
+
+      const files = Array.from(e.dataTransfer.files);
+      // console.log('拖拽的文件:', files);
+      if (files.length > 0) {
+        const cursorPosition = editor.selectionStart;
+        console.log('光标位置:', cursorPosition);
+        uploadFiles(files, cursorPosition);
+      }
+    });
+
+    // 处理粘贴文件
+    editor.addEventListener('paste', function (e) {
+      console.log('粘贴事件触发', e);
+      const items = Array.from(e.clipboardData.items);
+      console.log('剪贴板项目:', items);
+
+      const files = items
+        .filter(item => item.kind === 'file')
+        .map(item => item.getAsFile())
+        .filter(file => file !== null);
+
+      console.log('粘贴的文件:', files);
+      if (files.length > 0) {
+        e.preventDefault();
+        const cursorPosition = editor.selectionStart;
+        console.log('光标位置:', cursorPosition);
+        uploadFiles(files, cursorPosition);
+      }
+    });
+  }
+
+  // 上传文件并插入Markdown链接
+  async function uploadFiles(files, cursorPosition) {
+    const editor = document.getElementById('markdown-editor');
+    if (!editor) return;
+
+    for (const file of files) {
+      // 为每个文件生成唯一的占位符
+      const timestamp = Date.now() + Math.random();
+      const placeholder = `![上传中...](uploading-${timestamp})`;
+
+      try {
+        // 在光标位置插入上传中的占位符
+        insertTextAtCursor(editor, placeholder, cursorPosition);
+
+        // 上传文件
+        const fileId = await uploadSingleFile(file);
+
+        // 替换占位符为实际的Markdown链接
+        const filename = file.name;
+        const markdownLink = `![${filename}](/api/files/download/${fileId})`;
+
+        // 替换占位符
+        const currentValue = editor.value;
+        editor.value = currentValue.replace(placeholder, markdownLink);
+
+        // 触发预览更新
+        if (window.previewState && window.previewState.autoRefresh) {
+          manualPreview();
+        }
+
+        // 显示成功提示
+        showNotification(`文件上传成功: ${filename}`, 'success');
+
+      } catch (error) {
+        console.error('文件上传失败:', error);
+
+        // 替换占位符为错误信息
+        const currentValue = editor.value;
+        editor.value = currentValue.replace(placeholder, `![上传失败: ${file.name}]()`);
+
+        // 显示错误提示
+        showNotification('文件上传失败: ' + file.name, 'error');
+      }
+    }
+  }
+
+  // 上传单个文件
+  async function uploadSingleFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch('/api/files/upload', {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!response.ok) {
+      throw new Error(`上传失败: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    console.log('上传响应:', result);
+
+    // API返回格式为 {code: 200, msg: "文件上传成功", data: {file_id: xxx, filename: "xxx", ...}}
+    if (result.code === 200 && result.data && result.data.file_id) {
+      return result.data.file_id;
+    } else {
+      throw new Error('上传响应格式错误: ' + JSON.stringify(result));
+    }
+  }
+
+  // 在光标位置插入文本
+  function insertTextAtCursor(textarea, text, position) {
+    const before = textarea.value.substring(0, position);
+    const after = textarea.value.substring(position);
+    textarea.value = before + text + after;
+
+    // 设置光标位置到插入文本的末尾
+    const newPosition = position + text.length;
+    textarea.setSelectionRange(newPosition, newPosition);
+    textarea.focus();
+  }
+
+  // 显示通知
+  function showNotification(message, type = 'info') {
+    // 创建通知元素
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    document.body.appendChild(notification);
+
+    // 3秒后自动移除
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 3000);
+  }
+
+  // 切换滚动同步
+  function toggleScrollSync() {
+    const btn = document.getElementById('scroll-sync-btn');
+
+    // 确保预览状态已初始化
+    if (!window.previewState) {
+      window.previewState = {
+        autoRefresh: true,  // 保持自动预览开启
+        refreshInterval: null,
+        lastContent: '',
+        scrollSyncEnabled: false  // 默认关闭，用户点击时开启
+      };
+    }
+
+    if (window.previewState.scrollSyncEnabled) {
+      // 关闭滚动同步
+      window.previewState.scrollSyncEnabled = false;
+
+      // 移除滚动事件监听器
+      if (window.scrollSyncHandlers) {
+        const editor = document.getElementById('markdown-editor');
+        const preview = document.getElementById('preview-content');
+        if (editor && preview) {
+          editor.removeEventListener('scroll', window.scrollSyncHandlers.editor);
+          preview.removeEventListener('scroll', window.scrollSyncHandlers.preview);
+        }
+        window.scrollSyncHandlers = null;
+      }
+
+      btn.className = 'btn btn-sm btn-outline-info';
+      btn.innerHTML = '<i class="fas fa-arrows-alt-v"></i> 滚动同步';
+    } else {
+      // 开启滚动同步
+      const success = initScrollSync();
+
+      if (success) {
+        window.previewState.scrollSyncEnabled = true;
+        btn.className = 'btn btn-sm btn-info';
+        btn.innerHTML = '<i class="fas fa-arrows-alt-v"></i> 滚动同步';
+      } else {
+        // 初始化失败，保持关闭状态
+        window.previewState.scrollSyncEnabled = false;
+        btn.className = 'btn btn-sm btn-outline-info';
+        btn.innerHTML = '<i class="fas fa-arrows-alt-v"></i> 滚动同步';
+      }
+    }
+  }
+
+  // 切换自动预览
+  function toggleAutoPreview() {
+    const btn = document.getElementById('auto-preview-btn');
+
+    // 确保预览状态已初始化
+    if (!window.previewState) {
+      window.previewState = {
+        autoRefresh: false,
+        refreshInterval: null,
+        lastContent: ''
+      };
+      console.log('初始化预览状态');
+    }
+
+    const state = window.previewState;
+
+    if (state.autoRefresh) {
+      // 关闭自动预览
+      state.autoRefresh = false;
+      if (state.refreshInterval) {
+        clearInterval(state.refreshInterval);
+        state.refreshInterval = null;
+      }
+      btn.innerHTML = '<i class="fas fa-play"></i> 自动预览';
+      btn.className = 'btn btn-sm btn-outline-primary';
+    } else {
+      // 开启自动预览
+      state.autoRefresh = true;
+
+      // 设置定时器（每2秒检查一次）
+      state.refreshInterval = setInterval(() => {
+        const editor = document.getElementById('markdown-editor');
+        if (editor && editor.value !== state.lastContent) {
+          console.log('🔄 定时器触发预览更新');
+          manualPreview();
+        }
+      }, 2000);
+
+      btn.innerHTML = '<i class="fas fa-pause"></i> 自动预览';
+      btn.className = 'btn btn-sm btn-success';
+
+      // 立即刷新一次
+      manualPreview();
+    }
+  }
+
+  // 工具函数
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
 </script>
 
 <style>
-.editor-container {
-  min-height: 500px;
-  border: 1px solid var(--color-gray-4);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-}
+  .editor-container-split {
+    display: flex;
+    min-height: 600px;
+    border: 1px solid var(--color-gray-4);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
 
-.editor-pane,
-.preview-pane {
-  height: 100%;
-  min-height: 500px;
-}
+  .editor-pane-split {
+    flex: 1;
+    border-right: 1px solid var(--color-gray-4);
+  }
 
-.preview-content {
-  padding: 20px;
-  height: 100%;
-  overflow-y: auto;
-}
+  .preview-pane-split {
+    flex: 1;
+    background-color: var(--bg-primary);
+  }
 
-.upload-area {
-  border: 2px dashed var(--color-gray-4);
-  border-radius: var(--radius-md);
-  transition: all var(--transition-fast) var(--ease-out);
-  cursor: pointer;
-}
+  .editor-textarea-split {
+    width: 100% !important;
+    height: 600px !important;
+    border: none !important;
+    border-radius: 0 !important;
+    resize: none !important;
+    outline: none !important;
+    font-family: 'Monaco', 'Consolas', 'Courier New', monospace !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+    padding: 20px !important;
+  }
 
-.upload-area:hover,
-.upload-area.dragover {
-  border-color: var(--color-primary);
-  background-color: var(--color-gray-6);
-}
+  .preview-content {
+    padding: 20px;
+    height: 600px;
+    overflow-y: auto;
+  }
 
-.upload-item {
-  border: 1px solid var(--color-gray-5) !important;
-  background-color: var(--bg-primary);
-}
+  .markdown-help code {
+    background-color: var(--color-gray-6);
+    padding: 2px 4px;
+    border-radius: var(--radius-sm);
+    font-size: 0.85em;
+  }
 
-.markdown-help code {
-  background-color: var(--color-gray-6);
-  padding: 2px 4px;
-  border-radius: var(--radius-sm);
-  font-size: 0.85em;
-}
+  /* 文件拖拽样式 */
+  .editor-textarea-split.drag-over {
+    border: 2px dashed #007bff !important;
+    background-color: rgba(0, 123, 255, 0.1) !important;
+  }
 
-/* 全屏模式样式 */
-.editor-container:fullscreen {
-  background: var(--bg-primary);
-  padding: 20px;
-}
+  .editor-pane-split {
+    position: relative;
+  }
 
-.editor-container:fullscreen .editor-pane,
-.editor-container:fullscreen .preview-pane {
-  min-height: calc(100vh - 100px);
-}
+  .editor-pane-split.drag-over::before {
+    content: "拖拽文件到此处上传";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 123, 255, 0.9);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    z-index: 10;
+    pointer-events: none;
+    font-size: 14px;
+  }
+
+  /* 上传通知样式 */
+  .upload-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    min-width: 300px;
+  }
 </style>
