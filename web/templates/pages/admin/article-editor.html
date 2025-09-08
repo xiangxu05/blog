@@ -406,23 +406,39 @@
       saveBtn.disabled = true;
       saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>发布中...';
 
-      // 准备文章数据
+      // 步骤1: 创建MD文件并上传
+      console.log('开始创建并上传MD文件...');
+      const filename = `${title}.md`;
+      const fileId = await uploadMarkdownFile(filename, content);
+      console.log('MD文件上传成功，文件ID:', fileId);
+
+      // 步骤2: 创建文章记录
+      console.log('开始创建文章记录...');
       const articleData = {
         title,
         description,
-        content,
         category,
-        tags: tags.split(',').map(t => t.trim()).filter(t => t),
-        status
+        tags,
+        store_id: fileId
       };
 
-      let result;
-      if (window.editorState.isEditing) {
-        result = await window.apiClient.articles.update(window.editorState.articleId, articleData);
-      } else {
-        result = await window.apiClient.articles.create(articleData);
-        window.editorState.isEditing = true;
-        window.editorState.articleId = result.id;
+      const response = await fetch('/api/articles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(articleData)
+      });
+
+      if (!response.ok) {
+        throw new Error(`创建文章失败: ${response.status} ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('文章创建响应:', result);
+
+      if (result.code !== 200) {
+        throw new Error(result.msg || '创建文章失败');
       }
 
       window.editorState.isDirty = false;
@@ -449,6 +465,40 @@
         saveBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>发布文章';
       }
     }
+  }
+
+  // 上传Markdown文件
+  async function uploadMarkdownFile(filename, content) {
+    // 创建文件对象
+    const blob = new Blob([content], { type: 'text/markdown' });
+    const file = new File([blob], filename, { type: 'text/markdown' });
+
+    // 创建FormData
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // 上传文件
+    const response = await fetch('/api/files/upload', {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!response.ok) {
+      throw new Error(`文件上传失败: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    console.log('文件上传响应:', result);
+
+    if (result.code !== 200) {
+      throw new Error(result.msg || '文件上传失败');
+    }
+
+    if (!result.data || !result.data.file_id) {
+      throw new Error('文件上传响应格式错误');
+    }
+
+    return result.data.file_id;
   }
 
   // 加载文章内容（编辑模式）
