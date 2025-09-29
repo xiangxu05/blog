@@ -121,9 +121,11 @@ func (s *Server) setupRouter() {
 	// 文章模块
 	articles := api.Group("/articles")
 	// 公开访问的文章接口
-	articles.GET("/:id/:version", s.monitor.IncViews(), endpoint.GetArticleHandler) // 获取文章详情
-	articles.GET("", endpoint.GetArticleListHandler)                                // 获取文章列表
-	articles.GET("/hot", endpoint.GetHotArticleListHandler)                         // 获取热门文章
+	articles.GET("/:id/:version", s.monitor.IncViews(), endpoint.GetArticleHandler)     // 获取文章详情
+	articles.GET("/:id", s.monitor.IncViews(), endpoint.GetLatestArticleHandler)        // 获取最新文章详情
+	articles.GET("/:id/latest", s.monitor.IncViews(), endpoint.GetLatestArticleHandler) // 获取最新文章详情
+	articles.GET("", endpoint.GetArticleListHandler)                                    // 获取文章列表
+	articles.GET("/hot", endpoint.GetHotArticleListHandler)                             // 获取热门文章
 	// articles.GET("/search", endpoint.SearchArticlesHandler) // 搜索文章
 	// articles.GET("/popular", endpoint.GetPopularArticlesHandler)                  // 获取热门文章
 	// articles.GET("/user/:user_id", endpoint.GetUserArticlesHandler)               // 获取用户文章

@@ -12,7 +12,7 @@ import (
 
 var log = logger.GetLogger()
 
-// CreateArticleHandler 创建文章
+// GetArticleHandler 获取文章
 func GetArticleHandler(c *gin.Context) {
 	articleStr := c.Param("id")
 	articleId, err := strconv.Atoi(articleStr)
@@ -29,6 +29,24 @@ func GetArticleHandler(c *gin.Context) {
 		return
 	}
 	articleVersion, err := service.GetArticle(c, int32(articleId), version)
+	if err != nil {
+		log.Errorf("获取文章失败: %v", err)
+		message.SendMsg(c, http.StatusInternalServerError, "文章不存在", nil)
+		return
+	}
+	message.SendMsg(c, http.StatusOK, "获取成功", articleVersion)
+}
+
+// GetLatestArticleHandler 获取最新文章
+func GetLatestArticleHandler(c *gin.Context) {
+	articleStr := c.Param("id")
+	articleId, err := strconv.Atoi(articleStr)
+	if err != nil {
+		log.Errorf("参数绑定失败: %v", err)
+		message.SendMsg(c, http.StatusBadRequest, "参数绑定失败", nil)
+		return
+	}
+	articleVersion, err := service.GetLatestArticle(c, int32(articleId))
 	if err != nil {
 		log.Errorf("获取文章失败: %v", err)
 		message.SendMsg(c, http.StatusInternalServerError, "文章不存在", nil)

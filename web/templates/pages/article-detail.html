@@ -313,10 +313,16 @@
     // 安全获取路由参数
     const params = routeData && routeData.params ? routeData.params : {};
     const articleId = params.id;
-    const version = params.version;
+    let version = params.version;
 
-    if (!articleId || !version) {
-      console.error('路由参数缺失:', { articleId, version, routeData });
+    // 如果没有版本参数，默认使用 'latest'
+    if (!version) {
+      version = 'latest';
+      console.log('未提供版本参数，使用默认值: latest');
+    }
+
+    if (!articleId) {
+      console.error('文章ID缺失:', { articleId, version, routeData });
       showArticleError('无效的文章链接');
       return;
     }
@@ -351,8 +357,31 @@
       showArticleLoading();
 
       // 第一步：获取文章元数据
-      console.log('第一步：获取文章元数据');
-      window.articleData = await window.apiClient.articles.getDetail(id, version);
+      console.log('第一步：获取文章元数据', { id, version });
+
+      const response = await fetch(`/api/articles/${id}/${version}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error(`获取文章详情失败: ${response.status} ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('文章详情响应:', result);
+
+      if (result.code !== 200) {
+        throw new Error(result.msg || '获取文章详情失败');
+      }
+
+      window.articleData = result.data;
+      if (!window.articleData) {
+        throw new Error('文章数据为空');
+      }
 
       // 显示文章基本信息
       displayArticleInfo(window.articleData);
@@ -384,8 +413,19 @@
       // 显示内容加载状态
       showContentLoading();
 
-      console.log('第二步：根据store_id下载文章内容');
-      window.articleContent = await window.apiClient.files.download(window.articleData.store_id);
+      console.log('第二步：根据store_id下载文章内容', window.articleData.store_id);
+
+      const response = await fetch(`/api/files/download/${window.articleData.store_id}`, {
+        method: 'GET',
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error(`下载文章内容失败: ${response.status} ${response.statusText}`);
+      }
+
+      window.articleContent = await response.text();
+      console.log('文章内容下载成功，长度:', window.articleContent.length);
 
       // 渲染Markdown内容
       await renderMarkdownContent(window.articleContent);

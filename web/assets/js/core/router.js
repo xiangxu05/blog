@@ -55,6 +55,12 @@ class Router {
         title: '文章列表',
         requireAuth: false
       },
+      '/articles/:id': {
+        template: 'article-detail.html',
+        title: '文章详情',
+        requireAuth: false,
+        redirect: true // 标记为重定向路由
+      },
       '/articles/:id/:version': {
         template: 'article-detail.html',
         title: '文章详情',
@@ -167,10 +173,18 @@ class Router {
       // 显示加载状态
       window.appState.setLoading(true);
 
+      // 检查是否需要重定向（处理 /articles/:id -> /articles/:id/latest）
+      if (config.redirect && ctx.pathname.match(/^\/articles\/\d+$/)) {
+        const articleId = ctx.params.id;
+        console.log(`重定向 /articles/${articleId} -> /articles/${articleId}/latest`);
+        page.redirect(`/articles/${articleId}/latest`);
+        return;
+      }
+
       // 更新当前路由状态
       this.currentRoute = {
         path: ctx.pathname,
-        params: ctx ? ctx.params : {},
+        params: ctx && ctx.params ? ctx.params : {},
         query: this.parseQuery(ctx.querystring || ''),
         config
       };
@@ -264,14 +278,15 @@ class Router {
     // 检查是否存在页面初始化函数
     if (typeof window[initFunction] === 'function') {
       try {
-        // 确保 routeData 有正确的结构
+        // 确保 routeData 有正确的结构，使用当前路由状态
         const safeRouteData = {
-          path: routeData?.path || '',
-          params: routeData?.params || {},
-          query: routeData?.query || {},
-          config: routeData?.config || {}
+          path: this.currentRoute?.path || routeData?.path || '',
+          params: this.currentRoute?.params || routeData?.params || {},
+          query: this.currentRoute?.query || routeData?.query || {},
+          config: this.currentRoute?.config || routeData?.config || {}
         };
         
+        console.log(`初始化页面 ${initFunction}，路由数据:`, safeRouteData);
         await window[initFunction](safeRouteData);
       } catch (error) {
         console.error(`页面初始化失败 (${initFunction}):`, error);

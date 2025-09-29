@@ -404,41 +404,15 @@
 
       const originalText = saveBtn.textContent;
       saveBtn.disabled = true;
-      saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>发布中...';
 
-      // 步骤1: 创建MD文件并上传
-      console.log('开始创建并上传MD文件...');
-      const filename = `${title}.md`;
-      const fileId = await uploadMarkdownFile(filename, content);
-      console.log('MD文件上传成功，文件ID:', fileId);
-
-      // 步骤2: 创建文章记录
-      console.log('开始创建文章记录...');
-      const articleData = {
-        title,
-        description,
-        category,
-        tags,
-        store_id: fileId
-      };
-
-      const response = await fetch('/api/articles', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(articleData)
-      });
-
-      if (!response.ok) {
-        throw new Error(`创建文章失败: ${response.status} ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      console.log('文章创建响应:', result);
-
-      if (result.code !== 200) {
-        throw new Error(result.msg || '创建文章失败');
+      if (window.editorState.isEditing) {
+        // 编辑模式：更新现有文章
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>更新中...';
+        await updateExistingArticle(title, description, content, category, tags);
+      } else {
+        // 新建模式：创建新文章
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>发布中...';
+        await createNewArticle(title, description, content, category, tags);
       }
 
       window.editorState.isDirty = false;
@@ -447,7 +421,8 @@
       saveBtn.disabled = false;
       saveBtn.innerHTML = originalText;
 
-      window.blogApp.showNotification('文章发布成功', 'success');
+      const message = window.editorState.isEditing ? '文章更新成功' : '文章发布成功';
+      window.blogApp.showNotification(message, 'success');
 
       // 跳转到列表页
       setTimeout(() => {
@@ -462,8 +437,85 @@
       const saveBtn = document.getElementById('publish-btn');
       if (saveBtn) {
         saveBtn.disabled = false;
-        saveBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>发布文章';
+        const btnText = window.editorState.isEditing ? '更新文章' : '发布文章';
+        saveBtn.innerHTML = `<i class="fas fa-paper-plane me-2"></i>${btnText}`;
       }
+    }
+  }
+
+  // 创建新文章
+  async function createNewArticle(title, description, content, category, tags) {
+    // 步骤1: 创建MD文件并上传
+    console.log('开始创建并上传MD文件...');
+    const filename = `${title}.md`;
+    const fileId = await uploadMarkdownFile(filename, content);
+    console.log('MD文件上传成功，文件ID:', fileId);
+
+    // 步骤2: 创建文章记录
+    console.log('开始创建文章记录...');
+    const articleData = {
+      title,
+      description,
+      category,
+      tags,
+      store_id: fileId
+    };
+
+    const response = await fetch('/api/articles', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(articleData)
+    });
+
+    if (!response.ok) {
+      throw new Error(`创建文章失败: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    console.log('文章创建响应:', result);
+
+    if (result.code !== 200) {
+      throw new Error(result.msg || '创建文章失败');
+    }
+  }
+
+  // 更新现有文章
+  async function updateExistingArticle(title, description, content, category, tags) {
+    // 步骤1: 更新MD文件内容
+    console.log('开始更新MD文件内容...');
+    const filename = `${title}.md`;
+    const fileId = await uploadMarkdownFile(filename, content);
+    console.log('MD文件更新成功，文件ID:', fileId);
+
+    // 步骤2: 更新文章记录
+    console.log('开始更新文章记录...');
+    const articleData = {
+      title,
+      description,
+      category,
+      tags,
+      store_id: fileId
+    };
+
+    const response = await fetch(`/api/articles/${window.editorState.articleId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(articleData)
+    });
+
+    if (!response.ok) {
+      throw new Error(`更新文章失败: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    console.log('文章更新响应:', result);
+
+    if (result.code !== 200) {
+      throw new Error(result.msg || '更新文章失败');
     }
   }
 
@@ -504,26 +556,87 @@
   // 加载文章内容（编辑模式）
   async function loadArticleForEdit(articleId) {
     try {
-      const article = await window.apiClient.articles.getDetail(articleId, 'latest');
+      console.log('开始加载文章进行编辑，ID:', articleId);
 
-      // 填充表单
+      // 步骤1: 获取文章详情
+      const response = await fetch(`/api/articles/${articleId}/latest`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error(`获取文章详情失败: ${response.status} ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('文章详情响应:', result);
+
+      if (result.code !== 200) {
+        throw new Error(result.msg || '获取文章详情失败');
+      }
+
+      const article = result.data;
+      if (!article) {
+        throw new Error('文章数据为空');
+      }
+
+      // 步骤2: 下载文章内容
+      let content = '';
+      if (article.store_id) {
+        console.log('开始下载文章内容，store_id:', article.store_id);
+        content = await downloadArticleContent(article.store_id);
+      }
+
+      // 步骤3: 填充表单
       document.getElementById('article-title').value = article.title || '';
       document.getElementById('article-description').value = article.description || '';
       document.getElementById('article-category').value = article.category || '';
       document.getElementById('article-tags').value = (article.tags || []).join(', ');
-      document.getElementById('markdown-editor').value = article.content || '';
+      document.getElementById('markdown-editor').value = content;
 
-      // 设置状态
-      const statusRadio = document.querySelector(`input[name="article-status"][value="${article.status}"]`);
-      if (statusRadio) {
-        statusRadio.checked = true;
+      // 更新预览
+      if (window.previewState && window.previewState.autoRefresh) {
+        manualPreview();
+      }
+
+      // 更新按钮文本
+      const publishBtn = document.getElementById('publish-btn');
+      if (publishBtn) {
+        publishBtn.innerHTML = '<i class="fas fa-save me-2"></i>更新文章';
       }
 
       window.editorState.isDirty = false;
+      console.log('文章加载完成');
 
     } catch (error) {
       console.error('加载文章失败:', error);
       window.blogApp.showNotification('加载文章失败: ' + error.message, 'error');
+    }
+  }
+
+  // 下载文章内容
+  async function downloadArticleContent(storeId) {
+    try {
+      const response = await fetch(`/api/files/download/${storeId}`, {
+        method: 'GET',
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error(`下载文章内容失败: ${response.status} ${response.statusText}`);
+      }
+
+      const content = await response.text();
+      console.log('文章内容下载成功，长度:', content.length);
+      return content;
+
+    } catch (error) {
+      console.error('下载文章内容失败:', error);
+      window.blogApp.showNotification('下载文章内容失败: ' + error.message, 'warning');
+      return ''; // 返回空内容，让用户可以继续编辑
     }
   }
 

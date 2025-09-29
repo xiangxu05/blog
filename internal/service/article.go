@@ -33,6 +33,30 @@ func GetArticle(c *gin.Context, articleId int32, version int) (*model_def.Articl
 	return articleVersion, nil
 }
 
+// GetLatestArticle 获取最新文章
+func GetLatestArticle(c *gin.Context, articleId int32) (*model_def.ArticleVersion, error) {
+	// 增加浏览量
+	if err := IncrementArticleViewCount(c, articleId); err != nil {
+		// 浏览量更新失败不影响文章获取
+		log.Errorf("Failed to increment view count: %v\n", err)
+	}
+	// 获取文章
+	article, err := dao.Article.WithContext(c.Request.Context()).
+		Where(dao.Article.ID.Eq(articleId)).
+		First()
+	if err != nil {
+		return nil, err
+	}
+	// 获取文章版本
+	articleVersion, err := dao.ArticleVersion.WithContext(c.Request.Context()).
+		Where(dao.ArticleVersion.ArticleID.Eq(articleId), dao.ArticleVersion.Version.Eq(article.Version)).
+		First()
+	if err != nil {
+		return nil, err
+	}
+	return articleVersion, nil
+}
+
 // IncrementArticleViewCount 增加文章浏览量（并发安全）
 func IncrementArticleViewCount(c *gin.Context, articleId int32) error {
 	// 使用原子操作直接增加浏览量，避免并发问题
