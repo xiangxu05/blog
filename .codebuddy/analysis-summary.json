@@ -1,1 +1,0 @@
-{"title":"修复文章管理页面问题","features":["修复文章搜索卡片排布","修复文章查询API调用","优化页面响应式布局","增强错误处理机制"],"tech":{"Web":{"arch":"html","component":null}},"design":"修复 http://127.0.0.1:8080/admin/articles 页面的两个主要问题：1. 文章搜索卡片排布不正确 2. 文章查询一直在转圈，没有加载出来，疑似没有调用API","plan":{"step1":"done","step2":"done","step3":"done","step4":"done"}}
