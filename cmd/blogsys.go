@@ -9,6 +9,8 @@ import (
 	"gorm.io/gorm"
 )
 
+var port string
+
 var blogsysCmd = &cobra.Command{
 	Use:   "blogsys",
 	Short: "启动博客系统",
@@ -17,10 +19,11 @@ var blogsysCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
+
 		dao.SetDefault(db)
 
 		server := server.NewServer(db)
-		if err := server.Run(":8080"); err != nil {
+		if err := server.Run(":" + port); err != nil {
 			panic(err)
 		}
 	},
@@ -28,4 +31,5 @@ var blogsysCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(blogsysCmd)
+	blogsysCmd.Flags().StringVarP(&port, "port", "p", "8080", "端口")
 }

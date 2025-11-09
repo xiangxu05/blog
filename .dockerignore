@@ -1,0 +1,47 @@
+# Git 相关
+.git
+.gitignore
+.gitattributes
+
+# 文档
+README.md
+docs/
+*.md
+
+# IDE 配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 测试文件
+*_test.go
+test/
+
+# 构建产物
+blog
+*.exe
+*.dll
+*.so
+*.dylib
+
+# 临时文件
+*.log
+tmp/
+temp/
+
+# 数据文件（如果需要持久化，应该通过 volume 挂载）
+data/
+
+# Docker 相关
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# 其他
+LICENSE
+.env
+.env.local
+
+

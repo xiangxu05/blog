@@ -162,7 +162,8 @@ func (s *Server) setupRouter() {
 
 	// 网站信息查询
 	api.GET("/website_statistics", s.monitor.GetWebsiteStatisticsHandler())
-	admin.GET("/backend_statistics", middleware.RoleAuth(), s.monitor.GetBackendStatisticsHandler()) // 管理员专用
+	// 后台统计（admin 组已经有 RoleAuth 中间件，不需要重复添加）
+	admin.GET("/backend_statistics", s.monitor.GetBackendStatisticsHandler())
 	s.router = r
 }
 

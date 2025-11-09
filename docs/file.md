@@ -19,7 +19,7 @@
 }
 ```
 
-- **GET /api/files/** - 获取所有文件信息
+- **GET /api/files** - 获取所有文件信息
 
 ```json
 
@@ -27,16 +27,15 @@
 {
     "code": 200,
     "message": "查询成功",
-    "data": {
+    "data": [
         {
             "file_id": "string",
             "filename": "string",
             "size": "number",
             "mime_type": "string",
             "created_at": "string"
-        },
-        ...
-    }
+        }
+    ]
 }
 ```
 

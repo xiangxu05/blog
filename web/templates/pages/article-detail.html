@@ -60,7 +60,7 @@
               </div>
 
               <!-- 文章标签 -->
-              <div id="article-tags" class="article-tags">
+              <div id="article-tags" class="article-tags mb-3">
                 <!-- 标签将通过JavaScript动态添加 -->
               </div>
 
@@ -211,23 +211,6 @@
           </h6>
           <div id="quick-nav-content">
             <!-- 导航链接将通过JavaScript生成 -->
-          </div>
-        </div>
-      </div>
-
-      <!-- 相关文章 -->
-      <div class="card-custom mb-4">
-        <div class="card-body">
-          <h6 class="card-title">
-            <i class="fas fa-newspaper me-2"></i>
-            相关文章
-          </h6>
-          <div id="related-articles">
-            <div class="text-center py-3">
-              <div class="spinner-border spinner-border-sm text-primary" role="status">
-                <span class="visually-hidden">加载中...</span>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -392,9 +375,6 @@
       } else {
         showContentError('文章内容不存在');
       }
-
-      // 加载相关数据
-      loadRelatedArticles();
 
     } catch (error) {
       console.error('加载文章详情失败:', error);
@@ -645,36 +625,6 @@
       progressBar.style.width = progress + '%';
       progressPercent.textContent = Math.round(progress);
     });
-  }
-
-  // 加载相关文章
-  async function loadRelatedArticles() {
-    const relatedContainer = document.getElementById('related-articles');
-
-    try {
-      // 模拟相关文章数据
-      setTimeout(() => {
-        relatedContainer.innerHTML = `
-        <div class="list-group list-group-flush">
-          <a href="/articles/2/1" class="list-group-item list-group-item-action px-0">
-            <h6 class="mb-1">JavaScript 异步编程详解</h6>
-            <small class="text-muted">相关度 85%</small>
-          </a>
-          <a href="/articles/3/1" class="list-group-item list-group-item-action px-0">
-            <h6 class="mb-1">前端性能优化实践</h6>
-            <small class="text-muted">相关度 72%</small>
-          </a>
-          <a href="/articles/4/1" class="list-group-item list-group-item-action px-0">
-            <h6 class="mb-1">Vue.js 组件设计模式</h6>
-            <small class="text-muted">相关度 68%</small>
-          </a>
-        </div>
-      `;
-      }, 1500);
-
-    } catch (error) {
-      relatedContainer.innerHTML = '<p class="text-muted small">加载相关文章失败</p>';
-    }
   }
 
   // 绑定事件

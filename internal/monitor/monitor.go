@@ -7,8 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"path/filepath"
-	"runtime"
+	"os"
 	"sync"
 	"time"
 
@@ -114,28 +113,38 @@ func (m *Monitor) RefreshWebInfo() error {
 }
 
 func (m *Monitor) UpdateInfos() error {
-	articleNum, err := dao.Article.WithContext(m.ctx).Count()
+	return m.UpdateInfosWithContext(m.ctx)
+}
+
+func (m *Monitor) UpdateInfosWithContext(ctx context.Context) error {
+	articleNum, err := dao.Article.WithContext(ctx).Count()
 	if err != nil {
+		log.Errorf("Failed to count articles: %v", err)
 		return err
 	}
-	fileNum, err := dao.File.WithContext(m.ctx).Count()
+	fileNum, err := dao.File.WithContext(ctx).Count()
 	if err != nil {
+		log.Errorf("Failed to count files: %v", err)
 		return err
 	}
-	userNum, err := dao.User.WithContext(m.ctx).Count()
+	userNum, err := dao.User.WithContext(ctx).Count()
 	if err != nil {
+		log.Errorf("Failed to count users: %v", err)
 		return err
 	}
-	categoriesNum, err := dao.Category.WithContext(m.ctx).Count()
+	categoriesNum, err := dao.Category.WithContext(ctx).Count()
 	if err != nil {
+		log.Errorf("Failed to count categories: %v", err)
 		return err
 	}
-	commentsNum, err := dao.Comment.WithContext(m.ctx).Count()
+	commentsNum, err := dao.Comment.WithContext(ctx).Count()
 	if err != nil {
+		log.Errorf("Failed to count comments: %v", err)
 		return err
 	}
 	storeUsage, capacity, err := m.DiskCheck()
 	if err != nil {
+		log.Errorf("Failed to check disk: %v", err)
 		return err
 	}
 	m.WebInfo.ArticleNum = int(articleNum)
@@ -149,14 +158,21 @@ func (m *Monitor) UpdateInfos() error {
 }
 
 func (m *Monitor) DiskCheck() (string, string, error) {
-	_, filename, _, _ := runtime.Caller(0)
-	currentDir := filepath.Dir(filename)
+	// 使用当前工作目录或数据目录，而不是源代码路径
+	// 在 Docker 容器中，工作目录是 /app
+	currentDir := "."
 
-	// 获取当前项目所在分区的信息
+	// 尝试使用数据目录（更准确反映实际使用情况）
+	if _, err := os.Stat("data"); err == nil {
+		currentDir = "data"
+	}
+
+	// 获取当前目录所在分区的信息
 	usage, err := disk.Usage(currentDir)
 	if err != nil {
-		fmt.Printf("Error getting disk usage: %v\n", err)
-		return "", "", err
+		log.Errorf("Error getting disk usage for %s: %v", currentDir, err)
+		// 返回默认值而不是错误，避免整个统计失败
+		return "0 B", "0 B", nil
 	}
 	return formatBytes(uint64(usage.Used)), formatBytes(uint64(usage.Total)), nil
 }
@@ -226,6 +242,15 @@ func (m *Monitor) UpdateLastBackup() gin.HandlerFunc {
 
 func (m *Monitor) GetWebsiteStatisticsHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// 先更新数据到最新状态，使用请求的 context
+		m.mtx.Lock()
+		if err := m.UpdateInfosWithContext(c.Request.Context()); err != nil {
+			log.Errorf("Failed to update web info: %v", err)
+			m.mtx.Unlock()
+			message.SendMsg(c, http.StatusInternalServerError, "更新统计数据失败", nil)
+			return
+		}
+		// 读取最新数据
 		websiteStatisticsResponse := &message.WebsiteStatisticsResponse{
 			ArticlesNum:   m.WebInfo.ArticleNum,
 			Views:         m.WebInfo.Views,
@@ -233,12 +258,23 @@ func (m *Monitor) GetWebsiteStatisticsHandler() gin.HandlerFunc {
 			LastUpdate:    m.WebInfo.LastUpdate,
 			LastLogin:     m.WebInfo.LastLogin,
 		}
+		m.mtx.Unlock()
+
 		message.SendMsg(c, http.StatusOK, "获取网站统计信息成功", websiteStatisticsResponse)
 	}
 }
 
 func (m *Monitor) GetBackendStatisticsHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// 先更新数据到最新状态，使用请求的 context
+		m.mtx.Lock()
+		if err := m.UpdateInfosWithContext(c.Request.Context()); err != nil {
+			log.Errorf("Failed to update web info: %v", err)
+			m.mtx.Unlock()
+			message.SendMsg(c, http.StatusInternalServerError, "更新统计数据失败", nil)
+			return
+		}
+		// 读取最新数据
 		backendStatisticsResponse := &message.BackendStatisticsResponse{
 			ArticlesNum: m.WebInfo.ArticleNum,
 			Views:       m.WebInfo.Views,
@@ -248,6 +284,8 @@ func (m *Monitor) GetBackendStatisticsHandler() gin.HandlerFunc {
 			Capacity:    m.WebInfo.Capacity,
 			LastBackup:  m.WebInfo.LastBackup,
 		}
+		m.mtx.Unlock()
+
 		message.SendMsg(c, http.StatusOK, "获取后台统计信息成功", backendStatisticsResponse)
 	}
 }

@@ -1,0 +1,19 @@
+version: '3.7'
+
+services:
+  blog:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: blog
+    ports:
+      - "8080:8080"
+    volumes:
+      # 挂载 data 目录到本地磁盘，实现数据持久化
+      # 使用 :Z 或 :z 标签确保正确的 SELinux 上下文（如果需要）
+      - ./data:/app/data
+    restart: unless-stopped
+    environment:
+      - GIN_MODE=release
+      - TZ=Asia/Shanghai
+

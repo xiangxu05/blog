@@ -16,13 +16,37 @@ import (
 
 var log = logger.GetLogger()
 
+// ArticleDetail 文章详情响应结构（包含Article和ArticleVersion的完整信息）
+type ArticleDetail struct {
+	ID          uint   `json:"id"`
+	CreatedAt   string `json:"created_at"`
+	UpdatedAt   string `json:"updated_at"`
+	ArticleID   int32  `json:"article_id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Version     int    `json:"version"`
+	StoreID     int32  `json:"store_id"`
+	Category    string `json:"category"`
+	Tags        string `json:"tags"`
+	Views       int    `json:"views"`
+}
+
 // GetArticle 获取文章详情
-func GetArticle(c *gin.Context, articleId int32, version int) (*model_def.ArticleVersion, error) {
+func GetArticle(c *gin.Context, articleId int32, version int) (*ArticleDetail, error) {
 	// 增加浏览量
 	if err := IncrementArticleViewCount(c, articleId); err != nil {
 		// 浏览量更新失败不影响文章获取
 		log.Errorf("Failed to increment view count: %v\n", err)
 	}
+
+	// 获取文章基础信息
+	article, err := dao.Article.WithContext(c.Request.Context()).
+		Where(dao.Article.ID.Eq(articleId)).
+		First()
+	if err != nil {
+		return nil, err
+	}
+
 	// 获取文章版本
 	articleVersion, err := dao.ArticleVersion.WithContext(c.Request.Context()).
 		Where(dao.ArticleVersion.ArticleID.Eq(articleId), dao.ArticleVersion.Version.Eq(version)).
@@ -30,31 +54,61 @@ func GetArticle(c *gin.Context, articleId int32, version int) (*model_def.Articl
 	if err != nil {
 		return nil, err
 	}
-	return articleVersion, nil
+
+	// 组合返回完整的文章详情
+	return &ArticleDetail{
+		ID:          articleVersion.ID,
+		CreatedAt:   articleVersion.CreatedAt.Format("2006-01-02 15:04:05"),
+		UpdatedAt:   articleVersion.UpdatedAt.Format("2006-01-02 15:04:05"),
+		ArticleID:   article.ID,
+		Title:       article.Title,
+		Description: articleVersion.Description,
+		Version:     articleVersion.Version,
+		StoreID:     articleVersion.StoreID,
+		Category:    article.Category,
+		Tags:        article.Tags,
+		Views:       article.Views,
+	}, nil
 }
 
 // GetLatestArticle 获取最新文章
-func GetLatestArticle(c *gin.Context, articleId int32) (*model_def.ArticleVersion, error) {
+func GetLatestArticle(c *gin.Context, articleId int32) (*ArticleDetail, error) {
 	// 增加浏览量
 	if err := IncrementArticleViewCount(c, articleId); err != nil {
 		// 浏览量更新失败不影响文章获取
 		log.Errorf("Failed to increment view count: %v\n", err)
 	}
-	// 获取文章
+
+	// 获取文章基础信息
 	article, err := dao.Article.WithContext(c.Request.Context()).
 		Where(dao.Article.ID.Eq(articleId)).
 		First()
 	if err != nil {
 		return nil, err
 	}
-	// 获取文章版本
+
+	// 获取文章最新版本
 	articleVersion, err := dao.ArticleVersion.WithContext(c.Request.Context()).
 		Where(dao.ArticleVersion.ArticleID.Eq(articleId), dao.ArticleVersion.Version.Eq(article.Version)).
 		First()
 	if err != nil {
 		return nil, err
 	}
-	return articleVersion, nil
+
+	// 组合返回完整的文章详情
+	return &ArticleDetail{
+		ID:          articleVersion.ID,
+		CreatedAt:   articleVersion.CreatedAt.Format("2006-01-02 15:04:05"),
+		UpdatedAt:   articleVersion.UpdatedAt.Format("2006-01-02 15:04:05"),
+		ArticleID:   article.ID,
+		Title:       article.Title,
+		Description: articleVersion.Description,
+		Version:     articleVersion.Version,
+		StoreID:     articleVersion.StoreID,
+		Category:    article.Category,
+		Tags:        article.Tags,
+		Views:       article.Views,
+	}, nil
 }
 
 // IncrementArticleViewCount 增加文章浏览量（并发安全）

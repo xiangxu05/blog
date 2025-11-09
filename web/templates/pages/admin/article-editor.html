@@ -594,8 +594,17 @@
       document.getElementById('article-title').value = article.title || '';
       document.getElementById('article-description').value = article.description || '';
       document.getElementById('article-category').value = article.category || '';
-      document.getElementById('article-tags').value = (article.tags || []).join(', ');
+      // tags 是字符串，直接使用
+      document.getElementById('article-tags').value = article.tags || '';
       document.getElementById('markdown-editor').value = content;
+
+      console.log('表单填充完成:', {
+        title: article.title,
+        description: article.description,
+        category: article.category,
+        tags: article.tags,
+        contentLength: content.length
+      });
 
       // 更新预览
       if (window.previewState && window.previewState.autoRefresh) {

@@ -48,7 +48,7 @@
 }
 ```
 
-- **GET /api/users/logout** - 用户注销
+- **GET /api/users/logout** - 用户注销（需要认证）
 
 ```json
 响应数据:
@@ -58,7 +58,7 @@
 }
 ```
 
-- **DELETE /api/users/delete** - 删除用户
+- **DELETE /api/users/delete** - 删除用户（需要认证）
 
 ```json
 响应数据:
@@ -68,7 +68,7 @@
 }
 ```
 
-- **GET /api/users/refresh** - 刷新登出时间
+- **GET /api/users/refresh** - 刷新登出时间（需要认证）
 
 ```json
 响应数据:
