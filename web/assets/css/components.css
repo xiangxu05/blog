@@ -17,6 +17,8 @@
 
 .card-custom .card-body {
   padding: var(--spacing-lg);
+  overflow-x: hidden; /* 防止内容横向溢出 */
+  max-width: 100%;
 }
 
 .card-custom .card-title {

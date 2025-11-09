@@ -269,6 +269,20 @@
     const articlesEmpty = document.getElementById('articles-empty');
     const articlesError = document.getElementById('articles-error');
 
+    // 确保元素存在
+    if (!articlesLoading || !articlesList || !articlesEmpty || !articlesError) {
+      console.error('页面元素不存在');
+      return;
+    }
+
+    // 确保API客户端已初始化
+    if (!window.apiClient || !window.apiClient.articles) {
+      console.error('API客户端未初始化');
+      articlesLoading.classList.add('d-none');
+      articlesError.classList.remove('d-none');
+      return;
+    }
+
     try {
       // 显示加载状态
       articlesLoading.classList.remove('d-none');
@@ -276,16 +290,15 @@
       articlesEmpty.classList.add('d-none');
       articlesError.classList.add('d-none');
 
-      // 获取文章列表（首页只显示前3篇）
-      const response = await window.apiClient.articles.getList({
-        page: 1,
-        pageSize: 3
-      });
+      // 获取文章列表（首页只显示最新4篇）
+      const params = { page: 1, page_size: 4 };
+      const response = await window.apiClient.articles.getList(params);
 
       // 隐藏加载状态
       articlesLoading.classList.add('d-none');
 
-      if (response.articles && response.articles.length > 0) {
+      // 检查响应数据
+      if (response && response.articles && Array.isArray(response.articles) && response.articles.length > 0) {
         // 渲染文章列表
         renderArticlesList(response.articles);
         articlesList.classList.remove('d-none');
@@ -296,6 +309,7 @@
 
     } catch (error) {
       console.error('加载首页文章失败:', error);
+      console.error('错误详情:', error.message, error.stack);
 
       // 显示错误状态
       articlesLoading.classList.add('d-none');

@@ -133,6 +133,10 @@ body {
   line-height: 1.7;
   color: var(--text-primary);
   font-size: 1rem;
+  max-width: 100%;
+  overflow-x: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 /* 标题样式增强 */
@@ -329,6 +333,8 @@ body {
 .markdown-content .image-figure {
   margin: var(--spacing-lg) 0;
   text-align: center;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .markdown-content .markdown-image {
@@ -337,6 +343,18 @@ body {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   transition: transform var(--transition-normal) var(--ease-out);
+  display: block;
+  margin: 0 auto;
+}
+
+/* 确保所有图片（包括直接插入的img标签）都受限制 */
+.markdown-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  display: block;
+  margin: var(--spacing-md) auto;
 }
 
 .markdown-content .markdown-image:hover {

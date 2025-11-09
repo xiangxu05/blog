@@ -31,5 +31,5 @@ var blogsysCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(blogsysCmd)
-	blogsysCmd.Flags().StringVarP(&port, "port", "p", "8080", "端口")
+	blogsysCmd.Flags().StringVarP(&port, "port", "p", "80", "端口")
 }

@@ -1126,12 +1126,18 @@
 
   .editor-pane-split {
     flex: 1;
+    min-width: 0; /* 允许flex收缩 */
+    max-width: 50%; /* 固定最大宽度为50% */
     border-right: 1px solid var(--color-gray-4);
+    overflow: hidden;
   }
 
   .preview-pane-split {
     flex: 1;
+    min-width: 0; /* 允许flex收缩 */
+    max-width: 50%; /* 固定最大宽度为50% */
     background-color: var(--bg-primary);
+    overflow: hidden;
   }
 
   .editor-textarea-split {
@@ -1145,12 +1151,34 @@
     font-size: 14px !important;
     line-height: 1.6 !important;
     padding: 20px !important;
+    min-width: 0; /* 允许收缩 */
+    overflow-x: auto; /* 允许横向滚动 */
+    box-sizing: border-box; /* 确保padding不会导致溢出 */
   }
 
   .preview-content {
     padding: 20px;
     height: 600px;
     overflow-y: auto;
+    overflow-x: hidden; /* 防止横向滚动 */
+    word-wrap: break-word; /* 长单词换行 */
+    overflow-wrap: break-word;
+    box-sizing: border-box; /* 确保padding不会导致溢出 */
+  }
+
+  /* 限制预览区域的图片大小 */
+  .preview-content img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 10px auto;
+    border-radius: var(--radius-md);
+  }
+
+  /* 确保预览区域的markdown内容也受限制 */
+  .preview-content .markdown-content {
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   .markdown-help code {

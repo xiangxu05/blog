@@ -57,7 +57,7 @@
     <!-- 主内容区域 -->
     <div class="col-lg-8">
       <!-- 文章列表头部 -->
-      <div class="d-flex justify-content-between align-items-center mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <div>
           <h2 class="h3 mb-1">
             <i class="fas fa-newspaper me-2 text-primary"></i>
@@ -66,17 +66,30 @@
           <p class="text-muted mb-0" id="articles-count">共 0 篇文章</p>
         </div>
 
-        <!-- 视图切换 -->
-        <div class="btn-group" role="group" id="view-toggle">
-          <input type="radio" class="btn-check" name="view-mode" id="list-view" value="list" checked>
-          <label class="btn btn-outline-custom" for="list-view">
-            <i class="fas fa-list"></i>
-          </label>
+        <div class="d-flex align-items-center gap-2">
+          <!-- 分页数量选择 -->
+          <div class="d-flex align-items-center gap-2">
+            <label for="page-size-select" class="text-muted small mb-0" style="white-space: nowrap; flex-shrink: 0;">每页显示：</label>
+            <select class="form-select-custom form-select-sm" id="page-size-select" style="width: auto; min-width: 80px;">
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="30">30</option>
+              <option value="50">50</option>
+            </select>
+          </div>
 
-          <input type="radio" class="btn-check" name="view-mode" id="grid-view" value="grid">
-          <label class="btn btn-outline-custom" for="grid-view">
-            <i class="fas fa-th"></i>
-          </label>
+          <!-- 视图切换 -->
+          <div class="btn-group" role="group" id="view-toggle">
+            <input type="radio" class="btn-check" name="view-mode" id="list-view" value="list" checked>
+            <label class="btn btn-outline-custom" for="list-view">
+              <i class="fas fa-list"></i>
+            </label>
+
+            <input type="radio" class="btn-check" name="view-mode" id="grid-view" value="grid">
+            <label class="btn btn-outline-custom" for="grid-view">
+              <i class="fas fa-th"></i>
+            </label>
+          </div>
         </div>
       </div>
 
@@ -218,7 +231,7 @@
   if (typeof window.currentFilters === 'undefined') {
     window.currentFilters = {
       page: 1,
-      pageSize: 10,
+      page_size: 10,
       search: '',
       search_type: 'fuzzy',
       search_fields: 'all',
@@ -269,6 +282,7 @@
     window.currentFilters.category = urlParams.get('category') || '';
     window.currentFilters.sort = urlParams.get('sort') || 'created_at_desc';
     window.currentFilters.page = parseInt(urlParams.get('page')) || 1;
+    window.currentFilters.page_size = parseInt(urlParams.get('page_size')) || 10;
 
     // 设置筛选器值
     document.getElementById('search-input').value = window.currentFilters.search;
@@ -276,6 +290,7 @@
     document.getElementById('search-fields-filter').value = window.currentFilters.search_fields;
     document.getElementById('category-filter').value = window.currentFilters.category;
     document.getElementById('sort-filter').value = window.currentFilters.sort;
+    document.getElementById('page-size-select').value = window.currentFilters.page_size.toString();
   }
 
   // 加载文章列表
@@ -312,7 +327,7 @@
       // 隐藏加载状态
       articlesLoading.classList.add('d-none');
 
-      if (response.articles && response.articles.length > 0) {
+      if (response && response.articles && Array.isArray(response.articles) && response.articles.length > 0) {
         // 渲染文章列表
         renderArticlesList(response.articles);
 
@@ -323,7 +338,7 @@
         }
 
         // 更新文章数量显示
-        updateArticlesCount(response.pagination?.total || response.articles.length);
+        updateArticlesCount(response.pagination?.total_count || response.articles.length);
 
         articlesList.classList.remove('d-none');
       } else {
@@ -424,8 +439,11 @@
     const paginationEl = document.getElementById('pagination');
     if (!paginationEl) return;
 
-    const { page, pageSize, total } = pagination;
-    const totalPages = Math.ceil(total / pageSize);
+    const { current_page, page_size, total_count, total_pages } = pagination;
+    const page = current_page || pagination.page || 1;
+    const pageSize = page_size || pagination.pageSize || 10;
+    const total = total_count || pagination.total || 0;
+    const totalPages = total_pages || Math.ceil(total / pageSize);
 
     if (totalPages <= 1) {
       return;
@@ -510,6 +528,7 @@
     if (window.currentFilters.category) params.set('category', window.currentFilters.category);
     if (window.currentFilters.sort !== 'created_at_desc') params.set('sort', window.currentFilters.sort);
     if (window.currentFilters.page > 1) params.set('page', window.currentFilters.page.toString());
+    if (window.currentFilters.page_size !== 10) params.set('page_size', window.currentFilters.page_size.toString());
 
     const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
     window.history.replaceState({}, '', newUrl);
@@ -535,13 +554,28 @@
   function bindArticlesEvents() {
     // 搜索输入框防抖
     let searchTimeout;
-    document.getElementById('search-input')?.addEventListener('input', function (e) {
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(() => {
-        window.currentFilters.search = e.target.value.trim();
-        loadArticlesList(true);
-      }, 500);
-    });
+    const searchInput = document.getElementById('search-input');
+    
+    if (searchInput) {
+      // 输入事件防抖
+      searchInput.addEventListener('input', function (e) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          window.currentFilters.search = e.target.value.trim();
+          loadArticlesList(true);
+        }, 500);
+      });
+
+      // 回车键立即搜索
+      searchInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault(); // 防止表单提交或其他默认行为
+          clearTimeout(searchTimeout); // 清除防抖定时器
+          window.currentFilters.search = e.target.value.trim();
+          loadArticlesList(true);
+        }
+      });
+    }
 
     // 搜索类型筛选
     document.getElementById('search-type-filter')?.addEventListener('change', function (e) {
@@ -565,6 +599,13 @@
     document.getElementById('sort-filter')?.addEventListener('change', function (e) {
       window.currentFilters.sort = e.target.value;
       loadArticlesList(true);
+    });
+
+    // 分页数量选择
+    document.getElementById('page-size-select')?.addEventListener('change', function (e) {
+      window.currentFilters.page_size = parseInt(e.target.value);
+      window.currentFilters.page = 1; // 重置到第一页
+      loadArticlesList();
     });
 
     // 视图切换

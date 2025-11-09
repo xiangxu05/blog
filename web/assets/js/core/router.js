@@ -15,7 +15,22 @@ class Router {
 
     // 设置全局导航守卫（需在注册具体路由之前）
     page('*', (ctx, next) => {
-      this.globalGuard(ctx, next);
+      try {
+        this.globalGuard(ctx, next);
+      } catch (error) {
+        console.error('全局路由守卫错误:', error);
+        // 如果守卫失败，尝试重定向到首页
+        try {
+          if (ctx && ctx.pathname) {
+            page.redirect('/');
+          } else {
+            window.location.href = '/';
+          }
+        } catch (redirectError) {
+          console.error('重定向失败:', redirectError);
+          window.location.href = '/';
+        }
+      }
     });
 
     // 注册路由配置
@@ -117,27 +132,76 @@ class Router {
     // 注册路由
     Object.entries(routeConfigs).forEach(([path, config]) => {
       this.routes.set(path, config);
-      page(path, (ctx) => this.handleRoute(ctx, config));
+      page(path, (ctx) => {
+        try {
+          // 确保ctx对象存在且格式正确
+          if (!ctx) {
+            console.error('路由上下文ctx不存在，路径:', path);
+            page.redirect('/');
+            return;
+          }
+          this.handleRoute(ctx, config);
+        } catch (error) {
+          console.error('路由处理失败:', error, '路径:', path);
+          // 尝试重定向到首页
+          try {
+            page.redirect('/');
+          } catch (redirectError) {
+            console.error('重定向失败:', redirectError);
+          }
+        }
+      });
     });
 
     // 404处理
     page('*', (ctx) => {
-      this.handleRoute(ctx, {
-        template: '404.html',
-        title: '页面不存在',
-        requireAuth: false
-      });
+      try {
+        // 确保ctx对象存在
+        if (!ctx) {
+          console.error('404路由上下文ctx不存在');
+          window.location.href = '/';
+          return;
+        }
+        this.handleRoute(ctx, {
+          template: '404.html',
+          title: '页面不存在',
+          requireAuth: false
+        });
+      } catch (error) {
+        console.error('404路由处理失败:', error);
+        // 直接跳转到首页
+        window.location.href = '/';
+      }
     });
   }
 
   // 全局路由守卫
   async globalGuard(ctx, next) {
-    const route = this.routes.get(ctx.pathname) || this.routes.get(ctx.routePath);
+    // 安全检查：确保ctx存在
+    if (!ctx) {
+      console.error('路由上下文ctx不存在');
+      page.redirect('/');
+      return;
+    }
+
+    // 安全检查：确保ctx.pathname存在
+    if (!ctx.pathname) {
+      console.error('路由路径pathname不存在');
+      page.redirect('/');
+      return;
+    }
+
+    const route = this.routes.get(ctx.pathname) || (ctx.routePath && this.routes.get(ctx.routePath));
 
     // 执行前置钩子
     for (const hook of this.beforeHooks) {
-      const result = await hook(ctx, route);
-      if (result === false) return;
+      try {
+        const result = await hook(ctx, route);
+        if (result === false) return;
+      } catch (error) {
+        console.error('前置钩子执行失败:', error);
+        // 继续执行，不中断路由
+      }
     }
 
     // 检查用户认证状态
@@ -170,21 +234,47 @@ class Router {
   // 处理路由
   async handleRoute(ctx, config) {
     try {
+      // 安全检查：确保ctx和config存在
+      if (!ctx) {
+        console.error('路由上下文ctx不存在');
+        page.redirect('/');
+        return;
+      }
+
+      if (!config) {
+        console.error('路由配置config不存在，路径:', ctx.pathname);
+        page.redirect('/404');
+        return;
+      }
+
       // 显示加载状态
       window.appState.setLoading(true);
 
       // 检查是否需要重定向（处理 /articles/:id -> /articles/:id/latest）
-      if (config.redirect && ctx.pathname.match(/^\/articles\/\d+$/)) {
-        const articleId = ctx.params.id;
-        console.log(`重定向 /articles/${articleId} -> /articles/${articleId}/latest`);
-        page.redirect(`/articles/${articleId}/latest`);
-        return;
+      if (config.redirect && ctx.pathname && ctx.pathname.match(/^\/articles\/\d+$/)) {
+        const articleId = ctx.params && ctx.params.id;
+        if (articleId) {
+          console.log(`重定向 /articles/${articleId} -> /articles/${articleId}/latest`);
+          page.redirect(`/articles/${articleId}/latest`);
+          return;
+        }
       }
 
       // 更新当前路由状态
+      // 安全处理ctx.params，确保它是对象
+      let safeParams = {};
+      if (ctx && ctx.params) {
+        if (typeof ctx.params === 'object' && !Array.isArray(ctx.params)) {
+          safeParams = ctx.params;
+        } else {
+          console.warn('ctx.params格式异常:', ctx.params);
+          safeParams = {};
+        }
+      }
+
       this.currentRoute = {
-        path: ctx.pathname,
-        params: ctx && ctx.params ? ctx.params : {},
+        path: ctx.pathname || '',
+        params: safeParams,
         query: this.parseQuery(ctx.querystring || ''),
         config
       };

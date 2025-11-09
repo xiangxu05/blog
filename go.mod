@@ -9,6 +9,7 @@ require (
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/spf13/cobra v1.9.1
 	github.com/xiangxu05/logger/v2 v2.0.1
+	golang.org/x/time v0.5.0
 	gorm.io/gen v0.3.27
 	gorm.io/gorm v1.25.11
 	gorm.io/plugin/dbresolver v1.5.0

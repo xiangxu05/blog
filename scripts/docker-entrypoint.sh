@@ -26,5 +26,5 @@ else
 fi
 
 echo "启动应用..."
-exec ./blog blogsys
+exec ./blog blogsys --port 80
 

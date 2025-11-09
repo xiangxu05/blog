@@ -51,7 +51,7 @@ case "$ACTION" in
         docker-compose up -d --build
         echo ""
         echo "服务已启动！"
-        echo "访问地址: http://localhost:8080"
+        echo "访问地址: http://localhost:80"
         echo ""
         echo "查看日志: docker-compose logs -f"
         echo "停止服务: docker-compose down"

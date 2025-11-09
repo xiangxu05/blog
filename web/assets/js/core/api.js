@@ -151,7 +151,9 @@ class ApiClient {
       const queryParams = new URLSearchParams();
 
       if (params.page) queryParams.append('page', params.page);
-      if (params.pageSize) queryParams.append('pageSize', params.pageSize);
+      // 支持 page_size 和 pageSize 两种格式（向后兼容）
+      const pageSize = params.page_size || params.pageSize;
+      if (pageSize) queryParams.append('page_size', pageSize);
       if (params.category) queryParams.append('category', params.category);
       if (params.search) queryParams.append('search', params.search);
       if (params.search_type) queryParams.append('search_type', params.search_type);

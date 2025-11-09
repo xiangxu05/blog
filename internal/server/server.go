@@ -33,10 +33,9 @@ func corsMiddleware() gin.HandlerFunc {
 		origin := c.Request.Header.Get("Origin")
 		// 定义允许的域名列表
 		allowedOrigins := map[string]bool{
-			"http://localhost:8080": true, // 本地开发环境
-			"http://127.0.0.1:8080": true, // 本地开发环境
-			// "https://www.yourdomain.com":  true, // 生产环境www子域名
-			// "https://blog.yourdomain.com": true, // 博客子域名
+			"http://localhost:8080":     true, // 本地开发环境
+			"http://127.0.0.1:8080":     true, // 本地开发环境
+			"https://blog.xxsay.online": true, // 生产环境
 		}
 		// 检查请求的Origin是否在允许列表中
 		if allowedOrigins[origin] {
@@ -85,15 +84,18 @@ func (s *Server) setupRouter() {
 	// 设置Web路由和静态文件服务
 	endpoint.SetupWebRoutes(r)
 
-	// 为API路由组添加CORS中间件
+	// 为API路由组添加CORS中间件和IP限流
 	api := r.Group("/api")
 	api.Use(corsMiddleware())
+	// 添加IP限流：每秒100个请求，突发200个
+	api.Use(middleware.IPRateLimit(100, 200))
 
 	api.GET("/health", endpoint.HealthHandler)
 	// 用户模块
 	user := api.Group("/users")
 	user.POST("/register", endpoint.RegisterHandler)
-	user.POST("/login", s.monitor.UpdateLastLogin(), endpoint.LoginHandler)
+	// 登录接口添加更严格的限流：每10秒1次，突发3次
+	user.POST("/login", middleware.LoginRateLimit(0.1, 3), s.monitor.UpdateLastLogin(), endpoint.LoginHandler)
 	// 公开访问的用户信息接口
 	user.GET("/:user_id", endpoint.GetOtherUserHandler)
 	user.Use(middleware.UserAuth())
