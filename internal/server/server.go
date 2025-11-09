@@ -128,6 +128,7 @@ func (s *Server) setupRouter() {
 	articles.GET("/:id/latest", s.monitor.IncViews(), endpoint.GetLatestArticleHandler) // 获取最新文章详情
 	articles.GET("", endpoint.GetArticleListHandler)                                    // 获取文章列表
 	articles.GET("/hot", endpoint.GetHotArticleListHandler)                             // 获取热门文章
+	articles.GET("/archive", endpoint.GetArticleArchiveHandler)                         // 获取文章归档统计
 	// articles.GET("/search", endpoint.SearchArticlesHandler) // 搜索文章
 	// articles.GET("/popular", endpoint.GetPopularArticlesHandler)                  // 获取热门文章
 	// articles.GET("/user/:user_id", endpoint.GetUserArticlesHandler)               // 获取用户文章

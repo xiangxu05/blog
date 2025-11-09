@@ -153,7 +153,10 @@ class ApiClient {
       if (params.page) queryParams.append('page', params.page);
       // 支持 page_size 和 pageSize 两种格式（向后兼容）
       const pageSize = params.page_size || params.pageSize;
-      if (pageSize) queryParams.append('page_size', pageSize);
+      // 始终添加 page_size 参数，避免使用后端默认值
+      if (pageSize !== undefined && pageSize !== null) {
+        queryParams.append('page_size', pageSize);
+      }
       if (params.category) queryParams.append('category', params.category);
       if (params.search) queryParams.append('search', params.search);
       if (params.search_type) queryParams.append('search_type', params.search_type);
@@ -209,6 +212,11 @@ class ApiClient {
     // 获取热门文章
     getHot: () => {
       return this.request('/articles/hot');
+    },
+    
+    // 获取文章归档统计
+    getArchive: () => {
+      return this.request('/articles/archive');
     }
   };
 

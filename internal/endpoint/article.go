@@ -99,6 +99,17 @@ func GetHotArticleListHandler(c *gin.Context) {
 	message.SendMsg(c, http.StatusOK, "获取成功", articleList)
 }
 
+// GetArticleArchiveHandler 获取文章归档统计
+func GetArticleArchiveHandler(c *gin.Context) {
+	archiveList, err := service.GetArticleArchive(c)
+	if err != nil {
+		log.Errorf("获取文章归档失败: %v", err)
+		message.SendMsg(c, http.StatusInternalServerError, "获取文章归档失败", nil)
+		return
+	}
+	message.SendMsg(c, http.StatusOK, "获取成功", archiveList)
+}
+
 func CreateArticleHandler(c *gin.Context) {
 	articleReq := &message.ArticleRequest{}
 	if err := c.ShouldBindJSON(articleReq); err != nil {
@@ -169,8 +180,15 @@ func GetAdminArticleListHandler(c *gin.Context) {
 		pageNum = 1
 	}
 
-	pageSize := c.DefaultQuery("pageSize", "10")
-	pageSizeNum, err := strconv.Atoi(pageSize)
+	// 支持 pageSize 和 page_size 两种格式（向后兼容）
+	pageSizeStr := c.Query("page_size")
+	if pageSizeStr == "" {
+		pageSizeStr = c.Query("pageSize")
+	}
+	if pageSizeStr == "" {
+		pageSizeStr = "10"
+	}
+	pageSizeNum, err := strconv.Atoi(pageSizeStr)
 	if err != nil || pageSizeNum <= 0 {
 		pageSizeNum = 10
 	}

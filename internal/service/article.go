@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -257,6 +258,44 @@ func GetArticleList(c *gin.Context, page, pageSize int, category, sort, search, 
 	}
 
 	return resp, nil
+}
+
+// GetArticleArchive 获取文章归档统计（按年月分组）
+func GetArticleArchive(c *gin.Context) ([]message.ArchiveItem, error) {
+	ctx := c.Request.Context()
+
+	// 查询所有文章的创建时间
+	articles, err := dao.Article.WithContext(ctx).
+		Select(dao.Article.CreatedAt).
+		Order(dao.Article.CreatedAt.Desc()).
+		Find()
+	if err != nil {
+		return nil, err
+	}
+
+	// 按年月分组统计
+	archiveMap := make(map[string]int)
+	for _, article := range articles {
+		// 格式化为 "2024年11月"
+		yearMonth := article.CreatedAt.Format("2006年01月")
+		archiveMap[yearMonth]++
+	}
+
+	// 转换为切片并排序
+	var archiveList []message.ArchiveItem
+	for yearMonth, count := range archiveMap {
+		archiveList = append(archiveList, message.ArchiveItem{
+			YearMonth: yearMonth,
+			Count:     count,
+		})
+	}
+
+	// 按时间降序排序（最新的在前）
+	sort.Slice(archiveList, func(i, j int) bool {
+		return archiveList[i].YearMonth > archiveList[j].YearMonth
+	})
+
+	return archiveList, nil
 }
 
 // GetHotArticleList 获取热门文章列表

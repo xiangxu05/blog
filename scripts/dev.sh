@@ -40,7 +40,7 @@ export TZ=Asia/Shanghai
 # 启动应用
 echo "=========================================="
 echo "启动应用服务器..."
-echo "访问地址: http://localhost:8080"
+echo "访问地址: http://localhost:80"
 echo "按 Ctrl+C 停止服务"
 echo "=========================================="
 

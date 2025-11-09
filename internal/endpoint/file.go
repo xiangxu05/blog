@@ -4,6 +4,7 @@ import (
 	"blog/internal/message"
 	"blog/internal/service"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,16 +20,40 @@ func GetFileHandler(c *gin.Context) {
 }
 
 func GetFileListHandler(c *gin.Context) {
-	// 获取查询参数
+	// 获取分页参数
+	page := c.DefaultQuery("page", "1")
+	pageNum, err := strconv.Atoi(page)
+	if err != nil || pageNum <= 0 {
+		pageNum = 1
+	}
+
+	// 支持 pageSize 和 page_size 两种格式
+	pageSizeStr := c.Query("page_size")
+	if pageSizeStr == "" {
+		pageSizeStr = c.Query("pageSize")
+	}
+	if pageSizeStr == "" {
+		pageSizeStr = "24"
+	}
+	pageSizeNum, err := strconv.Atoi(pageSizeStr)
+	if err != nil || pageSizeNum <= 0 {
+		pageSizeNum = 24
+	}
+	if pageSizeNum > 100 {
+		pageSizeNum = 100 // 限制最大页面大小
+	}
+
+	// 获取其他查询参数
 	search := c.Query("search")
 	fileType := c.Query("type")
+	sort := c.DefaultQuery("sort", "created_at_desc")
 
-	fileInfos, err := service.GetFileList(c, search, fileType)
+	fileList, err := service.GetFileList(c, pageNum, pageSizeNum, search, fileType, sort)
 	if err != nil {
 		message.SendMsg(c, http.StatusInternalServerError, "获取文件列表失败", nil)
 		return
 	}
-	message.SendMsg(c, http.StatusOK, "获取文件列表成功", fileInfos)
+	message.SendMsg(c, http.StatusOK, "获取文件列表成功", fileList)
 }
 
 func UploadFileHandler(c *gin.Context) {

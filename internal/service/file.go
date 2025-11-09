@@ -40,8 +40,9 @@ func GetFileInfo(c *gin.Context, fileID string) (*message.FileInfo, error) {
 	return fileInfo, nil
 }
 
-func GetFileList(c *gin.Context, search, fileType string) ([]*message.FileInfo, error) {
-	query := dao.File.WithContext(c.Request.Context())
+func GetFileList(c *gin.Context, page, pageSize int, search, fileType, sort string) (*message.FileListResponse, error) {
+	ctx := c.Request.Context()
+	query := dao.File.WithContext(ctx)
 
 	// 添加搜索条件
 	if search != "" {
@@ -52,30 +53,80 @@ func GetFileList(c *gin.Context, search, fileType string) ([]*message.FileInfo, 
 	if fileType != "" {
 		switch fileType {
 		case "image":
-			query = query.Where(dao.File.MimeType.In(".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp", ".ico"))
+			query = query.Where(dao.File.MimeType.Like("image/%"))
 		case "document":
-			query = query.Where(dao.File.MimeType.In(".pdf", ".doc", ".docx", ".txt", ".md", ".xls", ".xlsx", ".ppt", ".pptx"))
+			query = query.Where(dao.File.MimeType.In("application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain", "text/markdown", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation"))
 		case "video":
-			query = query.Where(dao.File.MimeType.In(".mp4", ".avi", ".mov", ".wmv", ".webm", ".mkv", ".flv"))
+			query = query.Where(dao.File.MimeType.Like("video/%"))
 		case "audio":
-			query = query.Where(dao.File.MimeType.In(".mp3", ".wav", ".flac", ".aac", ".ogg", ".wma"))
+			query = query.Where(dao.File.MimeType.Like("audio/%"))
 		}
 	}
 
-	files, err := query.Find()
+	// 获取总数
+	total, err := query.Count()
 	if err != nil {
 		return nil, err
 	}
-	fileInfos := make([]*message.FileInfo, 0, len(files))
+
+	// 排序处理
+	switch sort {
+	case "created_at_asc":
+		query = query.Order(dao.File.CreatedAt.Asc())
+	case "created_at_desc":
+		query = query.Order(dao.File.CreatedAt.Desc())
+	case "filename_asc":
+		query = query.Order(dao.File.Filename.Asc())
+	case "filename_desc":
+		query = query.Order(dao.File.Filename.Desc())
+	case "size_asc":
+		query = query.Order(dao.File.Size.Asc())
+	case "size_desc":
+		query = query.Order(dao.File.Size.Desc())
+	default:
+		// 默认按创建时间倒序
+		query = query.Order(dao.File.CreatedAt.Desc())
+	}
+
+	// 分页处理
+	offset := (page - 1) * pageSize
+	files, err := query.
+		Limit(pageSize).
+		Offset(offset).
+		Find()
+	if err != nil {
+		return nil, err
+	}
+
+	// 转换为FileInfo
+	fileInfos := make([]message.FileInfo, 0, len(files))
 	for _, file := range files {
-		fileInfos = append(fileInfos, &message.FileInfo{
-			FileID:   file.ID,
-			Filename: file.Filename,
-			Size:     file.Size,
-			MimeType: file.MimeType,
+		fileInfos = append(fileInfos, message.FileInfo{
+			FileID:    file.ID,
+			Filename:  file.Filename,
+			Size:      file.Size,
+			MimeType:  file.MimeType,
+			CreatedAt: file.CreatedAt.Unix(),
 		})
 	}
-	return fileInfos, nil
+
+	// 计算总页数
+	totalPages := int(total) / pageSize
+	if int(total)%pageSize > 0 {
+		totalPages++
+	}
+
+	resp := &message.FileListResponse{
+		Files: fileInfos,
+		Pagination: message.PaginationInfo{
+			CurrentPage: page,
+			PageSize:    pageSize,
+			TotalPages:  totalPages,
+			TotalCount:  int(total),
+		},
+	}
+
+	return resp, nil
 }
 
 func UploadFile(c *gin.Context, file *multipart.FileHeader) (*message.FileInfo, error) {

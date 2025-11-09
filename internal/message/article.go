@@ -21,3 +21,9 @@ type PaginationInfo struct {
 	TotalPages  int `json:"total_pages"`
 	TotalCount  int `json:"total_count"`
 }
+
+// ArchiveItem 文章归档项
+type ArchiveItem struct {
+	YearMonth string `json:"year_month"` // 格式: "2024年11月"
+	Count     int    `json:"count"`      // 该月的文章数量
+}

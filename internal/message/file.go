@@ -7,3 +7,8 @@ type FileInfo struct {
 	MimeType  string `json:"mime_type"`  // 文件类型
 	CreatedAt int64  `json:"created_at"` // 创建时间
 }
+
+type FileListResponse struct {
+	Files      []FileInfo     `json:"files"`
+	Pagination PaginationInfo `json:"pagination"`
+}

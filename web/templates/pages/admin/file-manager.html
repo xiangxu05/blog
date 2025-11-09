@@ -11,6 +11,11 @@
 
     <script>
       // 文件管理页面初始化函数
+      // 使用全局变量防止重复初始化
+      if (typeof window.isFileManagerPageInitialized === 'undefined') {
+        window.isFileManagerPageInitialized = false;
+      }
+      
       window.initAdminFileManagerPage = function (routeData) {
         console.log('初始化文件管理页面');
 
@@ -20,10 +25,21 @@
           return;
         }
 
+        // 如果已经初始化过，只更新状态并重新加载（可能是URL变化）
+        if (window.isFileManagerPageInitialized) {
+          console.log('页面已初始化，仅更新状态');
+          initPageState();
+          loadFiles();
+          return;
+        }
+
+        // 首次初始化
+        window.isFileManagerPageInitialized = true;
+
         // 初始化页面状态
         initPageState();
 
-        // 绑定事件
+        // 绑定事件（只绑定一次）
         bindEvents();
 
         // 加载文件列表
@@ -50,8 +66,11 @@
       // 初始化页面状态
       function initPageState() {
         const urlParams = new URLSearchParams(window.location.search);
-        pageState.currentPage = parseInt(urlParams.get('page')) || 1;
-        pageState.pageSize = parseInt(urlParams.get('pageSize')) || 24;
+        const pageFromURL = parseInt(urlParams.get('page')) || 1;
+        console.log('initPageState 被调用，URL中的页码:', pageFromURL, '当前页码:', pageState.currentPage);
+        pageState.currentPage = pageFromURL;
+        // 支持 page_size 和 pageSize 两种格式（向后兼容）
+        pageState.pageSize = parseInt(urlParams.get('page_size') || urlParams.get('pageSize')) || 24;
         pageState.searchKeyword = urlParams.get('search') || '';
         pageState.typeFilter = urlParams.get('type') || '';
         pageState.sortBy = urlParams.get('sort') || 'created_at_desc';
@@ -166,18 +185,32 @@
       }
 
       // 加载文件列表
+      // 使用全局变量防止重复加载
+      if (typeof window.isLoadingFiles === 'undefined') {
+        window.isLoadingFiles = false;
+      }
+      
       async function loadFiles() {
+        // 防止重复加载
+        if (window.isLoadingFiles) {
+          console.log('文件列表正在加载中，跳过重复请求');
+          return;
+        }
+
+        window.isLoadingFiles = true;
         showLoading();
 
         try {
           const params = new URLSearchParams({
             page: pageState.currentPage,
-            pageSize: pageState.pageSize,
+            page_size: pageState.pageSize, // 统一使用 page_size
             search: pageState.searchKeyword,
             type: pageState.typeFilter,
             view: pageState.viewMode,
             sort: pageState.sortBy
           });
+
+          console.log('加载文件列表，页码:', pageState.currentPage, '参数:', params.toString());
 
           const response = await fetch(`/api/files?${params}`, {
             method: 'GET',
@@ -192,20 +225,38 @@
             console.log('文件列表数据:', result);
 
             if (result.code === 200 && result.data) {
-              // API 返回的数据直接是文件数组
-              pageState.files = Array.isArray(result.data) ? result.data : [];
-              pageState.totalCount = pageState.files.length;
-              pageState.totalPages = Math.ceil(pageState.totalCount / pageState.pageSize);
+              // API 返回的数据结构：{ files: [], pagination: {} }
+              const fileListData = result.data;
+              pageState.files = Array.isArray(fileListData.files) ? fileListData.files : [];
+              
+              // 从分页信息中获取总数
+              if (fileListData.pagination) {
+                pageState.totalCount = fileListData.pagination.total_count || pageState.files.length;
+                pageState.totalPages = fileListData.pagination.total_pages || Math.ceil(pageState.totalCount / pageState.pageSize);
+                // 确保当前页码不超过总页数
+                if (pageState.currentPage > pageState.totalPages && pageState.totalPages > 0) {
+                  pageState.currentPage = pageState.totalPages;
+                  window.isLoadingFiles = false;
+                  loadFiles(); // 重新加载正确的页码
+                  return;
+                }
+              } else {
+                pageState.totalCount = pageState.files.length;
+                pageState.totalPages = Math.ceil(pageState.totalCount / pageState.pageSize);
+              }
 
               // 转换字段名以匹配前端期望的格式
-              pageState.files = pageState.files.map(file => ({
-                id: file.file_id,
-                name: file.filename,
-                size: file.size,
-                type: getMimeTypeFromExtension(file.mime_type),
-                created_at: file.created_at || new Date().toISOString(),
-                updated_at: file.updated_at || file.created_at || new Date().toISOString()
-              }));
+              pageState.files = pageState.files.map(file => {
+                console.log('文件数据:', file.filename, 'created_at:', file.created_at, 'type:', typeof file.created_at);
+                return {
+                  id: file.file_id,
+                  name: file.filename,
+                  size: file.size,
+                  type: getMimeTypeFromExtension(file.mime_type),
+                  created_at: file.created_at, // 保持原始格式，formatDate会处理
+                  updated_at: file.updated_at || file.created_at
+                };
+              });
 
               renderFiles();
               renderPagination();
@@ -221,8 +272,10 @@
           }
 
         } catch (error) {
-          console.error('加载文件列表失败:', error);
+          console.error('加载文件列表异常:', error);
           showError();
+        } finally {
+          window.isLoadingFiles = false;
         }
       }
 
@@ -479,9 +532,17 @@
 
       // 跳转到指定页面
       function goToPage(page) {
+        console.log('goToPage 被调用，目标页码:', page, '当前页码:', pageState.currentPage);
         pageState.currentPage = page;
+        console.log('更新后的当前页码:', pageState.currentPage);
+        
+        // 立即更新 URL，避免路由重新加载时读取旧的 URL 参数
+        updateURL();
+        
         loadFiles();
       }
+      // 挂载到全局作用域
+      window.goToPage = goToPage;
 
       // 更新统计信息
       function updateStatistics() {
@@ -502,6 +563,11 @@
         document.getElementById('total-size').textContent = formatFileSize(totalSize);
         document.getElementById('image-files').textContent = imageCount;
         document.getElementById('document-files').textContent = documentCount;
+        
+        // 更新分页显示
+        document.getElementById('total-count').textContent = pageState.totalCount;
+        document.getElementById('current-page').textContent = pageState.currentPage;
+        document.getElementById('total-pages').textContent = pageState.totalPages;
       }
 
       // 更新批量操作
@@ -928,25 +994,57 @@
       function updateURL() {
         const params = new URLSearchParams();
         if (pageState.currentPage > 1) params.set('page', pageState.currentPage);
-        if (pageState.pageSize !== 24) params.set('pageSize', pageState.pageSize);
+        if (pageState.pageSize !== 24) params.set('page_size', pageState.pageSize);
         if (pageState.searchKeyword) params.set('search', pageState.searchKeyword);
         if (pageState.typeFilter) params.set('type', pageState.typeFilter);
         if (pageState.sortBy !== 'created_at_desc') params.set('sort', pageState.sortBy);
         if (pageState.viewMode !== 'grid') params.set('view', pageState.viewMode);
 
         const newURL = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
-        window.history.replaceState({}, '', newURL);
+        const currentURL = window.location.pathname + window.location.search;
+        
+        // 只有当URL确实变化时才更新，避免不必要的更新
+        if (newURL !== currentURL) {
+          console.log('更新URL:', newURL);
+          window.history.replaceState({}, '', newURL);
+        }
       }
 
       // 工具函数
-      function formatDate(dateString) {
-        if (!dateString) return '-';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('zh-CN', {
+      function formatDate(dateInput) {
+        console.log('formatDate input:', dateInput, 'type:', typeof dateInput);
+        
+        if (!dateInput) return '-';
+        
+        let date;
+        // 处理不同的日期输入格式
+        if (typeof dateInput === 'number') {
+          // Unix时间戳（秒），需要转换为毫秒
+          console.log('处理数字时间戳:', dateInput, '转换后:', new Date(dateInput * 1000));
+          date = new Date(dateInput * 1000);
+        } else if (typeof dateInput === 'string') {
+          // ISO字符串格式
+          console.log('处理字符串日期:', dateInput);
+          date = new Date(dateInput);
+        } else {
+          console.log('处理其他类型日期:', dateInput);
+          date = new Date(dateInput);
+        }
+        
+        // 检查日期是否有效
+        if (isNaN(date.getTime())) {
+          console.error('日期无效:', dateInput);
+          return '-';
+        }
+        
+        const result = date.toLocaleDateString('zh-CN', {
           year: 'numeric',
           month: '2-digit',
           day: '2-digit'
         });
+        console.log('formatDate result:', result);
+        
+        return result;
       }
 
       function formatFileSize(bytes) {

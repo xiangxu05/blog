@@ -180,7 +180,10 @@
 <script>
   // 首页初始化函数
   window.initHomePage = function (routeData) {
-    console.log('初始化首页');
+    console.log('===== 初始化首页 =====');
+    console.log('routeData:', routeData);
+    console.log('window.apiClient 是否存在:', !!window.apiClient);
+    console.log('window.apiClient.articles 是否存在:', !!window.apiClient?.articles);
 
     // 加载首页数据
     loadHomeData();
@@ -263,11 +266,20 @@
 
   // 加载首页文章列表
   window.loadHomeArticles = async function () {
+    console.log('===== 开始加载首页文章 =====');
     const articlesContainer = document.getElementById('articles-container');
     const articlesLoading = document.getElementById('articles-loading');
     const articlesList = document.getElementById('articles-list');
     const articlesEmpty = document.getElementById('articles-empty');
     const articlesError = document.getElementById('articles-error');
+
+    console.log('页面元素检查:', {
+      articlesContainer: !!articlesContainer,
+      articlesLoading: !!articlesLoading,
+      articlesList: !!articlesList,
+      articlesEmpty: !!articlesEmpty,
+      articlesError: !!articlesError
+    });
 
     // 确保元素存在
     if (!articlesLoading || !articlesList || !articlesEmpty || !articlesError) {
@@ -277,7 +289,10 @@
 
     // 确保API客户端已初始化
     if (!window.apiClient || !window.apiClient.articles) {
-      console.error('API客户端未初始化');
+      console.error('API客户端未初始化', {
+        apiClient: !!window.apiClient,
+        articles: !!window.apiClient?.articles
+      });
       articlesLoading.classList.add('d-none');
       articlesError.classList.remove('d-none');
       return;
@@ -292,23 +307,28 @@
 
       // 获取文章列表（首页只显示最新4篇）
       const params = { page: 1, page_size: 4 };
+      console.log('请求参数:', params);
       const response = await window.apiClient.articles.getList(params);
+      console.log('API 响应:', response);
 
       // 隐藏加载状态
       articlesLoading.classList.add('d-none');
 
       // 检查响应数据
       if (response && response.articles && Array.isArray(response.articles) && response.articles.length > 0) {
+        console.log('文章数量:', response.articles.length);
         // 渲染文章列表
         renderArticlesList(response.articles);
         articlesList.classList.remove('d-none');
       } else {
+        console.log('无文章数据');
         // 显示空状态
         articlesEmpty.classList.remove('d-none');
       }
 
     } catch (error) {
-      console.error('加载首页文章失败:', error);
+      console.error('===== 加载首页文章失败 =====');
+      console.error('错误:', error);
       console.error('错误详情:', error.message, error.stack);
 
       // 显示错误状态
@@ -412,7 +432,7 @@
       // 获取最新文章列表来提取标签
       const response = await window.apiClient.articles.getList({
         page: 1,
-        pageSize: 10,
+        page_size: 10,
         sort: 'created_at_desc'
       });
 

@@ -631,6 +631,9 @@
 
     // 加载标签云
     loadTagsCloud();
+    
+    // 加载文章归档
+    loadArticlesArchive();
   }
 
   // 加载热门文章
@@ -662,6 +665,66 @@
       popularArticles.innerHTML = '<p class="text-muted small">加载失败</p>';
     }
   }
+
+  // 加载文章归档
+  async function loadArticlesArchive() {
+    const archiveContainer = document.getElementById('articles-archive');
+    
+    console.log('===== 开始加载文章归档 =====');
+    
+    if (!archiveContainer) {
+      console.error('找不到文章归档容器元素');
+      return;
+    }
+    
+    // 显示加载状态
+    archiveContainer.innerHTML = '<p class="text-muted small">加载中...</p>';
+    
+    try {
+      console.log('调用 API: /api/articles/archive');
+      
+      // 调用文章归档API
+      const archiveList = await window.apiClient.articles.getArchive();
+      
+      console.log('归档API响应:', archiveList);
+      
+      if (archiveList && archiveList.length > 0) {
+        // 显示归档列表
+        const archiveHtml = `
+          <div class="list-group list-group-flush">
+            ${archiveList.map(item => `
+              <div class="list-group-item px-0 d-flex justify-content-between align-items-center" 
+                   style="cursor: pointer;" 
+                   onclick="filterByYearMonth('${item.year_month}')">
+                <span>${escapeHtml(item.year_month)}</span>
+                <span class="badge badge-secondary-custom">${item.count}</span>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        
+        archiveContainer.innerHTML = archiveHtml;
+        console.log('文章归档渲染成功');
+      } else {
+        console.warn('归档数据为空');
+        archiveContainer.innerHTML = '<p class="text-muted small">暂无归档</p>';
+      }
+      
+    } catch (error) {
+      console.error('===== 加载文章归档失败 =====');
+      console.error('错误类型:', error.constructor.name);
+      console.error('错误消息:', error.message);
+      console.error('错误堆栈:', error.stack);
+      archiveContainer.innerHTML = '<p class="text-muted small">加载失败</p>';
+    }
+  }
+  
+  // 按年月筛选文章（点击归档项时调用）
+  window.filterByYearMonth = function(yearMonth) {
+    // TODO: 实现按年月筛选功能
+    // 可以通过添加新的筛选参数，或者使用日期范围查询
+    window.blogApp.showNotification(`按 ${yearMonth} 筛选功能即将上线`, 'info');
+  };
 
   // 加载标签云（从当前页面所有文章提取标签）
   async function loadTagsCloud() {
