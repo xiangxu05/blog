@@ -713,7 +713,7 @@
   }
 
   /**
-   * 打印：在当前文档内打印（不新开 about:blank），仅标题 + Markdown 正文；通过 body 类 + @media print 隐藏其余 UI。
+   * 打印：在当前文档内打印（不新开 about:blank），仅标题 + Markdown 正文；隐藏 UI 仅用 @media print（勿给 body 加类，避免残留）。
    */
   function printArticleForPrint() {
     const contentEl = document.getElementById('article-content');
