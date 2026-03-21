@@ -1,15 +1,16 @@
 <div class="container-wide py-4">
   <!-- 页面头部 -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="admin-page-header">
     <div>
-      <h1 class="h3 mb-1" id="page-title">
-        <i class="fas fa-edit me-2 text-primary"></i>
+      <h1 class="admin-page-title" id="page-title">
+        <i class="fas fa-edit" aria-hidden="true"></i>
         <span id="editor-title">新建文章</span>
       </h1>
-      <p class="text-muted mb-0">使用 Markdown 语法编写文章</p>
+      <p class="admin-page-desc mb-1">使用 Markdown 语法编写文章</p>
+      <small id="draft-status" class="text-muted d-none" aria-live="polite"></small>
     </div>
-    <div class="d-flex gap-2">
-      <button class="btn btn-success-custom" id="publish-btn">
+    <div class="admin-page-actions">
+      <button type="button" class="btn btn-success-custom" id="publish-btn">
         <i class="fas fa-paper-plane me-2"></i>发布文章
       </button>
       <a href="/admin/articles" class="btn btn-secondary-custom">
@@ -24,26 +25,26 @@
       <div class="card-custom mb-4 w-100">
         <div class="card-body">
           <div class="mb-3">
-            <label for="article-title" class="form-label">文章标题 *</label>
-            <input type="text" class="form-control" id="article-title" placeholder="请输入文章标题" maxlength="100" required>
+            <label for="article-title" class="form-label form-label-custom">文章标题 *</label>
+            <input type="text" class="form-control form-control-custom" id="article-title" placeholder="请输入文章标题" maxlength="100" required>
             <div class="form-text">标题长度不超过100个字符</div>
           </div>
 
           <div class="mb-3">
-            <label for="article-description" class="form-label">文章摘要</label>
-            <textarea class="form-control" id="article-description" rows="3" placeholder="请输入文章摘要（可选）"
+            <label for="article-description" class="form-label form-label-custom">文章摘要</label>
+            <textarea class="form-control form-control-custom" id="article-description" rows="3" placeholder="请输入文章摘要（可选）"
               maxlength="200"></textarea>
             <div class="form-text">摘要长度不超过200个字符</div>
           </div>
 
           <div class="row">
             <div class="col-md-6">
-              <label for="article-category" class="form-label">分类</label>
-              <input type="text" class="form-control" id="article-category" placeholder="输入文章分类">
+              <label for="article-category" class="form-label form-label-custom">分类</label>
+              <input type="text" class="form-control form-control-custom" id="article-category" placeholder="输入文章分类">
             </div>
             <div class="col-md-6">
-              <label for="article-tags" class="form-label">标签</label>
-              <input type="text" class="form-control" id="article-tags" placeholder="输入标签，用逗号分隔">
+              <label for="article-tags" class="form-label form-label-custom">标签</label>
+              <input type="text" class="form-control form-control-custom" id="article-tags" placeholder="输入标签，用逗号分隔">
             </div>
           </div>
         </div>
@@ -175,6 +176,128 @@
     };
   }
 
+  /** 本地草稿：新建与编辑各用固定 key，覆盖写入不复制多份（用 var 避免 SPA 重复执行脚本时报重复声明） */
+  function getDraftStorageKey() {
+    if (window.editorState.isEditing && window.editorState.articleId) {
+      return 'blog_admin_article_draft_v1_' + window.editorState.articleId;
+    }
+    return 'blog_admin_new_article_draft_v1';
+  }
+  var blogArticleDraftDebounceTimer = null;
+
+  function collectDraftPayload() {
+    return {
+      title: document.getElementById('article-title')?.value ?? '',
+      description: document.getElementById('article-description')?.value ?? '',
+      category: document.getElementById('article-category')?.value ?? '',
+      tags: document.getElementById('article-tags')?.value ?? '',
+      content: document.getElementById('markdown-editor')?.value ?? '',
+      updatedAt: Date.now()
+    };
+  }
+
+  function updateDraftStatusUI(options) {
+    const el = document.getElementById('draft-status');
+    if (!el) return;
+    const loaded = options && options.loaded;
+    try {
+      const raw = localStorage.getItem(getDraftStorageKey());
+      if (!raw) {
+        el.textContent = '';
+        el.classList.add('d-none');
+        return;
+      }
+      const d = JSON.parse(raw);
+      if (loaded) {
+        el.textContent = '已从本机恢复未发布的草稿';
+      } else {
+        const t = d.updatedAt
+          ? new Date(d.updatedAt).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+          : '';
+        el.textContent = t ? '草稿已保存 ' + t : '草稿已保存';
+      }
+      el.classList.remove('d-none');
+    } catch (_) {
+      el.textContent = '';
+      el.classList.add('d-none');
+    }
+  }
+
+  function persistDraftNow() {
+    try {
+      localStorage.setItem(getDraftStorageKey(), JSON.stringify(collectDraftPayload()));
+      updateDraftStatusUI();
+    } catch (e) {
+      console.warn('草稿保存失败', e);
+    }
+  }
+
+  function scheduleDraftSave() {
+    if (blogArticleDraftDebounceTimer) clearTimeout(blogArticleDraftDebounceTimer);
+    blogArticleDraftDebounceTimer = setTimeout(function () {
+      blogArticleDraftDebounceTimer = null;
+      persistDraftNow();
+    }, 1200);
+  }
+
+  function flushDraftSync() {
+    if (blogArticleDraftDebounceTimer) {
+      clearTimeout(blogArticleDraftDebounceTimer);
+      blogArticleDraftDebounceTimer = null;
+    }
+    persistDraftNow();
+  }
+
+  function loadDraftIntoFormIfNew() {
+    if (window.editorState.isEditing) return;
+    try {
+      const raw = localStorage.getItem('blog_admin_new_article_draft_v1');
+      if (!raw) return;
+      const d = JSON.parse(raw);
+      if (!d || typeof d !== 'object') return;
+      if (d.title != null) document.getElementById('article-title').value = d.title;
+      if (d.description != null) document.getElementById('article-description').value = d.description;
+      if (d.category != null) document.getElementById('article-category').value = d.category;
+      if (d.tags != null) document.getElementById('article-tags').value = d.tags;
+      if (d.content != null) document.getElementById('markdown-editor').value = d.content;
+      if ((d.title && String(d.title).trim()) || (d.content && String(d.content).trim())) {
+        window.editorState.isDirty = true;
+      }
+      if (window.previewState && window.previewState.autoRefresh) {
+        manualPreview();
+      }
+      updateDraftStatusUI({ loaded: true });
+    } catch (e) {
+      console.warn('加载草稿失败', e);
+    }
+  }
+
+  function clearDraftStorage() {
+    try {
+      localStorage.removeItem(getDraftStorageKey());
+      const el = document.getElementById('draft-status');
+      if (el) {
+        el.textContent = '';
+        el.classList.add('d-none');
+      }
+    } catch (e) {}
+  }
+
+  async function deleteUploadedFileById(fileId) {
+    if (!fileId) return;
+    try {
+      const response = await fetch('/api/files/' + encodeURIComponent(fileId), {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        console.warn('清理已上传的正文文件失败', fileId, response.status);
+      }
+    } catch (e) {
+      console.warn('清理已上传的正文文件失败', e);
+    }
+  }
+
   // 初始化编辑器
   function initArticleEditor(routeData) {
     // console.log('initArticleEditor 开始执行');
@@ -214,6 +337,7 @@
     // console.log('开始绑定事件和初始化');
     bindEditorEvents();
     initMarkdownEditor();
+    loadDraftIntoFormIfNew();
     startAutoSave();
     // console.log('initArticleEditor 执行完成');
   }
@@ -233,6 +357,8 @@
     const markdownEditor = document.getElementById('markdown-editor');
     const articleTitle = document.getElementById('article-title');
     const articleDescription = document.getElementById('article-description');
+    const articleCategory = document.getElementById('article-category');
+    const articleTags = document.getElementById('article-tags');
 
     // console.log('查找编辑器元素:', {
     //   markdownEditor,
@@ -255,6 +381,7 @@
       const events = ['input', 'keyup', 'paste', 'change'];
       events.forEach(eventType => {
         markdownEditor.addEventListener(eventType, function () {
+          markDirty();
           if (window.previewState.autoRefresh) {
             manualPreview();
           }
@@ -295,6 +422,12 @@
     }
     if (articleDescription) {
       articleDescription.addEventListener('input', markDirty);
+    }
+    if (articleCategory) {
+      articleCategory.addEventListener('input', markDirty);
+    }
+    if (articleTags) {
+      articleTags.addEventListener('input', markDirty);
     }
   }
 
@@ -340,9 +473,10 @@
     markDirty();
   }
 
-  // 标记为已修改
+  // 标记为已修改，并防抖写入本地草稿（同一 storage key 覆盖）
   function markDirty() {
     window.editorState.isDirty = true;
+    scheduleDraftSave();
   }
 
   // 更新预览（简化版本）
@@ -416,6 +550,7 @@
       }
 
       window.editorState.isDirty = false;
+      clearDraftStorage();
 
       // 恢复按钮状态
       saveBtn.disabled = false;
@@ -443,15 +578,13 @@
     }
   }
 
-  // 创建新文章
+  // 创建新文章（正文上传成功但创建记录失败时，删除已上传文件，避免孤儿文件）
   async function createNewArticle(title, description, content, category, tags) {
-    // 步骤1: 创建MD文件并上传
     console.log('开始创建并上传MD文件...');
     const filename = `${title}.md`;
     const fileId = await uploadMarkdownFile(filename, content);
     console.log('MD文件上传成功，文件ID:', fileId);
 
-    // 步骤2: 创建文章记录
     console.log('开始创建文章记录...');
     const articleData = {
       title,
@@ -461,35 +594,44 @@
       store_id: fileId
     };
 
-    const response = await fetch('/api/articles', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(articleData)
-    });
+    let response;
+    try {
+      response = await fetch('/api/articles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify(articleData)
+      });
+    } catch (e) {
+      await deleteUploadedFileById(fileId);
+      throw e;
+    }
 
-    if (!response.ok) {
+    let result;
+    try {
+      result = await response.json();
+    } catch (e) {
+      await deleteUploadedFileById(fileId);
       throw new Error(`创建文章失败: ${response.status} ${response.statusText}`);
     }
 
-    const result = await response.json();
     console.log('文章创建响应:', result);
 
-    if (result.code !== 200) {
-      throw new Error(result.msg || '创建文章失败');
+    if (!response.ok || result.code !== 200) {
+      await deleteUploadedFileById(fileId);
+      throw new Error(result.msg || `创建文章失败: ${response.status} ${response.statusText}`);
     }
   }
 
-  // 更新现有文章
+  // 更新现有文章（新正文已上传但文章记录更新失败时，删除新上传文件）
   async function updateExistingArticle(title, description, content, category, tags) {
-    // 步骤1: 更新MD文件内容
     console.log('开始更新MD文件内容...');
     const filename = `${title}.md`;
     const fileId = await uploadMarkdownFile(filename, content);
     console.log('MD文件更新成功，文件ID:', fileId);
 
-    // 步骤2: 更新文章记录
     console.log('开始更新文章记录...');
     const articleData = {
       title,
@@ -499,22 +641,33 @@
       store_id: fileId
     };
 
-    const response = await fetch(`/api/articles/${window.editorState.articleId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(articleData)
-    });
+    let response;
+    try {
+      response = await fetch(`/api/articles/${window.editorState.articleId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify(articleData)
+      });
+    } catch (e) {
+      await deleteUploadedFileById(fileId);
+      throw e;
+    }
 
-    if (!response.ok) {
+    let result;
+    try {
+      result = await response.json();
+    } catch (e) {
+      await deleteUploadedFileById(fileId);
       throw new Error(`更新文章失败: ${response.status} ${response.statusText}`);
     }
 
-    const result = await response.json();
     console.log('文章更新响应:', result);
 
-    if (result.code !== 200) {
+    if (!response.ok || result.code !== 200) {
+      await deleteUploadedFileById(fileId);
       throw new Error(result.msg || '更新文章失败');
     }
   }
@@ -529,9 +682,9 @@
     const formData = new FormData();
     formData.append('file', file);
 
-    // 上传文件
     const response = await fetch('/api/files/upload', {
       method: 'POST',
+      credentials: 'include',
       body: formData
     });
 
@@ -649,19 +802,23 @@
     }
   }
 
-  // 自动保存
+  // 定时将本地草稿落盘（防抖之外再兜底）
   function startAutoSave() {
-    window.editorState.autoSaveTimer = setInterval(() => {
-      if (window.editorState.isDirty && window.editorState.isEditing) {
-        console.log('自动保存草稿...');
-        // 这里可以实现自动保存逻辑
+    if (window.editorState.autoSaveTimer) {
+      clearInterval(window.editorState.autoSaveTimer);
+      window.editorState.autoSaveTimer = null;
+    }
+    window.editorState.autoSaveTimer = setInterval(function () {
+      if (window.editorState.isDirty) {
+        flushDraftSync();
       }
-    }, 30000); // 30秒自动保存一次
+    }, 30000);
   }
 
-  // 页面离开前检查
+  // 页面离开前：先写入本地草稿再提示
   window.addEventListener('beforeunload', function (e) {
     if (window.editorState.isDirty) {
+      flushDraftSync();
       e.preventDefault();
       e.returnValue = '您有未保存的更改，确定要离开吗？';
       return e.returnValue;
@@ -922,6 +1079,7 @@
       try {
         // 在光标位置插入上传中的占位符
         insertTextAtCursor(editor, placeholder, cursorPosition);
+        markDirty();
 
         // 上传文件
         const fileId = await uploadSingleFile(file);
@@ -933,6 +1091,7 @@
         // 替换占位符
         const currentValue = editor.value;
         editor.value = currentValue.replace(placeholder, markdownLink);
+        markDirty();
 
         // 触发预览更新
         if (window.previewState && window.previewState.autoRefresh) {
@@ -948,6 +1107,7 @@
         // 替换占位符为错误信息
         const currentValue = editor.value;
         editor.value = currentValue.replace(placeholder, `![上传失败: ${file.name}]()`);
+        markDirty();
 
         // 显示错误提示
         showNotification('文件上传失败: ' + file.name, 'error');
@@ -962,6 +1122,7 @@
 
     const response = await fetch('/api/files/upload', {
       method: 'POST',
+      credentials: 'include',
       body: formData
     });
 

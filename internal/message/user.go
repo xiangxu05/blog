@@ -63,4 +63,6 @@ type GetUserResponse struct {
 	PersonalWeb string `json:"personal_web"`
 	Location    string `json:"location"`
 	CreateAt    int64  `json:"create_at"`
+	// 仅博主接口返回，用于首页联系；其它用户资料接口不填
+	Email string `json:"email,omitempty"`
 }

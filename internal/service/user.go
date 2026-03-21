@@ -10,6 +10,7 @@ import (
 	"regexp"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func RegisterUser(c *gin.Context, req *message.RegisterRequest) error {
@@ -130,14 +131,32 @@ func DeleteUser(c *gin.Context, userID int32) error {
 	return nil
 }
 
+// GetAdminBlogger 取 role=admin 中 id 最小者作为博主；后续若有多名管理员，展示仍稳定指向首位管理员。
+func GetAdminBlogger(c *gin.Context) (*model_def.User, error) {
+	ctx := c.Request.Context()
+	u, err := dao.User.WithContext(ctx).
+		Where(dao.User.Role.Eq("admin")).
+		Order(dao.User.ID.Asc()).
+		First()
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, gorm.ErrRecordNotFound
+		}
+		return nil, err
+	}
+	return u, nil
+}
+
 func GetUser(c *gin.Context, userID int32) (*model_def.User, error) {
 	ctx := c.Request.Context()
-	// 检查用户是否存在
 	existingUser, err := dao.User.WithContext(ctx).
 		Where(dao.User.ID.Eq(userID)).
 		First()
-	if err != nil || existingUser == nil {
-		return nil, errors.New("用户不存在")
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, gorm.ErrRecordNotFound
+		}
+		return nil, err
 	}
 	return existingUser, nil
 }

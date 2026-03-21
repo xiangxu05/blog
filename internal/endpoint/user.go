@@ -3,10 +3,12 @@ package endpoint
 import (
 	"blog/internal/message"
 	"blog/internal/service"
+	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 // 注册
@@ -127,6 +129,10 @@ func GetUserHandler(c *gin.Context) {
 
 	user, err := service.GetUser(c, userId.(int32))
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			message.SendMsg(c, http.StatusNotFound, "用户不存在", nil)
+			return
+		}
 		message.SendMsg(c, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
@@ -183,6 +189,32 @@ func UpdatePasswordHandler(c *gin.Context) {
 	message.SendMsg(c, http.StatusOK, "修改成功", nil)
 }
 
+// GetBloggerHandler GET /api/users/blogger 公开：返回管理员（博主）资料，不依赖 user id。
+func GetBloggerHandler(c *gin.Context) {
+	user, err := service.GetAdminBlogger(c)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			message.SendMsg(c, http.StatusNotFound, "未找到管理员账号", nil)
+			return
+		}
+		message.SendMsg(c, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+	resp := &message.GetUserResponse{
+		ID:          user.ID,
+		Username:    user.Username,
+		Nickname:    user.Nickname,
+		Avatar:      user.Avatar,
+		Role:        user.Role,
+		SelfIntro:   user.SelfIntro,
+		PersonalWeb: user.PersonalWeb,
+		Location:    user.Location,
+		CreateAt:    user.CreatedAt.Unix(),
+		Email:       user.Email,
+	}
+	message.SendMsg(c, http.StatusOK, "获取成功", resp)
+}
+
 func GetOtherUserHandler(c *gin.Context) {
 	user_id, err := strconv.Atoi(c.Param("user_id"))
 	if err != nil {
@@ -191,6 +223,10 @@ func GetOtherUserHandler(c *gin.Context) {
 	}
 	user, err := service.GetUser(c, int32(user_id))
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			message.SendMsg(c, http.StatusNotFound, "用户不存在", nil)
+			return
+		}
 		message.SendMsg(c, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}

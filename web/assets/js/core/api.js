@@ -131,6 +131,11 @@ class ApiClient {
       return this.request(`/users/${userId}`);
     },
 
+    /** 公开：当前站点管理员（博主）资料，不固定 user id */
+    getBlogger: () => {
+      return this.request('/users/blogger');
+    },
+
     // 删除用户账号
     deleteAccount: () => {
       return this.request('/users/delete', {
@@ -162,11 +167,22 @@ class ApiClient {
       if (params.search_type) queryParams.append('search_type', params.search_type);
       if (params.search_fields) queryParams.append('search_fields', params.search_fields);
       if (params.sort) queryParams.append('sort', params.sort);
+      if (params.year_month) queryParams.append('year_month', params.year_month);
 
       const queryString = queryParams.toString();
       const endpoint = queryString ? `/articles?${queryString}` : '/articles';
 
       return this.request(endpoint);
+    },
+
+    // 我的收藏（须登录）
+    listBookmarks: (params = {}) => {
+      const q = new URLSearchParams();
+      if (params.page) q.append('page', params.page);
+      const ps = params.page_size || params.pageSize;
+      if (ps != null) q.append('page_size', ps);
+      const qs = q.toString();
+      return this.request(`/articles/bookmarks${qs ? `?${qs}` : ''}`);
     },
 
     // 获取文章详情
@@ -217,6 +233,54 @@ class ApiClient {
     // 获取文章归档统计
     getArchive: () => {
       return this.request('/articles/archive');
+    },
+
+    getSocial: (id) => {
+      return this.request(`/articles/${id}/social`);
+    },
+    like: (id) => {
+      return this.request(`/articles/${id}/like`, { method: 'POST' });
+    },
+    unlike: (id) => {
+      return this.request(`/articles/${id}/like`, { method: 'DELETE' });
+    },
+    bookmark: (id) => {
+      return this.request(`/articles/${id}/bookmark`, { method: 'POST' });
+    },
+    unbookmark: (id) => {
+      return this.request(`/articles/${id}/bookmark`, { method: 'DELETE' });
+    }
+  };
+
+  // 评论
+  comments = {
+    list: (articleId, params = {}) => {
+      const q = new URLSearchParams();
+      if (params.page) q.append('page', params.page);
+      if (params.page_size) q.append('page_size', params.page_size);
+      const qs = q.toString();
+      return this.request(`/articles/${articleId}/comments${qs ? `?${qs}` : ''}`);
+    },
+    create: (articleId, body) => {
+      return this.request(`/articles/${articleId}/comments`, {
+        method: 'POST',
+        body: JSON.stringify(body)
+      });
+    },
+    delete: (commentId) => {
+      return this.request(`/comments/${commentId}`, { method: 'DELETE' });
+    },
+    update: (commentId, body) => {
+      return this.request(`/comments/${commentId}`, {
+        method: 'PUT',
+        body: JSON.stringify(body)
+      });
+    },
+    like: (commentId) => {
+      return this.request(`/comments/${commentId}/like`, { method: 'POST' });
+    },
+    unlike: (commentId) => {
+      return this.request(`/comments/${commentId}/like`, { method: 'DELETE' });
     }
   };
 

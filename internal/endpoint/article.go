@@ -78,8 +78,9 @@ func GetArticleListHandler(c *gin.Context) {
 	search := c.Query("search")
 	searchType := c.DefaultQuery("search_type", "fuzzy")
 	searchFields := c.DefaultQuery("search_fields", "all")
+	yearMonth := c.Query("year_month")
 
-	articleList, err := service.GetArticleList(c, pageNum, pageSizeNum, category, sort, search, searchType, searchFields)
+	articleList, err := service.GetArticleList(c, pageNum, pageSizeNum, category, sort, search, searchType, searchFields, yearMonth)
 	if err != nil {
 		log.Errorf("获取文章列表失败: %v", err)
 		message.SendMsg(c, http.StatusInternalServerError, "获取文章列表失败", nil)

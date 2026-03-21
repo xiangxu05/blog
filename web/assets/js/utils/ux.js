@@ -161,7 +161,22 @@ class ErrorHandler {
     });
   }
 
+  /** 路由切换、取消 fetch 等场景下的错误，不应弹 Toast */
+  isBenignError(error) {
+    if (error == null) return false;
+    const name = error.name || '';
+    if (name === 'AbortError') return true;
+    const msg = String(error.message || '').toLowerCase();
+    if (msg.includes('abort')) return true;
+    if (msg.includes('the user cancelled')) return true;
+    if (msg.includes('user aborted')) return true;
+    return false;
+  }
+
   handleError(error, context = '未知错误') {
+    if (this.isBenignError(error)) {
+      return;
+    }
     // 安全检查：确保error不为null或undefined
     const safeError = error || new Error('未知错误');
 

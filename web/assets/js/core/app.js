@@ -36,6 +36,9 @@ class BlogApp {
       
       // 7. 初始化全局组件
       this.initGlobalComponents();
+
+      // 8. 全局搜索
+      this.setupGlobalSearch();
       
       this.initialized = true;
       console.log('个人博客应用初始化完成');
@@ -250,10 +253,42 @@ class BlogApp {
     }
   }
   
-  // 打开搜索
+  // 打开搜索（跳转文章列表并带 search 参数）
   openSearch() {
-    // TODO: 实现搜索功能
-    console.log('打开搜索功能');
+    const modalEl = document.getElementById('global-search-modal');
+    if (!modalEl || typeof bootstrap === 'undefined') {
+      if (typeof page === 'function') page('/articles');
+      return;
+    }
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+    setTimeout(() => {
+      const input = document.getElementById('global-search-input');
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }, 200);
+  }
+
+  setupGlobalSearch() {
+    const form = document.getElementById('global-search-form');
+    const input = document.getElementById('global-search-input');
+    document.getElementById('navbar-search-btn')?.addEventListener('click', () => this.openSearch());
+    form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const q = (input?.value || '').trim();
+      const modalEl = document.getElementById('global-search-modal');
+      if (modalEl && typeof bootstrap !== 'undefined') {
+        bootstrap.Modal.getInstance(modalEl)?.hide();
+      }
+      if (typeof page === 'function') {
+        const qs = q ? `?search=${encodeURIComponent(q)}` : '';
+        page('/articles' + qs);
+      } else {
+        window.location.href = '/articles' + (q ? `?search=${encodeURIComponent(q)}` : '');
+      }
+    });
   }
   
   // 关闭模态框

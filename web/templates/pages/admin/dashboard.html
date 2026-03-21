@@ -1,14 +1,14 @@
 <div class="container-wide py-4">
   <!-- 管理后台头部 -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="admin-page-header">
     <div>
-      <h1 class="h3 mb-1">
-        <i class="fas fa-tachometer-alt me-2 text-primary"></i>
+      <h1 class="admin-page-title">
+        <i class="fas fa-tachometer-alt" aria-hidden="true"></i>
         管理后台
       </h1>
-      <p class="text-muted mb-0">欢迎回来，管理员</p>
+      <p class="admin-page-desc">欢迎回来，管理员</p>
     </div>
-    <div class="d-flex gap-2">
+    <div class="admin-page-actions">
       <a href="/admin/articles/new" class="btn btn-primary-custom">
         <i class="fas fa-plus me-2"></i>
         写新文章
@@ -31,8 +31,8 @@
               <div class="h3 fw-bold mb-0" id="total-articles">-</div>
             </div>
             <div class="ms-3">
-              <div class="bg-primary bg-opacity-10 p-2 rounded">
-                <i class="fas fa-newspaper text-primary fa-lg"></i>
+              <div class="admin-stat-icon">
+                <i class="fas fa-newspaper fa-lg"></i>
               </div>
             </div>
           </div>
@@ -49,8 +49,8 @@
               <div class="h3 fw-bold mb-0" id="total-views">-</div>
             </div>
             <div class="ms-3">
-              <div class="bg-success bg-opacity-10 p-2 rounded">
-                <i class="fas fa-eye text-success fa-lg"></i>
+              <div class="admin-stat-icon is-success">
+                <i class="fas fa-eye fa-lg"></i>
               </div>
             </div>
           </div>
@@ -67,8 +67,8 @@
               <div class="h3 fw-bold mb-0" id="total-files">-</div>
             </div>
             <div class="ms-3">
-              <div class="bg-info bg-opacity-10 p-2 rounded">
-                <i class="fas fa-folder text-info fa-lg"></i>
+              <div class="admin-stat-icon is-info">
+                <i class="fas fa-folder fa-lg"></i>
               </div>
             </div>
           </div>
@@ -85,8 +85,8 @@
               <div class="h3 fw-bold mb-0" id="total-users">-</div>
             </div>
             <div class="ms-3">
-              <div class="bg-warning bg-opacity-10 p-2 rounded">
-                <i class="fas fa-users text-warning fa-lg"></i>
+              <div class="admin-stat-icon is-warn">
+                <i class="fas fa-users fa-lg"></i>
               </div>
             </div>
           </div>
@@ -542,7 +542,7 @@
       }
     });
 
-    // 数据备份按钮
+    // 数据备份：POST 立即返回任务 → 轮询状态 → 就绪后用 <a> 触发下载（打包在后台，下载请求只读盘、很快结束）
     document.getElementById('backup-data-btn')?.addEventListener('click', async function () {
       if (!confirm('确定要进行数据备份吗？')) {
         return;
@@ -550,59 +550,72 @@
 
       const btn = this;
       const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = '备份中...';
 
       try {
-        // 显示加载状态
-        btn.disabled = true;
-        btn.textContent = '备份中...';
-        window.blogApp.showNotification('正在进行数据备份...', 'info');
-
-        const response = await fetch('/api/files/backup', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
+        const startRes = await fetch('/api/files/backup/start', {
+          method: 'POST',
+          credentials: 'include',
         });
+        const startJson = await startRes.json().catch(() => ({}));
+        if (!startRes.ok) {
+          throw new Error(startJson.msg || startJson.message || ('HTTP ' + startRes.status));
+        }
+        const payload = startJson.data !== undefined ? startJson.data : startJson;
+        const jobId = payload.job_id;
+        const filename = payload.filename;
+        if (!jobId || !filename) {
+          throw new Error('服务器未返回任务信息');
+        }
 
-        if (response.ok) {
-          // 检查响应类型
-          const contentType = response.headers.get('content-type');
+        window.blogApp.showNotification('备份任务已启动，正在打包…', 'info');
 
-          if (contentType && contentType.includes('application/json')) {
-            // 如果是JSON响应，说明有错误
-            const errorData = await response.json();
-            throw new Error(errorData.message || '备份失败');
-          } else {
-            // 如果是文件响应，处理下载
-            const blob = await response.blob();
-            const filename = response.headers.get('Content-Disposition')?.match(/filename="(.+)"/)?.[1] || `backup_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.zip`;
-
-            // 创建下载链接
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-
-            window.blogApp.showNotification('数据备份成功！文件已开始下载', 'success');
+        const maxAttempts = 300;
+        const intervalMs = 400;
+        let state = 'pending';
+        for (let i = 0; i < maxAttempts; i++) {
+          if (i > 0) {
+            await new Promise(function (r) { setTimeout(r, intervalMs); });
           }
-        } else {
-          // 尝试解析错误响应
-          try {
-            const errorData = await response.json();
-            throw new Error(errorData.message || '备份失败');
-          } catch {
-            throw new Error(`备份失败: HTTP ${response.status}`);
+          const stRes = await fetch('/api/files/backup/status?job=' + encodeURIComponent(jobId), {
+            credentials: 'include',
+          });
+          const stJson = await stRes.json().catch(() => ({}));
+          if (!stRes.ok) {
+            throw new Error(stJson.msg || stJson.message || '查询状态失败');
           }
+          const stPayload = stJson.data !== undefined ? stJson.data : stJson;
+          state = stPayload.state;
+          if (state === 'failed') {
+            throw new Error(stPayload.error || '备份失败');
+          }
+          if (state === 'done') {
+            break;
+          }
+        }
+
+        if (state !== 'done') {
+          throw new Error('备份超时，请稍后重试');
+        }
+
+        window.blogApp.showNotification('打包完成', 'success');
+
+        const downloadUrl = '/api/files/backup/download?file=' + encodeURIComponent(filename);
+        if (window.confirm('备份已就绪，是否立即下载？')) {
+          const a = document.createElement('a');
+          a.href = downloadUrl;
+          a.download = filename;
+          a.rel = 'noopener noreferrer';
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
         }
       } catch (error) {
         console.error('备份失败:', error);
-        window.blogApp.showNotification(`备份失败: ${error.message}`, 'error');
+        window.blogApp.showNotification('备份失败: ' + (error.message || String(error)), 'error');
       } finally {
-        // 恢复按钮状态
         btn.disabled = false;
         btn.textContent = originalText;
       }

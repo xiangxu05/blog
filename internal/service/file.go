@@ -13,7 +13,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -242,28 +241,6 @@ func DeleteFile(c *gin.Context, fileID string) error {
 	if err != nil {
 		return err
 	}
-	return nil
-}
-
-// Backup 实现备份功能
-func Backup(c *gin.Context) error {
-	// 生成备份文件名（包含时间戳）
-	timestamp := time.Now().Format("20060102_150405")
-	backupName := fmt.Sprintf("backup_%s.zip", timestamp)
-	backupPath := filepath.Join("backup", backupName)
-
-	// 确保备份目录存在
-	err := os.MkdirAll("backup", os.ModePerm)
-	if err != nil {
-		return fmt.Errorf("创建备份目录失败: %w", err)
-	}
-
-	// 打包数据目录
-	err = ZipFolder("data", backupPath)
-	if err != nil {
-		return fmt.Errorf("备份失败: %w", err)
-	}
-	c.FileAttachment(backupPath, backupName)
 	return nil
 }
 

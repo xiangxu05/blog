@@ -15,8 +15,8 @@ body {
 /* 亮色主题特定样式 */
 [data-theme="light"] {
   /* 导航栏 */
-  .navbar {
-    background-color: rgba(255, 255, 255, 0.8) !important;
+  .navbar-blog {
+    background-color: rgba(255, 255, 255, 0.78) !important;
     backdrop-filter: saturate(180%) blur(20px);
   }
   
@@ -51,10 +51,10 @@ body {
 /* 暗色主题特定样式 */
 [data-theme="dark"] {
   /* 导航栏 */
-  .navbar {
-    background-color: rgba(28, 28, 30, 0.8) !important;
+  .navbar-blog {
+    background-color: rgba(20, 24, 31, 0.82) !important;
     backdrop-filter: saturate(180%) blur(20px);
-    border-bottom-color: var(--color-gray-4);
+    border-bottom-color: var(--color-gray-5);
   }
   
   /* 毛玻璃效果 */
@@ -130,9 +130,10 @@ body {
 
 /* Markdown 内容样式 */
 .markdown-content {
-  line-height: 1.7;
+  font-family: var(--font-serif);
+  line-height: 1.8;
   color: var(--text-primary);
-  font-size: 1rem;
+  font-size: 1.0625rem;
   max-width: 100%;
   overflow-x: hidden;
   word-wrap: break-word;

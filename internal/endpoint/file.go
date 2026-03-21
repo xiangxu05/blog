@@ -2,6 +2,7 @@ package endpoint
 
 import (
 	"blog/internal/message"
+	"blog/internal/monitor"
 	"blog/internal/service"
 	"net/http"
 	"strconv"
@@ -91,12 +92,46 @@ func DeleteFileHandler(c *gin.Context) {
 	message.SendMsg(c, http.StatusOK, "文件删除成功", nil)
 }
 
-func BackupHandler(c *gin.Context) {
-	err := service.Backup(c)
-	if err != nil {
-		message.SendMsg(c, http.StatusInternalServerError, err.Error(), nil)
+// BackupStartHandler 异步创建备份任务，立即返回 job_id，避免长时间占用 HTTP 连接。
+func BackupStartHandler(m *monitor.Monitor) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		jobID, filename, err := service.StartBackupAsync(m)
+		if err != nil {
+			message.SendMsg(c, http.StatusInternalServerError, err.Error(), nil)
+			return
+		}
+		message.SendMsg(c, http.StatusOK, "备份任务已创建", gin.H{"job_id": jobID, "filename": filename})
+	}
+}
+
+// BackupStatusHandler 查询备份任务状态：pending / running / done / failed
+func BackupStatusHandler(c *gin.Context) {
+	job := c.Query("job")
+	if job == "" {
+		message.SendMsg(c, http.StatusBadRequest, "缺少 job 参数", nil)
 		return
 	}
-	// 如果没有错误，service.Backup已经通过c.FileAttachment发送了文件
-	// 不需要额外的响应
+	state, filename, errMsg := service.GetBackupJobStatus(job)
+	if state == "" {
+		message.SendMsg(c, http.StatusNotFound, errMsg, nil)
+		return
+	}
+	message.SendMsg(c, http.StatusOK, "ok", gin.H{
+		"state":    state,
+		"filename": filename,
+		"error":    errMsg,
+	})
+}
+
+// BackupDownloadHandler 下载已生成好的 zip（短响应，仅读盘发送文件）
+func BackupDownloadHandler(c *gin.Context) {
+	fn := c.Query("file")
+	if fn == "" {
+		message.SendMsg(c, http.StatusBadRequest, "缺少 file 参数", nil)
+		return
+	}
+	if err := service.ServeBackupDownload(c, fn); err != nil {
+		message.SendMsg(c, http.StatusNotFound, err.Error(), nil)
+		return
+	}
 }

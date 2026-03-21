@@ -1,11 +1,16 @@
 <div class="container-wide py-4">
+  <div class="blog-page-intro mb-4">
+    <h1 class="blog-page-title h2 mb-2">个人资料</h1>
+    <p class="blog-page-sub">管理展示信息、头像与账号安全</p>
+  </div>
+
   <div class="row">
     <!-- 用户信息卡片 -->
     <div class="col-lg-4 mb-4">
-      <div class="card-custom">
+      <div class="card-custom profile-sidebar-card">
         <div class="card-body text-center">
           <div class="mb-3">
-            <img id="profile-avatar" src="/assets/images/default-avatar.svg" alt="用户头像" class="avatar avatar-lg mb-3">
+            <img id="profile-avatar" src="/assets/images/default-avatar.svg?v=2" alt="用户头像" class="avatar avatar-lg mb-3" onerror="this.onerror=null;this.src='/assets/images/default-avatar.svg?v=2'">
             <div>
               <button class="btn btn-outline-custom btn-sm" id="change-avatar-btn">
                 <i class="fas fa-camera me-2"></i>更换头像
@@ -14,8 +19,8 @@
             </div>
           </div>
 
-          <h4 id="profile-username" class="mb-1">-</h4>
-          <p id="profile-role" class="text-muted mb-3">-</p>
+          <h4 id="profile-username" class="profile-name mb-1">-</h4>
+          <p id="profile-role" class="text-muted mb-3 small">-</p>
 
         </div>
       </div>
@@ -269,7 +274,7 @@
   // 显示用户信息
   function displayUserProfile(profile) {
     // 基本信息显示
-    document.getElementById('profile-avatar').src = profile.avatar || '/assets/images/default-avatar.svg';
+    document.getElementById('profile-avatar').src = profile.avatar || '/assets/images/default-avatar.svg?v=2';
     document.getElementById('profile-username').textContent = profile.nickname || profile.username;
     document.getElementById('profile-role').textContent = profile.role === 'admin' ? '管理员' : '用户';
 
@@ -409,8 +414,22 @@
 
       await window.apiClient.user.updatePassword(passwordData);
 
-      window.blogApp.showNotification('密码修改成功', 'success');
       document.getElementById('change-password-form').reset();
+
+      try {
+        await window.apiClient.user.logout();
+      } catch (logoutErr) {
+        console.warn('改密后登出请求失败（已忽略）:', logoutErr);
+      }
+      window.appState.clearUser();
+      window.blogApp.showNotification('密码已修改，请重新登录', 'success');
+      if (window.router && typeof window.router.push === 'function') {
+        window.router.push('/login');
+      } else if (typeof page === 'function') {
+        page('/login');
+      } else {
+        window.location.href = '/login';
+      }
 
     } catch (error) {
       console.error('修改密码失败:', error);

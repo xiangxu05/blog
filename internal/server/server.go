@@ -96,6 +96,8 @@ func (s *Server) setupRouter() {
 	user.POST("/register", endpoint.RegisterHandler)
 	// 登录接口添加更严格的限流：每10秒1次，突发3次
 	user.POST("/login", middleware.LoginRateLimit(0.1, 3), s.monitor.UpdateLastLogin(), endpoint.LoginHandler)
+	// 公开：首页博主区（按管理员角色，不固定 id）
+	user.GET("/blogger", endpoint.GetBloggerHandler)
 	// 公开访问的用户信息接口
 	user.GET("/:user_id", endpoint.GetOtherUserHandler)
 	user.Use(middleware.UserAuth())
@@ -117,11 +119,24 @@ func (s *Server) setupRouter() {
 		file.GET("/", endpoint.GetFileListHandler)
 		file.POST("/upload", endpoint.UploadFileHandler)
 		file.DELETE("/:file_id", endpoint.DeleteFileHandler)
-		file.GET("/backup", s.monitor.UpdateLastBackup(), endpoint.BackupHandler)
+		// 异步备份：先 POST 创建任务，再轮询 status，就绪后 GET download（短连接，不在一个请求里慢慢打 zip）
+		file.POST("/backup/start", endpoint.BackupStartHandler(s.monitor))
+		file.GET("/backup/status", endpoint.BackupStatusHandler)
+		file.GET("/backup/download", endpoint.BackupDownloadHandler)
 	}
 
 	// 文章模块
 	articles := api.Group("/articles")
+	// 固定路径须先于 /:id，否则会被当成文章 id
+	articles.GET("/bookmarks", middleware.UserAuth(), endpoint.ListMyBookmarksHandler)
+	// 评论 / 社交：必须注册在 /:id/:version 之前
+	articles.GET("/:id/comments", middleware.OptionalUserAuth(), endpoint.ListCommentsHandler)
+	articles.POST("/:id/comments", middleware.UserAuth(), endpoint.CreateCommentHandler)
+	articles.GET("/:id/social", middleware.OptionalUserAuth(), endpoint.GetArticleSocialHandler)
+	articles.POST("/:id/like", middleware.UserAuth(), endpoint.PostArticleLikeHandler)
+	articles.DELETE("/:id/like", middleware.UserAuth(), endpoint.DeleteArticleLikeHandler)
+	articles.POST("/:id/bookmark", middleware.UserAuth(), endpoint.PostArticleBookmarkHandler)
+	articles.DELETE("/:id/bookmark", middleware.UserAuth(), endpoint.DeleteArticleBookmarkHandler)
 	// 公开访问的文章接口
 	articles.GET("/:id/:version", s.monitor.IncViews(), endpoint.GetArticleHandler)     // 获取文章详情
 	articles.GET("/:id", s.monitor.IncViews(), endpoint.GetLatestArticleHandler)        // 获取最新文章详情
@@ -142,6 +157,14 @@ func (s *Server) setupRouter() {
 		articles.PUT("/:id", endpoint.UpdateArticleHandler)                            // 更新文章
 		articles.DELETE("/:id", endpoint.DeleteArticleHandler)                         // 删除文章
 	}
+
+	// 评论删除（登录用户：本人或管理员）
+	comments := api.Group("/comments")
+	comments.Use(middleware.UserAuth())
+	comments.PUT("/:comment_id", endpoint.UpdateCommentHandler)
+	comments.POST("/:comment_id/like", endpoint.PostCommentLikeHandler)
+	comments.DELETE("/:comment_id/like", endpoint.DeleteCommentLikeHandler)
+	comments.DELETE("/:comment_id", endpoint.DeleteCommentHandler)
 
 	// 分类模块
 	category := api.Group("/category")

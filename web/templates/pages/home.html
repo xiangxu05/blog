@@ -2,26 +2,20 @@
   <!-- 欢迎横幅 -->
   <div class="row mb-5">
     <div class="col-12">
-      <div class="card-custom bg-gradient p-4 p-md-5 text-center hero-banner">
-        <div class="row align-items-center">
-          <div class="col-md-8 mx-auto">
-            <h1 class="display-4 fw-bold text-white mb-3">
-              <i class="fas fa-feather-alt me-3"></i>
-              你好，我是项许
-            </h1>
-            <p class="lead text-white-50 mb-4">
-              分享技术见解，记录成长历程，与世界分享我的思考
-            </p>
-            <div class="d-flex justify-content-center gap-3 flex-wrap">
-              <a href="/articles" class="btn btn-light btn-lg">
-                <i class="fas fa-book-open me-2"></i>
-                浏览文章
-              </a>
-              <button class="btn btn-outline-light btn-lg" id="subscribe-btn">
-                <i class="fas fa-bell me-2"></i>
-                订阅更新
-              </button>
-            </div>
+      <div class="blog-hero p-4 p-md-5 text-center">
+        <div class="blog-hero-inner">
+          <p class="blog-hero-eyebrow mb-3">Personal blog</p>
+          <h1 class="blog-hero-title mb-3">
+            你好，我是项许
+          </h1>
+          <p class="blog-hero-lead mb-4">
+            分享技术见解，记录成长历程，把思考写清楚，也写给你看。
+          </p>
+          <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="/articles" class="btn btn-lg btn-hero-primary">
+              <i class="fas fa-book-open me-2"></i>
+              浏览文章
+            </a>
           </div>
         </div>
       </div>
@@ -32,12 +26,12 @@
     <!-- 主内容区域 -->
     <div class="col-lg-8">
       <!-- 最新文章标题 -->
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="h3 mb-0">
-          <i class="fas fa-newspaper me-2 text-primary"></i>
+      <div class="blog-section-head">
+        <h2 class="blog-section-title">
+          <i class="fas fa-newspaper" aria-hidden="true"></i>
           最新文章
         </h2>
-        <a href="/articles" class="btn btn-outline-custom">
+        <a href="/articles" class="btn btn-outline-custom btn-sm">
           查看全部
           <i class="fas fa-arrow-right ms-2"></i>
         </a>
@@ -87,7 +81,7 @@
             关于博主
           </h5>
           <div class="text-center mb-3">
-            <img id="blogger-avatar" src="/assets/images/default-avatar.svg" alt="博主头像" class="avatar avatar-lg">
+            <img id="blogger-avatar" src="/assets/images/default-avatar.svg?v=2" alt="博主头像" class="avatar avatar-lg" onerror="this.onerror=null;this.src='/assets/images/default-avatar.svg?v=2'">
           </div>
           <p id="blogger-intro" class="text-muted small text-center">
             热爱技术，喜欢分享。专注于前端开发、后端架构和技术教学。
@@ -187,9 +181,6 @@
 
     // 加载首页数据
     loadHomeData();
-
-    // 绑定事件
-    bindHomeEvents();
   };
 
   // 加载首页数据
@@ -207,8 +198,7 @@
   // 加载博主信息
   async function loadBloggerInfo() {
     try {
-      // 获取管理员（1号ID）用户信息
-      const response = await window.apiClient.user.getUserInfo(1);
+      const response = await window.apiClient.user.getBlogger();
 
       if (response) {
         const user = response;
@@ -216,7 +206,7 @@
         // 更新博主头像
         const avatar = document.getElementById('blogger-avatar');
         if (avatar) {
-          avatar.src = user.avatar || '/assets/images/default-avatar.svg';
+          avatar.src = user.avatar || '/assets/images/default-avatar.svg?v=2';
         }
 
         // 更新博主介绍
@@ -565,17 +555,6 @@
     } catch (error) {
       console.error('加载最近更新失败:', error);
       recentUpdates.innerHTML = '<p class="text-muted small">加载失败</p>';
-    }
-  }
-
-  // 绑定首页事件
-  function bindHomeEvents() {
-    // 订阅按钮
-    const subscribeBtn = document.getElementById('subscribe-btn');
-    if (subscribeBtn) {
-      subscribeBtn.addEventListener('click', function () {
-        window.blogApp.showNotification('订阅功能即将上线', 'info');
-      });
     }
   }
 

@@ -36,8 +36,17 @@ func clearAllData(db *gorm.DB) error {
 	if err := db.Unscoped().Where("1 = 1").Delete(&model_def.ArticleVersion{}).Error; err != nil {
 		return fmt.Errorf("清空 article_contents 表失败: %v", err)
 	}
+	if err := db.Unscoped().Where("1 = 1").Delete(&model_def.CommentLike{}).Error; err != nil {
+		return fmt.Errorf("清空 comment_like 表失败: %v", err)
+	}
 	if err := db.Unscoped().Where("1 = 1").Delete(&model_def.Comment{}).Error; err != nil {
 		return fmt.Errorf("清空 comments 表失败: %v", err)
+	}
+	if err := db.Unscoped().Where("1 = 1").Delete(&model_def.ArticleLike{}).Error; err != nil {
+		return fmt.Errorf("清空 article_like 表失败: %v", err)
+	}
+	if err := db.Unscoped().Where("1 = 1").Delete(&model_def.ArticleBookmark{}).Error; err != nil {
+		return fmt.Errorf("清空 article_bookmark 表失败: %v", err)
 	}
 	if err := db.Unscoped().Where("1 = 1").Delete(&model_def.User{}).Error; err != nil {
 		return fmt.Errorf("清空 users 表失败: %v", err)
@@ -99,6 +108,15 @@ func InitDataBase() {
 		log.Fatal("Failed to create table:", err)
 	}
 	if err := db.AutoMigrate(&model_def.WebInfo{}); err != nil {
+		log.Fatal("Failed to create table:", err)
+	}
+	if err := db.AutoMigrate(&model_def.ArticleLike{}); err != nil {
+		log.Fatal("Failed to create table:", err)
+	}
+	if err := db.AutoMigrate(&model_def.ArticleBookmark{}); err != nil {
+		log.Fatal("Failed to create table:", err)
+	}
+	if err := db.AutoMigrate(&model_def.CommentLike{}); err != nil {
 		log.Fatal("Failed to create table:", err)
 	}
 

@@ -1,8 +1,13 @@
 <div class="container-wide py-4">
+  <div class="blog-page-intro mb-2">
+    <h1 class="blog-page-title h2 mb-2">文章</h1>
+    <p class="blog-page-sub">搜索、筛选与浏览全部内容</p>
+  </div>
+
   <div class="row">
     <!-- 搜索和筛选栏 -->
     <div class="col-12 mb-4">
-      <div class="card-custom">
+      <div class="card-custom filter-toolbar-card">
         <div class="card-body">
           <div class="row align-items-center">
             <!-- 搜索框 -->
@@ -27,7 +32,7 @@
               <select class="form-select-custom" id="search-fields-filter" title="搜索范围">
                 <option value="all">全部字段</option>
                 <option value="title">仅标题</option>
-                <option value="content">仅内容</option>
+                <option value="content" title="正文在 Markdown 文件中，此处仅搜索摘要/描述">仅摘要</option>
                 <option value="tags">仅标签</option>
               </select>
             </div>
@@ -50,6 +55,13 @@
               </select>
             </div>
           </div>
+          <div class="row mt-2 d-none" id="archive-filter-active">
+            <div class="col-12">
+              <span class="text-muted small me-2">当前归档</span>
+              <span class="badge rounded-pill bg-secondary" id="archive-filter-label"></span>
+              <button type="button" class="btn btn-link btn-sm p-0 ms-2" id="clear-archive-filter">清除</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -59,11 +71,11 @@
       <!-- 文章列表头部 -->
       <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <div>
-          <h2 class="h3 mb-1">
-            <i class="fas fa-newspaper me-2 text-primary"></i>
-            全部文章
+          <h2 class="blog-section-title h4 mb-1">
+            <i class="fas fa-stream" aria-hidden="true"></i>
+            列表
           </h2>
-          <p class="text-muted mb-0" id="articles-count">共 0 篇文章</p>
+          <p class="text-muted mb-0 small" id="articles-count">共 0 篇文章</p>
         </div>
 
         <div class="d-flex align-items-center gap-2">
@@ -194,17 +206,6 @@
         </div>
       </div>
 
-      <!-- 订阅提醒 -->
-      <div class="card-custom">
-        <div class="card-body text-center">
-          <i class="fas fa-bell fa-2x text-primary mb-3"></i>
-          <h6 class="card-title">订阅更新</h6>
-          <p class="text-muted small">获取最新文章推送</p>
-          <button class="btn btn-primary-custom btn-sm" id="subscribe-updates-btn">
-            <i class="fas fa-envelope me-2"></i>立即订阅
-          </button>
-        </div>
-      </div>
     </div>
   </div>
 </div>
@@ -236,7 +237,8 @@
       search_type: 'fuzzy',
       search_fields: 'all',
       category: '',
-      sort: 'created_at_desc'
+      sort: 'created_at_desc',
+      year_month: ''
     };
   }
 
@@ -283,6 +285,7 @@
     window.currentFilters.sort = urlParams.get('sort') || 'created_at_desc';
     window.currentFilters.page = parseInt(urlParams.get('page')) || 1;
     window.currentFilters.page_size = parseInt(urlParams.get('page_size')) || 10;
+    window.currentFilters.year_month = urlParams.get('year_month') || '';
 
     // 设置筛选器值
     document.getElementById('search-input').value = window.currentFilters.search;
@@ -291,6 +294,27 @@
     document.getElementById('category-filter').value = window.currentFilters.category;
     document.getElementById('sort-filter').value = window.currentFilters.sort;
     document.getElementById('page-size-select').value = window.currentFilters.page_size.toString();
+
+    updateArchiveFilterUI();
+  }
+
+  function yearMonthLabelToApi(label) {
+    const m = /^(\d{4})年(\d{1,2})月$/.exec(String(label).trim());
+    if (!m) return '';
+    return m[1] + '-' + m[2].padStart(2, '0');
+  }
+
+  function updateArchiveFilterUI() {
+    const row = document.getElementById('archive-filter-active');
+    const badge = document.getElementById('archive-filter-label');
+    const ym = window.currentFilters.year_month;
+    if (!row || !badge) return;
+    if (ym) {
+      row.classList.remove('d-none');
+      badge.textContent = ym;
+    } else {
+      row.classList.add('d-none');
+    }
   }
 
   // 加载文章列表
@@ -349,6 +373,7 @@
 
       // 更新URL参数
       updateUrlParams();
+      updateArchiveFilterUI();
 
     } catch (error) {
       console.error('加载文章列表失败:', error);
@@ -529,6 +554,7 @@
     if (window.currentFilters.sort !== 'created_at_desc') params.set('sort', window.currentFilters.sort);
     if (window.currentFilters.page > 1) params.set('page', window.currentFilters.page.toString());
     if (window.currentFilters.page_size !== 10) params.set('page_size', window.currentFilters.page_size.toString());
+    if (window.currentFilters.year_month) params.set('year_month', window.currentFilters.year_month);
 
     const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
     window.history.replaceState({}, '', newUrl);
@@ -618,9 +644,10 @@
       });
     });
 
-    // 订阅按钮
-    document.getElementById('subscribe-updates-btn')?.addEventListener('click', function () {
-      window.blogApp.showNotification('订阅功能即将上线', 'info');
+    document.getElementById('clear-archive-filter')?.addEventListener('click', function () {
+      window.currentFilters.year_month = '';
+      updateArchiveFilterUI();
+      loadArticlesList(true);
     });
   }
 
@@ -719,11 +746,16 @@
     }
   }
   
-  // 按年月筛选文章（点击归档项时调用）
-  window.filterByYearMonth = function(yearMonth) {
-    // TODO: 实现按年月筛选功能
-    // 可以通过添加新的筛选参数，或者使用日期范围查询
-    window.blogApp.showNotification(`按 ${yearMonth} 筛选功能即将上线`, 'info');
+  // 按年月筛选文章（归档 API 返回的 year_month 为「2024年11月」格式）
+  window.filterByYearMonth = function (yearMonthLabel) {
+    const api = yearMonthLabelToApi(yearMonthLabel);
+    if (!api) {
+      window.blogApp.showNotification('无法解析归档月份', 'warning');
+      return;
+    }
+    window.currentFilters.year_month = api;
+    updateArchiveFilterUI();
+    loadArticlesList(true);
   };
 
   // 加载标签云（从当前页面所有文章提取标签）

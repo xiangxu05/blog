@@ -1,7 +1,7 @@
 <div class="container-wide py-4">
   <div class="row">
     <!-- 主内容区域 -->
-    <div class="col-lg-8">
+    <div class="col-lg-8 article-print-main-col">
       <!-- 文章加载状态 -->
       <div id="article-loading" class="text-center py-5">
         <div class="spinner-border text-primary mb-3" role="status">
@@ -16,27 +16,27 @@
         <article class="card-custom mb-4">
           <div class="card-body">
             <!-- 文章标题 -->
-            <header class="mb-4">
-              <h1 id="article-title" class="display-5 fw-bold mb-3">文章标题</h1>
+            <header class="article-detail-header">
+              <h1 id="article-title" class="article-detail-title display-5 mb-3">文章标题</h1>
 
               <!-- 文章元数据 -->
               <div class="article-meta mb-3">
                 <div class="row align-items-center">
                   <div class="col-md-8">
-                    <div class="d-flex flex-wrap align-items-center gap-3">
-                      <span class="text-muted">
+                    <div class="article-meta-inline d-flex flex-wrap align-items-center gap-3">
+                      <span>
                         <i class="fas fa-calendar-alt me-1"></i>
                         <span id="article-date">-</span>
                       </span>
-                      <span class="text-muted">
+                      <span>
                         <i class="fas fa-folder me-1"></i>
                         <span id="article-category">-</span>
                       </span>
-                      <span class="text-muted">
+                      <span>
                         <i class="fas fa-eye me-1"></i>
                         <span id="article-views">0</span> 次阅读
                       </span>
-                      <span class="text-muted">
+                      <span>
                         <i class="fas fa-clock me-1"></i>
                         <span id="reading-time">5</span> 分钟阅读
                       </span>
@@ -48,8 +48,8 @@
                       <button class="btn btn-outline-custom btn-sm" id="share-btn" title="分享文章">
                         <i class="fas fa-share-alt"></i>
                       </button>
-                      <button class="btn btn-outline-custom btn-sm" id="bookmark-btn" title="收藏文章">
-                        <i class="fas fa-bookmark"></i>
+                      <button type="button" class="btn btn-outline-custom btn-sm article-bookmark-btn" id="bookmark-btn-top" title="收藏文章">
+                        <i class="fas fa-bookmark" id="bookmark-icon-top"></i>
                       </button>
                       <button class="btn btn-outline-custom btn-sm" id="print-btn" title="打印文章">
                         <i class="fas fa-print"></i>
@@ -110,17 +110,20 @@
         </article>
 
         <!-- 文章底部操作 -->
-        <div class="card-custom mb-4">
+        <div class="card-custom article-footer-card mb-4">
           <div class="card-body">
             <div class="row align-items-center">
               <div class="col-md-6">
                 <h6 class="mb-2">觉得文章有用？</h6>
                 <div class="btn-group" role="group">
-                  <button class="btn btn-outline-success btn-sm" id="like-btn">
+                  <button type="button" class="btn btn-outline-success btn-sm" id="like-btn" title="点赞">
                     <i class="fas fa-thumbs-up me-2"></i>
                     <span id="like-count">0</span> 赞
                   </button>
-                  <button class="btn btn-outline-custom btn-sm" id="comment-btn">
+                  <button type="button" class="btn btn-outline-custom btn-sm article-bookmark-btn" id="bookmark-btn-footer" title="收藏">
+                    <i class="fas fa-bookmark me-1" id="bookmark-icon"></i><span id="bookmark-text">收藏</span>
+                  </button>
+                  <button type="button" class="btn btn-outline-custom btn-sm" id="comment-btn">
                     <i class="fas fa-comment me-2"></i>
                     评论
                   </button>
@@ -144,8 +147,40 @@
           </div>
         </div>
 
+        <!-- 评论区 -->
+        <div class="card-custom mb-4" id="comments-section">
+          <div class="card-body">
+            <h5 class="card-title mb-3" id="comments-heading">
+              <i class="fas fa-comments me-2"></i>
+              评论 <span class="text-muted small" id="comments-count">(0)</span>
+            </h5>
+
+            <div id="comment-compose" class="mb-4 d-none">
+              <div class="mb-2 small text-muted" id="comment-reply-hint"></div>
+              <div class="mb-2">
+                <textarea class="form-control form-control-custom" id="comment-input" rows="3"
+                  maxlength="2000" placeholder="写下你的想法…"></textarea>
+              </div>
+              <div class="d-flex flex-wrap gap-2 align-items-center">
+                <button type="button" class="btn btn-primary-custom btn-sm" id="comment-submit">发表</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm d-none" id="comment-cancel-reply">取消回复</button>
+              </div>
+            </div>
+
+            <div id="comment-login-hint" class="alert alert-info-custom py-2 mb-4">
+              <a href="/login" class="text-decoration-none">登录</a> 后即可发表评论。
+            </div>
+
+            <div id="comments-list" class="comments-list">
+              <!-- 动态填充 -->
+            </div>
+            <div id="comments-empty" class="text-muted small d-none">暂无评论，来抢沙发吧。</div>
+            <div id="comments-error" class="alert alert-warning-custom d-none small"></div>
+          </div>
+        </div>
+
         <!-- 文章导航 -->
-        <div class="row mb-4">
+        <div class="row mb-4" id="article-prev-next">
           <div class="col-md-6 mb-3 mb-md-0">
             <div class="card-custom h-100" id="prev-article" style="display: none;">
               <div class="card-body">
@@ -186,37 +221,10 @@
       </div>
     </div>
 
-    <!-- 侧边栏 -->
-    <div class="col-lg-4">
-      <!-- 阅读进度 -->
-      <div class="card-custom mb-4 sticky-top" style="top: 100px;">
-        <div class="card-body">
-          <h6 class="card-title">
-            <i class="fas fa-book-reader me-2"></i>
-            阅读进度
-          </h6>
-          <div class="progress progress-custom mb-2">
-            <div class="progress-bar" id="reading-progress" role="progressbar" style="width: 0%"></div>
-          </div>
-          <small class="text-muted">已阅读 <span id="progress-percent">0</span>%</small>
-        </div>
-      </div>
-
-      <!-- 快速导航 -->
-      <div class="card-custom mb-4" id="quick-nav" style="display: none;">
-        <div class="card-body">
-          <h6 class="card-title">
-            <i class="fas fa-list me-2"></i>
-            快速导航
-          </h6>
-          <div id="quick-nav-content">
-            <!-- 导航链接将通过JavaScript生成 -->
-          </div>
-        </div>
-      </div>
-
-      <!-- 文章信息卡片 -->
-      <div class="card-custom">
+    <!-- 侧边栏：文章信息置顶；阅读进度 + 快速导航共用一个 sticky 块（勿对 col 用 align-self-start，否则列高不够 sticky 无法随正文吸附） -->
+    <div class="col-lg-4" id="article-sidebar-column">
+      <!-- 文章信息卡片（置顶） -->
+      <div class="card-custom mb-4">
         <div class="card-body">
           <h6 class="card-title">
             <i class="fas fa-info-circle me-2"></i>
@@ -242,6 +250,35 @@
             <div class="row">
               <div class="col-6 text-muted">阅读时长:</div>
               <div class="col-6" id="info-read-time">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="article-sidebar-sticky sticky-top">
+        <!-- 阅读进度 -->
+        <div class="card-custom mb-4">
+          <div class="card-body">
+            <h6 class="card-title">
+              <i class="fas fa-book-reader me-2"></i>
+              阅读进度
+            </h6>
+            <div class="progress progress-custom mb-2">
+              <div class="progress-bar" id="reading-progress" role="progressbar" style="width: 0%"></div>
+            </div>
+            <small class="text-muted">已阅读 <span id="progress-percent">0</span>%</small>
+          </div>
+        </div>
+
+        <!-- 快速导航：有标题锚点时由 JS 显示；与阅读进度同一 sticky 容器 -->
+        <div class="card-custom mb-0 d-none" id="quick-nav">
+          <div class="card-body">
+            <h6 class="card-title">
+              <i class="fas fa-list me-2"></i>
+              快速导航
+            </h6>
+            <div id="quick-nav-content">
+              <!-- 导航链接将通过JavaScript生成 -->
             </div>
           </div>
         </div>
@@ -369,6 +406,10 @@
       // 显示文章基本信息
       displayArticleInfo(window.articleData);
 
+      loadArticleSocial();
+      initCommentsUI();
+      loadComments();
+
       // 第二步：根据store_id加载文章内容
       if (window.articleData.store_id) {
         await loadArticleContent();
@@ -468,11 +509,28 @@
     hideArticleLoading();
   }
 
+  /** 剥离 Jekyll/Obsidian 风格 YAML front matter，避免正文与目录被 front matter 污染 */
+  function stripYamlFrontMatter(md) {
+    if (typeof md !== 'string' || md.length < 4) return md;
+    const t = md.replace(/^\uFEFF/, '').trimStart();
+    if (!t.startsWith('---')) return md;
+    const lines = t.split(/\r?\n/);
+    if (lines[0].trim() !== '---') return md;
+    for (let i = 1; i < lines.length; i++) {
+      if (lines[i].trim() === '---') {
+        return lines.slice(i + 1).join('\n').replace(/^\s+/, '');
+      }
+    }
+    return md;
+  }
+
   // 渲染Markdown内容
   async function renderMarkdownContent(content) {
     const contentContainer = document.getElementById('article-content');
 
     try {
+      const bodyMd = stripYamlFrontMatter(content);
+
       // 使用marked.js渲染Markdown
       const renderer = new marked.Renderer();
 
@@ -505,11 +563,11 @@
       });
 
       // 渲染内容
-      const htmlContent = marked.parse(content);
+      const htmlContent = marked.parse(bodyMd);
       contentContainer.innerHTML = htmlContent;
 
-      // 计算字数和阅读时间
-      const wordCount = content.length;
+      // 计算字数和阅读时间（按去掉 front matter 后的正文）
+      const wordCount = bodyMd.length;
       const readingTime = Math.ceil(wordCount / 500); // 假设每分钟阅读500字
 
       document.getElementById('info-word-count').textContent = wordCount;
@@ -542,6 +600,10 @@
     const headings = document.querySelectorAll('#article-content h1, #article-content h2, #article-content h3, #article-content h4');
 
     if (headings.length === 0) {
+      const qn = document.getElementById('quick-nav');
+      const qnc = document.getElementById('quick-nav-content');
+      if (qn) qn.classList.add('d-none');
+      if (qnc) qnc.innerHTML = '';
       return;
     }
 
@@ -569,7 +631,8 @@
       </li>
     `;
 
-      if (level <= 3) {
+      /* 与主栏目录一致：h1–h4 均进入快速导航（仅 h5/h6 不入，避免过长） */
+      if (level <= 4) {
         quickNavHtml += `
         <a href="#${id}" class="btn btn-outline-custom btn-sm mb-2 d-block text-start">
           ${text}
@@ -585,7 +648,13 @@
 
     if (quickNavHtml) {
       quickNavContent.innerHTML = quickNavHtml;
-      document.getElementById('quick-nav').style.display = 'block';
+      const qn = document.getElementById('quick-nav');
+      /* 仅去掉 d-none；勿用 d-lg-block，避免与 d-none 组合在部分环境下不显示 */
+      qn.classList.remove('d-none');
+      /* 大屏有侧栏导航时，主栏目录隐藏，避免重复 */
+      tocContainer.classList.add('d-lg-none');
+    } else {
+      tocContainer.classList.remove('d-lg-none');
     }
 
     // 平滑滚动到锚点
@@ -627,6 +696,43 @@
     });
   }
 
+  /** 将正文内图片 src 转为绝对地址，避免相对路径在打印预览中解析错误 */
+  function absolutizeArticleContentImages() {
+    const root = document.getElementById('article-content');
+    if (!root) return;
+    const base = window.location.href;
+    root.querySelectorAll('img[src]').forEach(function (img) {
+      const s = img.getAttribute('src');
+      if (!s || /^https?:\/\//i.test(s) || s.startsWith('data:') || s.startsWith('blob:')) return;
+      try {
+        img.setAttribute('src', new URL(s, base).href);
+      } catch (e) {
+        /* ignore */
+      }
+    });
+  }
+
+  /**
+   * 打印：在当前文档内打印（不新开 about:blank），仅标题 + Markdown 正文；通过 body 类 + @media print 隐藏其余 UI。
+   */
+  function printArticleForPrint() {
+    const contentEl = document.getElementById('article-content');
+    if (!contentEl || contentEl.classList.contains('d-none')) {
+      window.blogApp.showNotification('请先等待文章加载完成', 'warning');
+      return;
+    }
+    if (!contentEl.innerHTML.trim()) {
+      window.blogApp.showNotification('没有可打印的内容', 'warning');
+      return;
+    }
+    absolutizeArticleContentImages();
+
+    /* 不往 body 加 class：避免部分浏览器 afterprint 不触发导致样式残留；打印样式仅用 @media print */
+    requestAnimationFrame(function () {
+      window.print();
+    });
+  }
+
   // 绑定事件
   function bindArticleEvents() {
     // 分享按钮
@@ -634,28 +740,394 @@
       new bootstrap.Modal(document.getElementById('share-modal')).show();
     });
 
-    // 收藏按钮
-    document.getElementById('bookmark-btn')?.addEventListener('click', function () {
-      window.blogApp.showNotification('收藏功能即将上线', 'info');
+    // 收藏（顶部与底部两个按钮，需分别绑定；勿重复使用同一 id）
+    async function onBookmarkToggle() {
+      if (!window.appState.isAuthenticated()) {
+        page('/login?redirect=' + encodeURIComponent(window.location.pathname));
+        return;
+      }
+      const aid = parseInt(window.currentArticle.id, 10);
+      try {
+        const s = await window.apiClient.articles.getSocial(aid);
+        if (s.bookmarked) {
+          await window.apiClient.articles.unbookmark(aid);
+        } else {
+          await window.apiClient.articles.bookmark(aid);
+        }
+        await loadArticleSocial();
+        window.blogApp.showNotification(s.bookmarked ? '已取消收藏' : '已加入收藏', 'success');
+      } catch (err) {
+        window.blogApp.showNotification(err.message || '操作失败', 'error');
+      }
+    }
+    document.getElementById('bookmark-btn-top')?.addEventListener('click', onBookmarkToggle);
+    document.getElementById('bookmark-btn-footer')?.addEventListener('click', onBookmarkToggle);
+
+    // 打印：同页打印，仅标题 + 正文（见 printArticleForPrint）
+    document.getElementById('print-btn')?.addEventListener('click', printArticleForPrint);
+
+    // 点赞（需登录，可取消）
+    document.getElementById('like-btn')?.addEventListener('click', async function () {
+      if (!window.appState.isAuthenticated()) {
+        page('/login?redirect=' + encodeURIComponent(window.location.pathname));
+        return;
+      }
+      const aid = parseInt(window.currentArticle.id, 10);
+      try {
+        const s = await window.apiClient.articles.getSocial(aid);
+        if (s.liked) {
+          await window.apiClient.articles.unlike(aid);
+        } else {
+          await window.apiClient.articles.like(aid);
+        }
+        await loadArticleSocial();
+      } catch (err) {
+        window.blogApp.showNotification(err.message || '操作失败', 'error');
+      }
     });
 
-    // 打印按钮
-    document.getElementById('print-btn')?.addEventListener('click', function () {
-      window.print();
-    });
-
-    // 点赞按钮
-    document.getElementById('like-btn')?.addEventListener('click', function () {
-      const likeCount = document.getElementById('like-count');
-      const currentCount = parseInt(likeCount.textContent) || 0;
-      likeCount.textContent = currentCount + 1;
-      window.blogApp.showNotification('感谢您的点赞！', 'success');
-    });
-
-    // 评论按钮
+    // 评论按钮：滚动到评论区
     document.getElementById('comment-btn')?.addEventListener('click', function () {
-      window.blogApp.showNotification('评论功能即将上线', 'info');
+      document.getElementById('comments-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('comment-input')?.focus();
     });
+  }
+
+  window.commentReplyParentId = null;
+
+  function initCommentsUI() {
+    const authed = window.appState && window.appState.isAuthenticated && window.appState.isAuthenticated();
+    const compose = document.getElementById('comment-compose');
+    const hint = document.getElementById('comment-login-hint');
+    if (authed) {
+      compose?.classList.remove('d-none');
+      hint?.classList.add('d-none');
+    } else {
+      compose?.classList.add('d-none');
+      hint?.classList.remove('d-none');
+    }
+
+    document.getElementById('comment-submit')?.addEventListener('click', submitComment);
+    document.getElementById('comment-cancel-reply')?.addEventListener('click', cancelReply);
+  }
+
+  function cancelReply() {
+    window.commentReplyParentId = null;
+    const el = document.getElementById('comment-reply-hint');
+    const btn = document.getElementById('comment-cancel-reply');
+    if (el) el.textContent = '';
+    btn?.classList.add('d-none');
+  }
+
+  async function loadComments() {
+    const id = window.currentArticle && window.currentArticle.id;
+    if (!id || !window.apiClient) return;
+    const listEl = document.getElementById('comments-list');
+    const emptyEl = document.getElementById('comments-empty');
+    const errEl = document.getElementById('comments-error');
+    errEl?.classList.add('d-none');
+    try {
+      const expandedCollapseIds = [];
+      listEl.querySelectorAll('.collapse.show').forEach(function (el) {
+        if (el.id) expandedCollapseIds.push(el.id);
+      });
+
+      const data = await window.apiClient.comments.list(id, { page: 1, page_size: 50 });
+      const items = (data && data.comments) ? data.comments : [];
+      document.getElementById('comments-count').textContent = '(' + ((data && data.pagination && data.pagination.total_count) || items.length) + ')';
+      if (!items.length) {
+        listEl.innerHTML = '';
+        emptyEl?.classList.remove('d-none');
+        return;
+      }
+      emptyEl?.classList.add('d-none');
+      listEl.innerHTML = buildCommentThreadsHTML(items);
+      bindCommentActions();
+
+      expandedCollapseIds.forEach(function (collapseId) {
+        const el = document.getElementById(collapseId);
+        if (!el || !el.classList.contains('collapse')) return;
+        try {
+          if (typeof bootstrap !== 'undefined' && bootstrap.Collapse) {
+            const inst = bootstrap.Collapse.getOrCreateInstance(el, { toggle: false });
+            inst.show();
+          } else {
+            el.classList.add('show');
+          }
+        } catch (e) {
+          el.classList.add('show');
+        }
+        const btn = listEl.querySelector('[data-bs-target="#' + collapseId.replace(/"/g, '') + '"]');
+        if (btn) btn.setAttribute('aria-expanded', 'true');
+      });
+    } catch (e) {
+      console.error(e);
+      errEl.textContent = '评论加载失败，请稍后刷新';
+      errEl?.classList.remove('d-none');
+    }
+  }
+
+  /** 按 parent_id 分组子评论，同一父下按时间排序 */
+  function groupCommentsByParent(items) {
+    const byParent = new Map();
+    items.forEach((c) => {
+      if (c.parent_id == null || c.parent_id === undefined) return;
+      const k = Number(c.parent_id);
+      if (!byParent.has(k)) byParent.set(k, []);
+      byParent.get(k).push(c);
+    });
+    byParent.forEach((arr) => {
+      arr.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    });
+    return byParent;
+  }
+
+  /** 顶层评论 + 楼中楼（子树默认折叠）；父评论不在本页时当作顶层显示 */
+  function buildCommentThreadsHTML(items) {
+    const byParent = groupCommentsByParent(items);
+    const idSet = new Set(items.map((c) => Number(c.id)));
+    const roots = items.filter((c) => {
+      if (c.parent_id == null || c.parent_id === undefined) return true;
+      return !idSet.has(Number(c.parent_id));
+    });
+    roots.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    if (!roots.length) return '';
+    return roots.map((r) => renderCommentThread(r, byParent)).join('');
+  }
+
+  function renderCommentThread(c, byParent) {
+    const children = byParent.get(Number(c.id)) || [];
+    const card = renderCommentCard(c);
+    if (!children.length) {
+      return `<div class="comment-thread border-bottom py-3">${card}</div>`;
+    }
+    const cid = 'comment-replies-' + c.id;
+    const inner = children.map((ch) => renderCommentThreadNested(ch, byParent, 1)).join('');
+    return `
+      <div class="comment-thread border-bottom py-3">
+        ${card}
+        <div class="${commentRepliesNestClass(1)}">
+          <button type="button" class="btn btn-link btn-sm p-0 text-muted comment-replies-toggle d-flex align-items-center gap-1"
+            data-bs-toggle="collapse" data-bs-target="#${cid}" aria-expanded="false">
+            <i class="fas fa-reply fa-flip-horizontal"></i>
+            <span>${children.length} 条回复</span>
+            <i class="fas fa-chevron-down small comment-replies-chevron"></i>
+          </button>
+          <div class="collapse" id="${cid}">${inner}</div>
+        </div>
+      </div>`;
+  }
+
+  /** 视觉层级：depth 1～2 逐级缩进；depth≥3 不再增加左边距（仍保留折叠与「回复 @」） */
+  function commentRepliesNestClass(depth) {
+    var base = 'comment-replies-nest mt-2 ps-2 border-start border-secondary';
+    if (depth >= 3) {
+      return base + ' comment-replies-nest--deep';
+    }
+    if (depth === 2) {
+      return base + ' ms-2';
+    }
+    return base + ' ms-3';
+  }
+
+  function commentItemNestedClass(depth) {
+    var cls = 'comment-item-nested pt-3 mt-2 border-top border-light';
+    if (depth >= 3) {
+      cls += ' comment-item-nested--deep';
+    }
+    return cls;
+  }
+
+  /** 子层评论卡片（无顶边 border-bottom，由外层折叠包裹） */
+  function renderCommentThreadNested(c, byParent, depth) {
+    if (depth == null || depth < 1) depth = 1;
+    const children = byParent.get(Number(c.id)) || [];
+    const card = renderCommentCard(c);
+    if (!children.length) {
+      return `<div class="${commentItemNestedClass(depth)}">${card}</div>`;
+    }
+    const cid = 'comment-replies-' + c.id;
+    const inner = children.map((ch) => renderCommentThreadNested(ch, byParent, depth + 1)).join('');
+    return `
+      <div class="${commentItemNestedClass(depth)}">
+        ${card}
+        <div class="${commentRepliesNestClass(depth)}">
+          <button type="button" class="btn btn-link btn-sm p-0 text-muted comment-replies-toggle d-flex align-items-center gap-1"
+            data-bs-toggle="collapse" data-bs-target="#${cid}" aria-expanded="false">
+            <i class="fas fa-reply fa-flip-horizontal"></i>
+            <span>${children.length} 条回复</span>
+            <i class="fas fa-chevron-down small comment-replies-chevron"></i>
+          </button>
+          <div class="collapse" id="${cid}">${inner}</div>
+        </div>
+      </div>`;
+  }
+
+  function renderCommentCard(c) {
+    const replyTo = c.reply_to
+      ? `<div class="small text-muted mb-1">回复 <strong>${escapeHtml(c.reply_to.nickname || '')}</strong></div>`
+      : '';
+    const profile = window.appState.getState('user.profile');
+    const myId = profile && profile.user_id;
+    const canDelete = myId != null && (c.author.user_id === myId || window.appState.isAdmin());
+    const canEdit = myId != null && c.author.user_id === myId;
+    const delBtn = canDelete
+      ? `<button type="button" class="btn btn-link btn-sm text-danger p-0 ms-2 comment-del" data-id="${c.id}">删除</button>`
+      : '';
+    const editBtn = canEdit
+      ? `<button type="button" class="btn btn-link btn-sm p-0 ms-2 comment-edit" data-id="${c.id}">编辑</button>`
+      : '';
+    const replyBtn = window.appState.isAuthenticated()
+      ? `<button type="button" class="btn btn-link btn-sm p-0 ms-2 comment-reply" data-id="${c.id}" data-nick="${escapeHtml(c.author.nickname || c.author.username)}">回复</button>`
+      : '';
+    const lc = c.like_count != null ? c.like_count : 0;
+    const liked = !!c.liked;
+    const likePart = window.appState.isAuthenticated()
+      ? `<button type="button" class="btn btn-link btn-sm p-0 ms-2 comment-like ${liked ? 'text-primary' : 'text-muted'}" data-id="${c.id}" data-liked="${liked}"><i class="fas fa-thumbs-up"></i> ${lc}</button>`
+      : `<span class="text-muted small ms-2"><i class="fas fa-thumbs-up"></i> ${lc}</span>`;
+
+    const editedHint = c.edited && c.updated_at
+      ? `<span class="text-muted small">（编辑过 ${escapeHtml(c.updated_at)}）</span>`
+      : '';
+
+    return `
+      <div class="comment-item" data-comment-id="${c.id}">
+        ${replyTo}
+        <div class="d-flex gap-2">
+          <img src="${escapeHtml(c.author.avatar || '/assets/images/default-avatar.svg?v=2')}" alt="" class="rounded-circle" width="40" height="40" style="object-fit:cover;" onerror="this.onerror=null;this.src='/assets/images/default-avatar.svg?v=2'">
+          <div class="flex-grow-1 min-w-0">
+            <div class="d-flex flex-wrap align-items-baseline gap-2">
+              <strong class="small">${escapeHtml(c.author.nickname || c.author.username)}</strong>
+              <span class="text-muted small">${escapeHtml(c.created_at)}</span>${editedHint}
+              ${likePart}${replyBtn}${editBtn}${delBtn}
+            </div>
+            <div class="comment-body mt-1">${escapeHtml(c.content).replace(/\n/g, '<br>')}</div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function bindCommentActions() {
+    document.querySelectorAll('.comment-reply').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (!window.appState.isAuthenticated()) return;
+        const id = parseInt(btn.getAttribute('data-id'), 10);
+        const nick = btn.getAttribute('data-nick') || '';
+        window.commentReplyParentId = id;
+        const hint = document.getElementById('comment-reply-hint');
+        const cancel = document.getElementById('comment-cancel-reply');
+        if (hint) hint.textContent = `回复 @${nick}`;
+        cancel?.classList.remove('d-none');
+        document.getElementById('comments-section')?.scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('comment-input')?.focus();
+      });
+    });
+    document.querySelectorAll('.comment-del').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = parseInt(btn.getAttribute('data-id'), 10);
+        if (!confirm('确定删除这条评论？')) return;
+        try {
+          await window.apiClient.comments.delete(id);
+          window.blogApp.showNotification('已删除', 'success');
+          loadComments();
+        } catch (err) {
+          window.blogApp.showNotification(err.message || '删除失败', 'error');
+        }
+      });
+    });
+    document.querySelectorAll('.comment-edit').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = parseInt(btn.getAttribute('data-id'), 10);
+        const item = btn.closest('.comment-item');
+        const body = item && item.querySelector('.comment-body');
+        const oldText = body ? body.innerText.replace(/\s+$/,'') : '';
+        const nc = window.prompt('编辑评论', oldText);
+        if (nc == null) return;
+        const t = nc.trim();
+        if (!t) return;
+        try {
+          await window.apiClient.comments.update(id, { content: t });
+          window.blogApp.showNotification('已更新', 'success');
+          loadComments();
+        } catch (err) {
+          window.blogApp.showNotification(err.message || '更新失败', 'error');
+        }
+      });
+    });
+    document.querySelectorAll('.comment-like').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = parseInt(btn.getAttribute('data-id'), 10);
+        const liked = btn.getAttribute('data-liked') === 'true';
+        try {
+          if (liked) {
+            await window.apiClient.comments.unlike(id);
+          } else {
+            await window.apiClient.comments.like(id);
+          }
+          loadComments();
+        } catch (err) {
+          window.blogApp.showNotification(err.message || '操作失败', 'error');
+        }
+      });
+    });
+  }
+
+  async function loadArticleSocial() {
+    const id = window.currentArticle && window.currentArticle.id;
+    if (!id || !window.apiClient || !window.apiClient.articles.getSocial) return;
+    try {
+      const s = await window.apiClient.articles.getSocial(id);
+      const n = s.like_count != null ? s.like_count : 0;
+      const le = document.getElementById('like-count');
+      if (le) le.textContent = n;
+      const likeBtn = document.getElementById('like-btn');
+      if (likeBtn) {
+        if (s.liked) {
+          likeBtn.classList.add('active', 'btn-success');
+          likeBtn.classList.remove('btn-outline-success');
+        } else {
+          likeBtn.classList.remove('active', 'btn-success');
+          likeBtn.classList.add('btn-outline-success');
+        }
+      }
+      document.querySelectorAll('.article-bookmark-btn').forEach(function (bm) {
+        if (s.bookmarked) {
+          bm.classList.add('active');
+        } else {
+          bm.classList.remove('active');
+        }
+      });
+      const btxt = document.getElementById('bookmark-text');
+      if (btxt) {
+        btxt.textContent = s.bookmarked ? '已收藏' : '收藏';
+      }
+    } catch (e) {
+      console.warn('loadArticleSocial', e);
+    }
+  }
+
+  async function submitComment() {
+    const input = document.getElementById('comment-input');
+    const text = (input && input.value) ? input.value.trim() : '';
+    if (!text) {
+      window.blogApp.showNotification('请输入评论内容', 'warning');
+      return;
+    }
+    const id = window.currentArticle && window.currentArticle.id;
+    if (!id) return;
+    const body = { content: text };
+    if (window.commentReplyParentId) {
+      body.parent_id = window.commentReplyParentId;
+    }
+    try {
+      await window.apiClient.comments.create(id, body);
+      input.value = '';
+      cancelReply();
+      window.blogApp.showNotification('评论已发布', 'success');
+      loadComments();
+    } catch (err) {
+      window.blogApp.showNotification(err.message || '发送失败', 'error');
+    }
   }
 
   // 显示状态函数

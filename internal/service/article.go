@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/xiangxu05/logger/v2"
@@ -147,7 +148,7 @@ func applyExactSearch(query dao.IArticleDo, search, searchFields string) dao.IAr
 	case "title":
 		return query.Where(dao.Q.Article.Title.Eq(search))
 	case "content":
-		// 暂时在描述字段中搜索
+		// 正文在 Markdown 文件中，列表仅搜摘要/描述字段
 		return query.Where(dao.Q.Article.Description.Eq(search))
 	case "tags":
 		return query.Where(dao.Q.Article.Tags.Eq(search))
@@ -169,7 +170,6 @@ func applyFuzzySearch(query dao.IArticleDo, search, searchFields string) dao.IAr
 	case "title":
 		return query.Where(dao.Q.Article.Title.Like(searchPattern))
 	case "content":
-		// 暂时在描述字段中搜索
 		return query.Where(dao.Q.Article.Description.Like(searchPattern))
 	case "tags":
 		return query.Where(dao.Q.Article.Tags.Like(searchPattern))
@@ -183,8 +183,8 @@ func applyFuzzySearch(query dao.IArticleDo, search, searchFields string) dao.IAr
 	}
 }
 
-// GetArticleList 获取文章列表
-func GetArticleList(c *gin.Context, page, pageSize int, category, sort, search, searchType, searchFields string) (*message.ArticleResponse, error) {
+// GetArticleList 获取文章列表（yearMonth 格式 2006-01，与归档筛选一致）
+func GetArticleList(c *gin.Context, page, pageSize int, category, sort, search, searchType, searchFields, yearMonth string) (*message.ArticleResponse, error) {
 	ctx := c.Request.Context()
 
 	// 构建查询条件
@@ -193,6 +193,16 @@ func GetArticleList(c *gin.Context, page, pageSize int, category, sort, search, 
 	// 分类筛选
 	if category != "" {
 		query = query.Where(dao.Article.Category.Eq(category))
+	}
+
+	// 按年月筛选（创建时间落在该自然月内）
+	ym := strings.TrimSpace(yearMonth)
+	if ym != "" {
+		if t, err := time.ParseInLocation("2006-01", ym, time.Local); err == nil {
+			start := time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, time.Local)
+			end := start.AddDate(0, 1, 0)
+			query = query.Where(dao.Article.CreatedAt.Gte(start)).Where(dao.Article.CreatedAt.Lt(end))
+		}
 	}
 
 	// 搜索功能
@@ -368,10 +378,10 @@ func CreateArticle(c *gin.Context, req *message.ArticleRequest) error {
 }
 
 func processArticleCategory(ctx context.Context, categoryName string) (*model_def.Category, error) {
-	// 去除前后空格
+	// 去除前后空格；空字符串与文章模型默认分类一致（前端可不选分类）
 	categoryName = strings.TrimSpace(categoryName)
 	if categoryName == "" {
-		return nil, errors.New("分类名称不能为空")
+		categoryName = "default"
 	}
 
 	// 查找分类
@@ -431,7 +441,11 @@ func UpdateArticle(c *gin.Context, articleID int32, req *message.ArticleRequest)
 	err = dao.Q.Transaction(func(tx *dao.Query) error {
 		// 更新文章基本信息
 		existingArticle.Title = req.Title
-		existingArticle.Category = req.Category
+		cat := strings.TrimSpace(req.Category)
+		if cat == "" {
+			cat = "default"
+		}
+		existingArticle.Category = cat
 		existingArticle.Tags = req.Tags
 		existingArticle.Version++
 		// 更新文章

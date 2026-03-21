@@ -1,18 +1,14 @@
 package model_def
 
-import (
-	"gorm.io/gorm"
-)
+import "gorm.io/gorm"
 
+// Comment 文章评论（支持楼中楼：ParentID 指向父评论）
 type Comment struct {
 	gorm.Model
-	ArticleID int32    `gorm:"index"` // 添加index加速按文章查询
-	Article   Article  `gorm:"foreignKey:ArticleID"`
-	UserID    int32    `gorm:"index"` // 添加index
-	User      int32    `gorm:"foreignKey:UserID"`
-	Content   string   `gorm:"type:text;not null"`
-	ParentID  *int32   `gorm:"index"` // 添加index支持嵌套评论查询
-	Parent    *Comment `gorm:"foreignKey:ParentID"`
+	ArticleID int32  `gorm:"index;not null"`
+	UserID    int32  `gorm:"index;not null"`
+	Content   string `gorm:"type:text;not null"`
+	ParentID  *int32 `gorm:"index"`
 }
 
 func (Comment) TableName() string {

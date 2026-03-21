@@ -1,12 +1,12 @@
 <div class="container-wide py-5">
   <div class="blog-404">
     <div class="blog-404-visual" aria-hidden="true">
-      <div class="blog-404-code">404</div>
+      <div class="blog-404-code">403</div>
     </div>
 
-    <h1 class="blog-404-title h3 mb-3">页面不存在</h1>
+    <h1 class="blog-404-title h3 mb-3">无权访问</h1>
     <p class="blog-404-hint text-muted lead mb-4">
-      链接可能已失效，或页面已被移动。试试从首页或文章列表重新进入。
+      你没有权限查看此页面。若你认为这是错误，请联系站点管理员。
     </p>
 
     <div class="d-flex justify-content-center gap-3 flex-wrap">
@@ -28,13 +28,13 @@
       <div class="card-custom">
         <div class="card-body py-3">
           <h6 class="card-title mb-3">
-            <i class="fas fa-lightbulb me-2"></i>
-            你可以…
+            <i class="fas fa-shield-alt me-2"></i>
+            常见原因
           </h6>
           <ul class="list-unstyled mb-0 small text-muted">
-            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>检查地址栏是否输错</li>
-            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>到「文章」页用搜索找内容</li>
-            <li class="mb-0"><i class="fas fa-check text-success me-2"></i>回到首页从导航重新进入</li>
+            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>管理后台仅对管理员开放</li>
+            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>请确认当前账号是否具备相应角色</li>
+            <li class="mb-0"><i class="fas fa-check text-success me-2"></i>需要权限时可尝试使用管理员账号登录</li>
           </ul>
         </div>
       </div>
@@ -43,16 +43,7 @@
 </div>
 
 <script>
-// 404页面初始化函数
-window.init404Page = function(routeData) {
-  console.log('初始化404页面');
-  
-  // 记录404错误（用于分析）
-  if (typeof gtag !== 'undefined') {
-    gtag('event', '404_error', {
-      'custom_parameter': window.location.pathname
-    });
-  }
-  
+window.init403Page = function (routeData) {
+  console.log('初始化 403 页面', routeData && routeData.path);
 };
 </script>

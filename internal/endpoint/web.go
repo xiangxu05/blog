@@ -70,6 +70,7 @@ func (w *WebHandlerStruct) setupPageRoutes(router *gin.Engine) {
 		"/login",
 		"/register",
 		"/profile",
+		"/bookmarks",
 		"/articles",
 		"/articles/*path",
 		"/admin",
@@ -140,7 +141,8 @@ func (w *WebHandlerStruct) SecurityHeadersMiddleware() gin.HandlerFunc {
 		c.Header("X-Frame-Options", "DENY")
 
 		// 内容安全策略（放宽限制以支持CDN资源）
-		c.Header("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self';")
+		// default-src 需包含 blob:，否则前台用 createObjectURL(blob)+<a download> 触发下载会被 CSP 拦截（备份 zip 等）
+		c.Header("Content-Security-Policy", "default-src 'self' blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self';")
 
 		c.Next()
 	}

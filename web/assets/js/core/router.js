@@ -7,6 +7,10 @@ class Router {
     this.beforeHooks = [];
     this.afterHooks = [];
     this.initialized = false;
+    /** 每次进入 handleRoute 递增，用于丢弃过期的模板加载结果（前进/后退快速切换时） */
+    this.navSeq = 0;
+    /** 取消上一次尚未完成的模板 fetch */
+    this.templateFetchAbort = null;
   }
 
   // 初始化路由系统
@@ -70,6 +74,11 @@ class Router {
         title: '文章列表',
         requireAuth: false
       },
+      '/bookmarks': {
+        template: 'bookmarks.html',
+        title: '我的收藏',
+        requireAuth: true
+      },
       '/articles/:id': {
         template: 'article-detail.html',
         title: '文章详情',
@@ -119,6 +128,12 @@ class Router {
         title: '文件管理',
         requireAuth: true,
         requireRole: 'admin'
+      },
+
+      '/403': {
+        template: '403.html',
+        title: '无权访问',
+        requireAuth: false
       },
 
       // 错误页面
@@ -218,7 +233,7 @@ class Router {
     // 如果需要管理员权限但用户不是管理员
     if (route && route.requireRole === 'admin' && userRole !== 'admin') {
       this.showNotification('权限不足', 'error');
-      page.redirect('/404');
+      page.redirect('/403');
       return;
     }
 
@@ -233,6 +248,7 @@ class Router {
 
   // 处理路由
   async handleRoute(ctx, config) {
+    let navId = null;
     try {
       // 安全检查：确保ctx和config存在
       if (!ctx) {
@@ -246,6 +262,16 @@ class Router {
         page.redirect('/404');
         return;
       }
+
+      // 取消上一段导航未完成的模板请求，避免与 popstate 竞态导致未捕获的 AbortError
+      if (this.templateFetchAbort) {
+        try {
+          this.templateFetchAbort.abort();
+        } catch (e) { /* ignore */ }
+      }
+      this.templateFetchAbort = new AbortController();
+      const fetchSignal = this.templateFetchAbort.signal;
+      navId = ++this.navSeq;
 
       // 显示加载状态
       window.appState.setLoading(true);
@@ -287,7 +313,10 @@ class Router {
       }
 
       // 加载页面模板
-      await this.loadTemplate(config.template, this.currentRoute);
+      const aborted = await this.loadTemplate(config.template, this.currentRoute, fetchSignal, navId);
+      if (aborted) {
+        return;
+      }
 
       // 更新导航栏状态
       this.updateNavigation();
@@ -298,28 +327,43 @@ class Router {
       }
 
     } catch (error) {
+      if (error && error.name === 'AbortError') {
+        return;
+      }
       console.error('路由处理失败:', error);
       this.showNotification('页面加载失败', 'error');
 
       // 加载错误页面
-      await this.loadTemplate('404.html', { error });
+      await this.loadTemplate('404.html', { error }, null, this.navSeq);
     } finally {
-      // 隐藏加载状态
-      window.appState.setLoading(false);
+      // 仅当前导航仍为「最新」时关 loading，避免被取代的旧导航误关新导航的 loading
+      if (navId != null && navId === this.navSeq) {
+        window.appState.setLoading(false);
+      }
     }
   }
 
-  // 加载页面模板
-  async loadTemplate(templateName, routeData = {}) {
+  /**
+   * 加载页面模板
+   * @returns {Promise<boolean>} true 表示本次加载已被更新导航取消，不应再更新 UI
+   */
+  async loadTemplate(templateName, routeData = {}, fetchSignal = null, navId = null) {
     const contentContainer = document.getElementById('page-content');
     if (!contentContainer) {
       throw new Error('页面内容容器不存在');
     }
 
+    const isStale = () => navId != null && navId !== this.navSeq;
+
     try {
       // 获取模板内容
       const templateUrl = `/templates/pages/${templateName}`;
-      const response = await fetch(templateUrl);
+      const fetchOpts = fetchSignal ? { signal: fetchSignal } : {};
+      const response = await fetch(templateUrl, fetchOpts);
+
+      if (isStale()) {
+        return true;
+      }
 
       if (!response.ok) {
         throw new Error(`模板加载失败: ${response.status}`);
@@ -327,26 +371,43 @@ class Router {
 
       const templateContent = await response.text();
 
+      if (isStale()) {
+        return true;
+      }
+
       // 渲染模板
       contentContainer.innerHTML = templateContent;
 
       // 执行模板内的脚本，确保 initXxxPage 已定义
       executeTemplateScripts(contentContainer);
 
+      if (isStale()) {
+        return true;
+      }
+
       // 添加页面动画
       contentContainer.classList.add('fade-in');
 
       // 执行页面特定的初始化逻辑
-      await this.initializePage(templateName, routeData);
+      await this.initializePage(templateName, routeData, navId);
+
+      if (isStale()) {
+        return true;
+      }
 
       // 滚动到顶部
       window.scrollTo(0, 0);
 
+      return false;
     } catch (error) {
+      if (error && error.name === 'AbortError') {
+        return true;
+      }
       console.error('模板加载失败:', error);
 
-      // 显示错误页面
-      contentContainer.innerHTML = `
+      if (!isStale()) {
+        // 显示错误页面
+        contentContainer.innerHTML = `
         <div class="container py-5">
           <div class="text-center">
             <h2>页面加载失败</h2>
@@ -357,13 +418,17 @@ class Router {
           </div>
         </div>
       `;
+      }
+      return false;
     }
   }
 
   // 初始化页面特定逻辑
-  async initializePage(templateName, routeData) {
+  async initializePage(templateName, routeData, navId = null) {
     const pageName = templateName.replace('.html', '').replace('/', '-');
     const initFunction = `init${this.toPascalCase(pageName)}Page`;
+
+    const isStale = () => navId != null && navId !== this.navSeq;
 
     // 检查是否存在页面初始化函数
     if (typeof window[initFunction] === 'function') {
@@ -378,7 +443,13 @@ class Router {
         
         console.log(`初始化页面 ${initFunction}，路由数据:`, safeRouteData);
         await window[initFunction](safeRouteData);
+        if (isStale()) {
+          return;
+        }
       } catch (error) {
+        if (isStale()) {
+          return;
+        }
         console.error(`页面初始化失败 (${initFunction}):`, error);
         // 显示用户友好的错误信息
         if (window.blogApp && window.blogApp.showNotification) {
@@ -417,17 +488,19 @@ class Router {
     const guestElements = document.querySelectorAll('#nav-guest, #nav-guest-register');
     const userElements = document.querySelectorAll('#nav-user');
     const adminElements = document.querySelectorAll('#nav-admin');
+    const bookmarkNav = document.querySelectorAll('#nav-bookmarks');
 
     if (isAuthenticated) {
       guestElements.forEach(el => el.classList.add('d-none'));
       userElements.forEach(el => el.classList.remove('d-none'));
+      bookmarkNav.forEach(el => el.classList.remove('d-none'));
 
       // 更新用户信息显示
       const avatarEl = document.getElementById('nav-avatar');
       const usernameEl = document.getElementById('nav-username');
 
       if (avatarEl && userProfile) {
-        avatarEl.src = userProfile.avatar || '/assets/images/default-avatar.svg';
+        avatarEl.src = userProfile.avatar || '/assets/images/default-avatar.svg?v=2';
         avatarEl.alt = userProfile.nickname || userProfile.username;
       }
 
@@ -446,6 +519,7 @@ class Router {
       guestElements.forEach(el => el.classList.remove('d-none'));
       userElements.forEach(el => el.classList.add('d-none'));
       adminElements.forEach(el => el.classList.add('d-none'));
+      bookmarkNav.forEach(el => el.classList.add('d-none'));
     }
   }
 

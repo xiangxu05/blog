@@ -33,30 +33,8 @@ func newComment(db *gorm.DB, opts ...gen.DOOption) comment {
 	_comment.DeletedAt = field.NewField(tableName, "deleted_at")
 	_comment.ArticleID = field.NewInt32(tableName, "article_id")
 	_comment.UserID = field.NewInt32(tableName, "user_id")
-	_comment.User = field.NewInt32(tableName, "user")
 	_comment.Content = field.NewString(tableName, "content")
 	_comment.ParentID = field.NewInt32(tableName, "parent_id")
-	_comment.Article = commentBelongsToArticle{
-		db: db.Session(&gorm.Session{}),
-
-		RelationField: field.NewRelation("Article", "model_def.Article"),
-	}
-
-	_comment.Parent = commentBelongsToParent{
-		db: db.Session(&gorm.Session{}),
-
-		RelationField: field.NewRelation("Parent", "model_def.Comment"),
-		Article: struct {
-			field.RelationField
-		}{
-			RelationField: field.NewRelation("Parent.Article", "model_def.Article"),
-		},
-		Parent: struct {
-			field.RelationField
-		}{
-			RelationField: field.NewRelation("Parent.Parent", "model_def.Comment"),
-		},
-	}
 
 	_comment.fillFieldMap()
 
@@ -73,12 +51,8 @@ type comment struct {
 	DeletedAt field.Field
 	ArticleID field.Int32
 	UserID    field.Int32
-	User      field.Int32
 	Content   field.String
 	ParentID  field.Int32
-	Article   commentBelongsToArticle
-
-	Parent commentBelongsToParent
 
 	fieldMap map[string]field.Expr
 }
@@ -101,7 +75,6 @@ func (c *comment) updateTableName(table string) *comment {
 	c.DeletedAt = field.NewField(table, "deleted_at")
 	c.ArticleID = field.NewInt32(table, "article_id")
 	c.UserID = field.NewInt32(table, "user_id")
-	c.User = field.NewInt32(table, "user")
 	c.Content = field.NewString(table, "content")
 	c.ParentID = field.NewInt32(table, "parent_id")
 
@@ -128,202 +101,25 @@ func (c *comment) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (c *comment) fillFieldMap() {
-	c.fieldMap = make(map[string]field.Expr, 11)
+	c.fieldMap = make(map[string]field.Expr, 8)
 	c.fieldMap["id"] = c.ID
 	c.fieldMap["created_at"] = c.CreatedAt
 	c.fieldMap["updated_at"] = c.UpdatedAt
 	c.fieldMap["deleted_at"] = c.DeletedAt
 	c.fieldMap["article_id"] = c.ArticleID
 	c.fieldMap["user_id"] = c.UserID
-	c.fieldMap["user"] = c.User
 	c.fieldMap["content"] = c.Content
 	c.fieldMap["parent_id"] = c.ParentID
-
 }
 
 func (c comment) clone(db *gorm.DB) comment {
 	c.commentDo.ReplaceConnPool(db.Statement.ConnPool)
-	c.Article.db = db.Session(&gorm.Session{Initialized: true})
-	c.Article.db.Statement.ConnPool = db.Statement.ConnPool
-	c.Parent.db = db.Session(&gorm.Session{Initialized: true})
-	c.Parent.db.Statement.ConnPool = db.Statement.ConnPool
 	return c
 }
 
 func (c comment) replaceDB(db *gorm.DB) comment {
 	c.commentDo.ReplaceDB(db)
-	c.Article.db = db.Session(&gorm.Session{})
-	c.Parent.db = db.Session(&gorm.Session{})
 	return c
-}
-
-type commentBelongsToArticle struct {
-	db *gorm.DB
-
-	field.RelationField
-}
-
-func (a commentBelongsToArticle) Where(conds ...field.Expr) *commentBelongsToArticle {
-	if len(conds) == 0 {
-		return &a
-	}
-
-	exprs := make([]clause.Expression, 0, len(conds))
-	for _, cond := range conds {
-		exprs = append(exprs, cond.BeCond().(clause.Expression))
-	}
-	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
-	return &a
-}
-
-func (a commentBelongsToArticle) WithContext(ctx context.Context) *commentBelongsToArticle {
-	a.db = a.db.WithContext(ctx)
-	return &a
-}
-
-func (a commentBelongsToArticle) Session(session *gorm.Session) *commentBelongsToArticle {
-	a.db = a.db.Session(session)
-	return &a
-}
-
-func (a commentBelongsToArticle) Model(m *model_def.Comment) *commentBelongsToArticleTx {
-	return &commentBelongsToArticleTx{a.db.Model(m).Association(a.Name())}
-}
-
-func (a commentBelongsToArticle) Unscoped() *commentBelongsToArticle {
-	a.db = a.db.Unscoped()
-	return &a
-}
-
-type commentBelongsToArticleTx struct{ tx *gorm.Association }
-
-func (a commentBelongsToArticleTx) Find() (result *model_def.Article, err error) {
-	return result, a.tx.Find(&result)
-}
-
-func (a commentBelongsToArticleTx) Append(values ...*model_def.Article) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Append(targetValues...)
-}
-
-func (a commentBelongsToArticleTx) Replace(values ...*model_def.Article) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Replace(targetValues...)
-}
-
-func (a commentBelongsToArticleTx) Delete(values ...*model_def.Article) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Delete(targetValues...)
-}
-
-func (a commentBelongsToArticleTx) Clear() error {
-	return a.tx.Clear()
-}
-
-func (a commentBelongsToArticleTx) Count() int64 {
-	return a.tx.Count()
-}
-
-func (a commentBelongsToArticleTx) Unscoped() *commentBelongsToArticleTx {
-	a.tx = a.tx.Unscoped()
-	return &a
-}
-
-type commentBelongsToParent struct {
-	db *gorm.DB
-
-	field.RelationField
-
-	Article struct {
-		field.RelationField
-	}
-	Parent struct {
-		field.RelationField
-	}
-}
-
-func (a commentBelongsToParent) Where(conds ...field.Expr) *commentBelongsToParent {
-	if len(conds) == 0 {
-		return &a
-	}
-
-	exprs := make([]clause.Expression, 0, len(conds))
-	for _, cond := range conds {
-		exprs = append(exprs, cond.BeCond().(clause.Expression))
-	}
-	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
-	return &a
-}
-
-func (a commentBelongsToParent) WithContext(ctx context.Context) *commentBelongsToParent {
-	a.db = a.db.WithContext(ctx)
-	return &a
-}
-
-func (a commentBelongsToParent) Session(session *gorm.Session) *commentBelongsToParent {
-	a.db = a.db.Session(session)
-	return &a
-}
-
-func (a commentBelongsToParent) Model(m *model_def.Comment) *commentBelongsToParentTx {
-	return &commentBelongsToParentTx{a.db.Model(m).Association(a.Name())}
-}
-
-func (a commentBelongsToParent) Unscoped() *commentBelongsToParent {
-	a.db = a.db.Unscoped()
-	return &a
-}
-
-type commentBelongsToParentTx struct{ tx *gorm.Association }
-
-func (a commentBelongsToParentTx) Find() (result *model_def.Comment, err error) {
-	return result, a.tx.Find(&result)
-}
-
-func (a commentBelongsToParentTx) Append(values ...*model_def.Comment) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Append(targetValues...)
-}
-
-func (a commentBelongsToParentTx) Replace(values ...*model_def.Comment) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Replace(targetValues...)
-}
-
-func (a commentBelongsToParentTx) Delete(values ...*model_def.Comment) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Delete(targetValues...)
-}
-
-func (a commentBelongsToParentTx) Clear() error {
-	return a.tx.Clear()
-}
-
-func (a commentBelongsToParentTx) Count() int64 {
-	return a.tx.Count()
-}
-
-func (a commentBelongsToParentTx) Unscoped() *commentBelongsToParentTx {
-	a.tx = a.tx.Unscoped()
-	return &a
 }
 
 type commentDo struct{ gen.DO }

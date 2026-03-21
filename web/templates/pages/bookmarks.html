@@ -1,0 +1,204 @@
+<div class="container-wide py-4">
+  <div class="blog-page-intro mb-4">
+    <h1 class="blog-page-title h2 mb-2">
+      <i class="fas fa-bookmark text-primary me-2" aria-hidden="true"></i>我的收藏
+    </h1>
+    <p class="blog-page-sub mb-0">从文章详情页收藏的内容会出现在这里</p>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+    <p class="text-muted small mb-0" id="bookmarks-count">共 0 篇</p>
+    <div class="d-flex align-items-center gap-2">
+      <label for="bookmarks-page-size" class="text-muted small mb-0">每页</label>
+      <select class="form-select-custom form-select-sm" id="bookmarks-page-size" style="width: auto; min-width: 72px;">
+        <option value="10">10</option>
+        <option value="20">20</option>
+        <option value="30">30</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="bookmarks-loading" class="text-center py-5">
+    <div class="spinner-border text-primary mb-3" role="status"></div>
+    <p class="text-muted">加载中…</p>
+  </div>
+
+  <div id="bookmarks-empty" class="text-center py-5 d-none">
+    <i class="fas fa-bookmark fa-3x text-muted mb-3"></i>
+    <p class="text-muted mb-3">还没有收藏任何文章</p>
+    <a href="/articles" class="btn btn-primary-custom">去文章列表逛逛</a>
+  </div>
+
+  <div id="bookmarks-error" class="alert alert-danger d-none" role="alert"></div>
+
+  <div id="bookmarks-list" class="d-none"></div>
+
+  <nav class="mt-4 d-none" id="bookmarks-pagination-wrap" aria-label="收藏分页">
+    <ul class="pagination justify-content-center mb-0" id="bookmarks-pagination"></ul>
+  </nav>
+</div>
+
+<script>
+  window.initBookmarksPage = function () {
+    if (!window.appState.isAuthenticated()) {
+      window.router.push('/login?redirect=' + encodeURIComponent('/bookmarks'));
+      return;
+    }
+
+    let currentPage = 1;
+    let pageSize = 10;
+
+    function escapeHtml(text) {
+      if (text == null) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function formatDate(dateInput) {
+      if (!dateInput) return '';
+      const d = typeof dateInput === 'string' ? new Date(dateInput) : new Date(dateInput);
+      if (Number.isNaN(d.getTime())) return '';
+      return d.toLocaleDateString('zh-CN', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function formatDateTime(dateInput) {
+      if (!dateInput) return '';
+      const d = typeof dateInput === 'string' ? new Date(dateInput) : new Date(dateInput);
+      if (Number.isNaN(d.getTime())) return '';
+      return d.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    }
+
+    async function loadBookmarks() {
+      const loading = document.getElementById('bookmarks-loading');
+      const empty = document.getElementById('bookmarks-empty');
+      const list = document.getElementById('bookmarks-list');
+      const errEl = document.getElementById('bookmarks-error');
+      const pagWrap = document.getElementById('bookmarks-pagination-wrap');
+
+      loading.classList.remove('d-none');
+      empty.classList.add('d-none');
+      list.classList.add('d-none');
+      errEl.classList.add('d-none');
+      pagWrap.classList.add('d-none');
+
+      try {
+        const data = await window.apiClient.articles.listBookmarks({
+          page: currentPage,
+          page_size: pageSize
+        });
+
+        loading.classList.add('d-none');
+
+        const articles = (data && data.articles) ? data.articles : [];
+        const pagination = data && data.pagination;
+
+        document.getElementById('bookmarks-count').textContent =
+          '共 ' + (pagination && pagination.total_count != null ? pagination.total_count : articles.length) + ' 篇';
+
+        if (!articles.length) {
+          empty.classList.remove('d-none');
+          return;
+        }
+
+        list.innerHTML = articles.map(function (a) {
+          const tags = a.tags ? a.tags.split(',').filter(function (t) { return t.trim(); }) : [];
+          const bm = a.bookmarked_at ? formatDateTime(a.bookmarked_at) : '';
+          return (
+            '<div class="article-card mb-3">' +
+              '<div class="card-body">' +
+                '<div class="d-flex flex-wrap justify-content-between gap-2 align-items-start">' +
+                  '<div class="flex-grow-1 min-w-0">' +
+                    '<h3 class="article-title h5 mb-2">' +
+                      '<a href="/articles/' + a.id + '/' + a.version + '" class="text-decoration-none">' +
+                        escapeHtml(a.title) +
+                      '</a>' +
+                    '</h3>' +
+                    '<p class="article-description mb-2">' + escapeHtml(a.description || '暂无描述') + '</p>' +
+                    (tags.length ? '<div class="article-tags mb-2">' +
+                      tags.map(function (tag) {
+                        return '<span class="article-tag">' + escapeHtml(tag.trim()) + '</span>';
+                      }).join('') + '</div>' : '') +
+                    '<div class="article-meta small">' +
+                      '<span class="me-3"><i class="fas fa-calendar-alt me-1"></i>' + formatDate(a.created_at) + '</span>' +
+                      '<span class="me-3"><i class="fas fa-folder me-1"></i>' + escapeHtml(a.category || '未分类') + '</span>' +
+                      '<span class="me-3"><i class="fas fa-eye me-1"></i>' + (a.views || 0) + ' 次阅读</span>' +
+                      (bm ? '<span class="text-muted"><i class="fas fa-bookmark me-1"></i>收藏于 ' + bm + '</span>' : '') +
+                    '</div>' +
+                  '</div>' +
+                  '<button type="button" class="btn btn-outline-secondary btn-sm flex-shrink-0 bookmark-remove-btn" data-id="' + a.id + '" title="取消收藏">' +
+                    '<i class="fas fa-times me-1"></i>取消收藏' +
+                  '</button>' +
+                '</div>' +
+              '</div>' +
+            '</div>'
+          );
+        }).join('');
+
+        list.classList.remove('d-none');
+
+        list.querySelectorAll('.bookmark-remove-btn').forEach(function (btn) {
+          btn.addEventListener('click', async function () {
+            const id = btn.getAttribute('data-id');
+            if (!id) return;
+            btn.disabled = true;
+            try {
+              await window.apiClient.articles.unbookmark(id);
+              window.blogApp.showNotification('已取消收藏', 'success');
+              await loadBookmarks();
+            } catch (e) {
+              window.blogApp.showNotification((e && e.message) || '操作失败', 'error');
+              btn.disabled = false;
+            }
+          });
+        });
+
+        if (pagination && pagination.total_pages > 1) {
+          renderPagination(pagination);
+          pagWrap.classList.remove('d-none');
+        }
+      } catch (e) {
+        console.error(e);
+        loading.classList.add('d-none');
+        errEl.textContent = (e && e.message) ? e.message : '加载失败';
+        errEl.classList.remove('d-none');
+      }
+    }
+
+    function renderPagination(p) {
+      const el = document.getElementById('bookmarks-pagination');
+      const page = p.current_page || 1;
+      const totalPages = p.total_pages || 1;
+      let html = '';
+      if (page > 1) {
+        html += '<li class="page-item"><a class="page-link" href="#" data-page="' + (page - 1) + '"><i class="fas fa-chevron-left"></i></a></li>';
+      }
+      const start = Math.max(1, page - 2);
+      const end = Math.min(totalPages, page + 2);
+      for (let i = start; i <= end; i++) {
+        html += '<li class="page-item' + (i === page ? ' active' : '') + '">' +
+          '<a class="page-link" href="#" data-page="' + i + '">' + i + '</a></li>';
+      }
+      if (page < totalPages) {
+        html += '<li class="page-item"><a class="page-link" href="#" data-page="' + (page + 1) + '"><i class="fas fa-chevron-right"></i></a></li>';
+      }
+      el.innerHTML = html;
+      el.querySelectorAll('a[data-page]').forEach(function (a) {
+        a.addEventListener('click', function (ev) {
+          ev.preventDefault();
+          currentPage = parseInt(a.getAttribute('data-page'), 10);
+          loadBookmarks();
+        });
+      });
+    }
+
+    document.getElementById('bookmarks-page-size').value = String(pageSize);
+    document.getElementById('bookmarks-page-size').addEventListener('change', function () {
+      pageSize = parseInt(this.value, 10) || 10;
+      currentPage = 1;
+      loadBookmarks();
+    });
+
+    loadBookmarks();
+  };
+</script>

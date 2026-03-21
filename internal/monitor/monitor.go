@@ -240,6 +240,24 @@ func (m *Monitor) UpdateLastBackup() gin.HandlerFunc {
 	}
 }
 
+// MarkBackupCompleted 在异步备份 zip 写盘成功后更新内存与数据库中的 last_backup。
+func (m *Monitor) MarkBackupCompleted() {
+	m.mtx.Lock()
+	m.WebInfo.LastBackup = time.Now()
+	wid := m.WebInfo.ID
+	m.mtx.Unlock()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
+	defer cancel()
+	if wid == 0 {
+		return
+	}
+	_, err := dao.WebInfo.WithContext(ctx).Where(dao.WebInfo.ID.Eq(wid)).UpdateColumn(dao.WebInfo.LastBackup, time.Now())
+	if err != nil {
+		log.Errorf("persist last_backup failed: %v", err)
+	}
+}
+
 func (m *Monitor) GetWebsiteStatisticsHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 先更新数据到最新状态，使用请求的 context
